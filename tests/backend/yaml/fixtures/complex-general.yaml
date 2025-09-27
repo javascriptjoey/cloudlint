@@ -1,0 +1,12 @@
+# Complex general YAML with formatting and lint issues
+name: example-app
+version: 1.0.0
+list:
+  - item1
+  - item2
+map:
+  key1: value1
+  key2: value2
+# duplicate map renamed to avoid parser error
+map2:
+  key1: value1

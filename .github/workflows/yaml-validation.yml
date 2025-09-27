@@ -1,0 +1,50 @@
+name: YAML Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Install yamllint (pip)
+        run: |
+          python3 -m pip install --user yamllint
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Pull cfn-lint docker image
+        run: docker pull giammbo/cfn-lint:latest
+
+      - name: Spectral version
+        run: npx spectral --version
+
+      - name: Run yamllint on fixtures
+        run: |
+          yamllint -f parsable tests/backend/yaml/fixtures/complex-general.yaml || true
+          yamllint -f parsable tests/backend/yaml/fixtures/complex-cdk.yaml || true
+
+      - name: Run cfn-lint on CFN fixture (JSON output)
+        run: |
+          docker run --rm -v "$PWD:$PWD" giammbo/cfn-lint:latest \
+            /tests/backend/yaml/fixtures/complex-cdk.yaml || true
+
+      - name: Spectral lint (if ruleset present)
+        run: |
+          if [ -f .spectral.yaml ]; then npx spectral lint -r .spectral.yaml tests/backend/yaml/fixtures/*.yaml || true; fi
+
+      - name: Run unit tests
+        run: npm run test:run

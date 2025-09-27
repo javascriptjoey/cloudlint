@@ -14,7 +14,8 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-github@latest"],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PAT}"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PAT}",
+        "GITHUB_TOKEN": "${GITHUB_PAT}"
       },
       "disabled": false,
       "autoApprove": [],

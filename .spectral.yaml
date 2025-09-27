@@ -1,0 +1,23 @@
+# Minimal Spectral ruleset for generic YAML/JSON files
+# Extend and customize via local Spectral MCP. Placeholders below.
+
+# MCP: Use local Spectral MCP to propose and insert additional rules here.
+# MCP_PLACEHOLDER_START
+# - Ask Spectral MCP to suggest rules for CloudFormation, OpenAPI, or general YAML conventions.
+# - Insert schema-based rules via `rules:` below.
+# MCP_PLACEHOLDER_END
+
+formats:
+  - yaml
+  - yml
+  - json
+
+rules:
+  # Example: Ensure document is not empty (informational)
+  document-not-empty:
+    description: Document should not be empty
+    message: Document appears to be empty
+    severity: warn
+    given: $
+    then:
+      function: truthy

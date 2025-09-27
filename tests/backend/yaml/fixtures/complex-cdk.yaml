@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Complex CDK-like CloudFormation template with intentional style and semantic issues
+
+Parameters:
+  EnvName:
+    Type: String
+    Default: dev
+    Description: "Environment name with trailing spaces"
+
+Resources:
+  ValidBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-valid-bucket
+
+  MissingTypeResource:
+    # Intentional error: missing Type
+    Properties:
+      BucketName: missing-type-bucket
+
+  TypoPropertyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketnName: wrong-prop-should-be-BucketName
+
+Outputs:
+  BucketName:
+    Description: The name of the valid bucket
+    Value: !Ref ValidBucket

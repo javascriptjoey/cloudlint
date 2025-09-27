@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Another complex CFN template with multiple errors and style issues
+
+Parameters:
+  Project:
+    Type: String
+
+Resources:
+  NoType:
+    Properties:
+      BucketName: missing-type
+
+  BadProp:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucktName: should-be-BucketName
+
+Outputs:
+  ProjectOut:
+    Value: !Ref Project
