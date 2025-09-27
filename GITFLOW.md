@@ -61,8 +61,14 @@ git add .
 git commit -m "Add user authentication system"
 git push origin feature/CL-123/add-user-authentication
 
-# 3. Create PR to develop branch
-# 4. After approval, merge and delete feature branch
+# 3. Merge directly to develop (or create PR for documentation)
+git checkout develop
+git merge feature/CL-123/add-user-authentication
+git push origin develop
+
+# 4. Delete feature branch
+git branch -d feature/CL-123/add-user-authentication
+git push origin --delete feature/CL-123/add-user-authentication
 ```
 
 ### Creating a Release
@@ -77,9 +83,19 @@ git add .
 git commit -m "Prepare release v1.2.0"
 git push origin release/v1.2.0
 
-# 3. Create PR to main branch
-# 4. After testing and approval, merge to main
-# 5. Merge main back to develop to sync branches
+# 3. Merge to main branch
+git checkout main
+git merge release/v1.2.0
+git push origin main
+
+# 4. Merge main back to develop to sync branches
+git checkout develop
+git merge main
+git push origin develop
+
+# 5. Delete release branch
+git branch -d release/v1.2.0
+git push origin --delete release/v1.2.0
 ```
 
 ### Emergency Hotfix
@@ -94,19 +110,28 @@ git add .
 git commit -m "Fix critical security vulnerability"
 git push origin hotfix/CL-789/fix-security-issue
 
-# 3. Create PR to main branch
-# 4. After approval, merge to main
-# 5. Merge main back to develop to sync branches
+# 3. Merge to main branch
+git checkout main
+git merge hotfix/CL-789/fix-security-issue
+git push origin main
+
+# 4. Merge main back to develop to sync branches
+git checkout develop
+git merge main
+git push origin develop
+
+# 5. Delete hotfix branch
+git branch -d hotfix/CL-789/fix-security-issue
+git push origin --delete hotfix/CL-789/fix-security-issue
 ```
 
 ## 🛡️ Branch Protection Rules
 
-Both `main` and `develop` branches are protected with:
-- ✅ Require pull request reviews (1 approval required)
-- ✅ Dismiss stale reviews when new commits are pushed
-- ✅ No direct pushes allowed
-- ✅ No force pushes allowed
-- ✅ No branch deletion allowed
+**Solo Developer Setup** - No branch protection rules:
+- ✅ Direct pushes allowed (you have admin access)
+- ✅ Force pushes allowed (use with caution)
+- ✅ Pull requests optional (recommended for documentation)
+- ✅ Full admin control over all branches
 
 ## 🎯 Feature Flags
 
