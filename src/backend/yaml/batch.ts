@@ -1,7 +1,7 @@
 import { readFileSync, statSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { validateYaml } from './validate'
-import type { ValidateOptions } from './types'
+import type { ValidateOptions, LintMessage } from './types'
 
 function walk(dir: string, files: string[] = []) {
   for (const entry of readdirSync(dir)) {
@@ -16,7 +16,7 @@ function walk(dir: string, files: string[] = []) {
 export async function validateDirectory(dir: string, opts: Omit<ValidateOptions, 'filename'> = {}) {
   const abs = resolve(dir)
   const files = walk(abs)
-  const results = [] as Array<{ file: string; ok: boolean; messages: any[] }>
+  const results = [] as Array<{ file: string; ok: boolean; messages: LintMessage[] }>
   for (const f of files) {
     const content = readFileSync(f, 'utf8')
     const res = await validateYaml(content, { ...opts, filename: f })

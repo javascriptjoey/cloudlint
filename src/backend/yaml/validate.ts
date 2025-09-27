@@ -66,7 +66,14 @@ export async function validateYaml(content: string, options: ValidateOptions = {
         const res = await runner.run('docker', ['run', '--rm', '-v', `${process.cwd()}:${process.cwd()}`, '-w', process.cwd(), 'ghcr.io/aws-cloudformation/cfn-lint:latest', 'cfn-lint', '-f', 'json', options.filename])
         if (res.code !== 0 && res.stdout) {
           try {
-            const arr = JSON.parse(res.stdout) as Array<any>
+            type CFNFinding = {
+              Filename: string
+              Location?: { Start?: { Line?: number; Column?: number } }
+              Message: string
+              Level: 'Error' | 'Warning' | string
+              Rule?: { Id?: string }
+            }
+            const arr = JSON.parse(res.stdout) as CFNFinding[]
             for (const it of arr) {
               messages.push({
                 source: 'cfn-lint',
@@ -83,7 +90,7 @@ export async function validateYaml(content: string, options: ValidateOptions = {
           }
         }
       }
-    } catch (e) {
+    } catch {
       messages.push({ source: 'cfn-lint', message: 'cfn-lint not available; skipped', severity: 'info' })
     }
   }
@@ -109,7 +116,7 @@ export async function validateYaml(content: string, options: ValidateOptions = {
           messages.push({ source: 'spectral', message: 'Failed to parse spectral JSON output', severity: 'warning' })
         }
       }
-    } catch (e) {
+    } catch {
       messages.push({ source: 'spectral', message: 'spectral not available; skipped', severity: 'info' })
     }
   }

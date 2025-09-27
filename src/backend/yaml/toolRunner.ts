@@ -23,7 +23,7 @@ export const defaultToolRunner: ToolRunner = {
 
       const timeout = opts.timeoutMs ?? 10000
       const timer = setTimeout(() => {
-        try { child.kill() } catch {}
+        try { child.kill() } catch (err) { /* noop: process may have already exited */ void err }
       }, timeout)
 
       child.on('close', (code) => {
