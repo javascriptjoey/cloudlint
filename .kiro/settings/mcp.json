@@ -11,8 +11,8 @@
       "disabledTools": []
     },
     "github": {
-      "command": "uvx",
-      "args": ["mcp-server-github"],
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@latest"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PAT}"
       },
