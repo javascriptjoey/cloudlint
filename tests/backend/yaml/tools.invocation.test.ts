@@ -30,9 +30,10 @@ describe('Tool invocation behavior', () => {
   it('invokes cfn-lint via docker for CFN-like file', async () => {
     const p = resolve(process.cwd(), 'tests/backend/yaml/fixtures/complex-cdk.yaml')
     const content = readFileSync(p, 'utf8')
-    const runner = makeCapturingRunner() as unknown as ToolRunner
+    const capRunner = makeCapturingRunner()
+    const runner = capRunner as unknown as ToolRunner
     await validateYaml(content, { filename: p, toolRunner: runner })
-    expect(runner.calls.some(c => c.includes('docker') && c.includes('cfn-lint'))).toBe(true)
+    expect(capRunner.calls.some((c: string) => c.includes('docker') && c.includes('cfn-lint'))).toBe(true)
   })
 
   it('invokes yamllint for general YAML and spectral when ruleset provided', async () => {
@@ -40,8 +41,8 @@ describe('Tool invocation behavior', () => {
     const capRunner = makeCapturingRunner()
     const runner = capRunner as unknown as ToolRunner
     await validateYaml(content, { toolRunner: runner, spectralRulesetPath: 'tests/.spectral.yaml' })
-    const tokens = capRunner.calls.flatMap(c => c.split(/\s+/))
+    const tokens = capRunner.calls.flatMap((c: string) => c.split(/\s+/))
     expect(tokens.includes('yamllint')).toBe(true)
-    expect(capRunner.calls.some(c => c.includes('spectral') && c.includes('lint'))).toBe(true)
+    expect(capRunner.calls.some((c: string) => c.includes('spectral') && c.includes('lint'))).toBe(true)
   })
 })
