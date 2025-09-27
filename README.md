@@ -2,6 +2,8 @@
 
 A modern React application built with Vite, TypeScript, and shadcn/ui components.
 
+> CI smoke test: Updated README via Warp to trigger GitHub Actions.
+
 ## 🚀 Features
 
 - ⚡ **Vite** - Fast build tool and development server
