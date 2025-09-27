@@ -7,7 +7,7 @@ function makeCapturingRunner() {
   const calls: string[] = []
   return {
     calls,
-    run: async (cmd: string, args: string[], _opts?: { input?: string }) => {
+    run: async (cmd: string, args: string[]) => {
       calls.push([cmd, ...args].join(' '))
       // Simulate success with no issues
       if (cmd === 'docker' && args.includes('cfn-lint')) {

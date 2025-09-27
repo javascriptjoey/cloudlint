@@ -7,7 +7,7 @@ const noopRunner = { run: async () => ({ code: 0, stdout: '', stderr: '' }) }
 
 // Mocked runner that simulates yamllint + cfn-lint outputs for the complex fixture
 const mockRunnerComplex = {
-  run: async (cmd: string, args: string[], _opts?: { input?: string }) => {
+  run: async (cmd: string, args: string[]) => {
     const arg0 = args[0] || ''
     if (arg0.includes('yamllint') || cmd.includes('yamllint')) {
       // Simulate style issues: trailing spaces + indentation warning
