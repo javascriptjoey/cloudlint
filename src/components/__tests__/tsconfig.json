@@ -1,10 +1,18 @@
 {
-  "extends": "../../../tsconfig.test.json",
+  "extends": "../../../tsconfig.app.json",
   "compilerOptions": {
-    "types": ["vitest/globals", "vitest/jsdom", "@testing-library/jest-dom", "@types/jest"],
+    "types": ["vitest/globals", "vitest/jsdom", "@testing-library/jest-dom", "@types/jest", "node"],
     "jsx": "react-jsx",
-    "noEmit": true
+    "noEmit": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": false,
+    "isolatedModules": false,
+    "baseUrl": "../../..",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["./**/*"],
+  "include": ["./**/*", "../../../src/**/*"],
   "exclude": ["node_modules"]
 }

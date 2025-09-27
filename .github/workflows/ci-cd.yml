@@ -26,10 +26,16 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm ci
+      run: npm ci --prefer-offline --no-audit
       
     - name: Run ESLint
       run: npm run lint
+      
+    - name: Run TypeScript check for app
+      run: npm run type-check
+      
+    - name: Run TypeScript check for tests
+      run: npm run type-check:test
       
     - name: Run tests
       run: npm run test:run
