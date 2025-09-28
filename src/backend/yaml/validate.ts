@@ -1,4 +1,4 @@
-import YAML from 'yaml'
+import { parseWithTimeout } from './parseSafe'
 import { isLikelyCloudFormation } from './detect'
 import type { LintMessage, LintResult, ValidateOptions, ToolRunner } from './types'
 import { defaultToolRunner } from './toolRunner'
@@ -21,7 +21,7 @@ export async function validateYaml(content: string, options: ValidateOptions = {
 
   // Basic parse validation with safe options
   try {
-    YAML.parse(content, { version: '1.2', schema: 'core', uniqueKeys: true })
+    await parseWithTimeout(content, { timeoutMs: options.parseTimeoutMs })
   } catch (e) {
     pushParserError(e, messages)
     return { ok: false, messages }

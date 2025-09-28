@@ -3,6 +3,7 @@
 This document describes the security precautions implemented for YAML parsing and validation.
 
 Key precautions
+- Parse timeout: default 5s (configurable via YAML_PARSE_TIMEOUT_MS env or --parse-timeout-ms CLI flag, max 10s)
 - Strict size and line limits:
   - Max file size: 2 MiB (2,097,152 bytes)
   - Max lines: 15,000

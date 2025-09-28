@@ -43,6 +43,7 @@ Examples
   - $env:YAML_FILE = "tests\\backend\\yaml\\fixtures\\complex-general.yaml"; npm run yaml:fix
 
 Security
+- Parse timeout defaults to 5s; override via env YAML_PARSE_TIMEOUT_MS or CLI flag --parse-timeout-ms (max 10s).
 - See docs/secure-yaml.md for enforced limits (2 MiB, 15k lines), MIME/type checks, disallowed anchors/tags, and Docker sandboxing.
 
 Troubleshooting
