@@ -79,6 +79,7 @@ describe('YAML validation', () => {
     const res = await validateYaml(yaml, { toolRunner: noopRunner })
     expect(res.ok).toBe(true)
     expect(res.messages.filter(m => m.severity === 'error')).toHaveLength(0)
+    expect(res.providerSummary).toBeDefined()
   })
 
   it('rejects invalid YAML (parser error)', async () => {

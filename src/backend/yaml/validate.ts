@@ -1,8 +1,9 @@
 import { parseWithTimeout } from './parseSafe'
-import { isLikelyCloudFormation, isLikelyAzurePipelines } from './detect'
-import type { LintMessage, LintResult, ValidateOptions, ToolRunner } from './types'
+import { isLikelyCloudFormation, isLikelyAzurePipelines, detectProvider } from './detect'
+import type { LintMessage, LintResult, ValidateOptions, ToolRunner, ProviderSummary } from './types'
 import { defaultToolRunner } from './toolRunner'
 import { preflightContentGuards, validateFileMeta } from './security'
+import fs from 'node:fs'
 
 function pushParserError(e: unknown, messages: LintMessage[]) {
   const msg = e instanceof Error ? e.message : String(e)
@@ -63,15 +64,13 @@ export async function validateYaml(content: string, options: ValidateOptions = {
 
   // cfn-lint (CloudFormation), only if CFN detected or forced
   const runCfn = options.assumeCloudFormation || isLikelyCloudFormation(content)
+  const cfnDockerImage = 'giammbo/cfn-lint:latest'
   if (runCfn) {
     try {
-      // Use dockerized cfn-lint if available, otherwise npx cfn-lint if installed globally
-      // Prefer stdin via temp file workaround: cfn-lint expects a file. We'll pass via - (stdin) is not supported; so skip stdin and fallback to docker echo piping.
-      // Create a temp file approach: not writing files in this utility; instead, rely on caller to provide filename if needed.
       if (!options.filename) {
         messages.push({ source: 'cfn-lint', message: 'CFN detection true but no filename provided; cfn-lint requires a file path. Skipped.', severity: 'info' })
       } else {
-const res = await runner.run('docker', ['run', '--rm', '--network=none', '-v', `${process.cwd()}:${process.cwd()}:ro`, '-w', process.cwd(), 'giammbo/cfn-lint:latest', 'cfn-lint', '-f', 'json', options.filename])
+const res = await runner.run('docker', ['run', '--rm', '--network=none', '-v', `${process.cwd()}:${process.cwd()}:ro`, '-w', process.cwd(), cfnDockerImage, 'cfn-lint', '-f', 'json', options.filename])
         if (res.code !== 0 && res.stdout) {
           try {
             type CFNFinding = {
@@ -143,6 +142,32 @@ const res = await runner.run('docker', ['run', '--rm', '--network=none', '-v', `
     }
   }
 
+  // Build provider summary
+  const provider = detectProvider(content)
+  const counts: Record<string, { errors: number; warnings: number; infos: number }> = {}
+  const bump = (src: string, sev: 'error'|'warning'|'info') => {
+    if (!counts[src]) counts[src] = { errors: 0, warnings: 0, infos: 0 }
+    if (sev === 'error') counts[src].errors++
+    else if (sev === 'warning') counts[src].warnings++
+    else counts[src].infos++
+  }
+  for (const m of messages) bump(m.source, m.severity)
+
+  const azureSchemaPath = process.env.AZURE_PIPELINES_SCHEMA_PATH && fs.existsSync(process.env.AZURE_PIPELINES_SCHEMA_PATH) ? process.env.AZURE_PIPELINES_SCHEMA_PATH : undefined
+  const cfnSpecPath = process.env.CFN_SPEC_PATH && fs.existsSync(process.env.CFN_SPEC_PATH) ? process.env.CFN_SPEC_PATH : undefined
+  const spectralRulesetPath = options.spectralRulesetPath || process.env.SPECTRAL_RULESET || undefined
+
+  const providerSummary: ProviderSummary = {
+    provider,
+    sources: {
+      azureSchemaPath,
+      cfnSpecPath,
+      spectralRulesetPath,
+      cfnLintDockerImage: runCfn ? cfnDockerImage : undefined,
+    },
+    counts: counts as unknown as ProviderSummary['counts'],
+  }
+
   const ok = messages.every((m) => m.severity !== 'error')
-  return { ok, messages }
+  return { ok, messages, providerSummary }
 }

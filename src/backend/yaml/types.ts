@@ -12,9 +12,27 @@ export interface LintMessage {
   suggestion?: string
 }
 
+export interface SourceCounts {
+  errors: number
+  warnings: number
+  infos: number
+}
+
+export interface ProviderSummary {
+  provider: 'aws' | 'azure' | 'generic'
+  sources: {
+    azureSchemaPath?: string
+    cfnSpecPath?: string
+    spectralRulesetPath?: string
+    cfnLintDockerImage?: string
+  }
+  counts: Partial<Record<LintSource, SourceCounts>>
+}
+
 export interface LintResult {
   ok: boolean
   messages: LintMessage[]
+  providerSummary?: ProviderSummary
 }
 
 export interface ValidateOptions {
