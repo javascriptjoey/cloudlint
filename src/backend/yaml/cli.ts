@@ -44,15 +44,17 @@ async function doSuggestInteractive() {
   const p = getFile()
   const content = readFileSync(p, 'utf8')
   const providerArgIdx = process.argv.indexOf('--provider')
-  const forcedProv = providerArgIdx !== -1 ? String(process.argv[providerArgIdx + 1] || '') as any : undefined
-  const forced = (process.env.PROVIDER as any) || forcedProv
+  const forcedProv: string | undefined = providerArgIdx !== -1 ? String(process.argv[providerArgIdx + 1] || '') : undefined
+  const forced: string | undefined = process.env.PROVIDER || forcedProv
   const { detectProvider } = await import('./detect')
-  const prov = detectProvider(content, forced)
+  const forcedProvider = (forced === 'aws' || forced === 'azure' || forced === 'generic') ? forced : undefined
+  const prov = detectProvider(content, forcedProvider)
 
   const YAML = (await import('yaml')).default
   const doc = YAML.parse(content)
 
-  let analyze: any, applySuggestions: any
+  let analyze: (doc: unknown) => { suggestions: { kind: string; path: string; message: string; fix?: (doc: unknown) => void }[]; messages: unknown[] }
+  let applySuggestions: (content: string, selected: number[]) => { content: string }
   if (prov === 'aws') {
     ({ analyze, applySuggestions } = await import('./cfnSuggest'))
   } else if (prov === 'azure') {
@@ -69,7 +71,7 @@ async function doSuggestInteractive() {
   }
   console.log(`Provider: ${prov}`)
   console.log('Suggestions:')
-  suggestions.forEach((s: any, i: number) => console.log(`[${i}] ${s.kind.toUpperCase()} ${s.path} - ${s.message}`))
+  suggestions.forEach((s, i) => console.log(`[${i}] ${s.kind.toUpperCase()} ${s.path} - ${s.message}`))
   const rl = await import('node:readline/promises')
   const itf = rl.createInterface({ input: process.stdin, output: process.stdout })
   const ans = await itf.question('Enter indexes to apply (comma-separated), or press Enter to skip: ')
