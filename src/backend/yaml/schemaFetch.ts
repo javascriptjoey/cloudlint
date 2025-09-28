@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { createWriteStream, mkdirSync, existsSync, writeFileSync } from 'node:fs'
+import { mkdirSync, existsSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import https from 'node:https'
 import zlib from 'node:zlib'
@@ -17,7 +17,7 @@ function fetchBuffer(url: string): Promise<Buffer> {
         let buf = Buffer.concat(chunks)
         const enc = (res.headers['content-encoding'] || '').toString().toLowerCase()
         if (enc.includes('gzip')) {
-          try { buf = zlib.gunzipSync(buf) } catch {}
+try { buf = zlib.gunzipSync(buf) } catch { console.warn('gzip decompression failed, using raw buffer') }
         }
         resolveP(buf)
       })
@@ -26,11 +26,11 @@ function fetchBuffer(url: string): Promise<Buffer> {
   })
 }
 
-async function downloadJson(url: string): Promise<any> {
+async function downloadJson(url: string): Promise<unknown> {
   const buf = await fetchBuffer(url)
   // try as text JSON; if gzipped JSON, we already unzipped
   const txt = buf.toString('utf8')
-  return JSON.parse(txt)
+  return JSON.parse(txt) as unknown
 }
 
 function ensureDir(p: string) {
