@@ -89,6 +89,42 @@ describe('YAML validation', () => {
     expect(res.messages.some(m => m.source === 'parser' && m.severity === 'error')).toBe(true)
   })
 
+  it('aggregates providerSummary counts from yamllint and cfn-lint', async () => {
+    const p = resolve(process.cwd(), 'tests/backend/yaml/fixtures/complex-cdk.yaml')
+    const content = readFileSync(p, 'utf8')
+    const res = await validateYaml(content, { filename: p, toolRunner: mockRunnerComplex })
+    expect(res.providerSummary).toBeDefined()
+    const counts = res.providerSummary!.counts
+    expect(counts['yamllint']?.warnings ?? 0).toBeGreaterThan(0)
+    expect(counts['cfn-lint']?.errors ?? 0).toBeGreaterThan(0)
+  })
+
+  it('exposes cfnSpecPath and azureSchemaPath in providerSummary.sources when present', async () => {
+    // Create temporary empty files to satisfy existsSync checks
+    const os = await import('node:os')
+    const fs = await import('node:fs')
+    const path = await import('node:path')
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'schemas-'))
+    const cfn = path.join(tmp, 'cfn.json')
+    const az = path.join(tmp, 'azure.json')
+    fs.writeFileSync(cfn, '{}', 'utf8')
+    fs.writeFileSync(az, '{}', 'utf8')
+    const prevCFN = process.env.CFN_SPEC_PATH
+    const prevAZ = process.env.AZURE_PIPELINES_SCHEMA_PATH
+    process.env.CFN_SPEC_PATH = cfn
+    process.env.AZURE_PIPELINES_SCHEMA_PATH = az
+    try {
+      const yaml = 'name: t\n'
+      const res = await validateYaml(yaml, { toolRunner: noopRunner })
+      expect(res.providerSummary?.sources?.cfnSpecPath).toBe(cfn)
+      expect(res.providerSummary?.sources?.azureSchemaPath).toBe(az)
+    } finally {
+      process.env.CFN_SPEC_PATH = prevCFN
+      process.env.AZURE_PIPELINES_SCHEMA_PATH = prevAZ
+      fs.rmSync(tmp, { recursive: true, force: true })
+    }
+  })
+
   it('validates complex CFN file, detects and reduces errors after auto-fix', async () => {
     const p = resolve(process.cwd(), 'tests/backend/yaml/fixtures/complex-cdk.yaml')
     const content = readFileSync(p, 'utf8')
