@@ -34,6 +34,12 @@ jobs:
     - name: Install dependencies
       run: npm ci --prefer-offline --no-audit
       
+    - name: Fetch latest schemas
+      run: |
+        npm run schemas:fetch
+        echo "CFN_SPEC_PATH=${{ github.workspace }}/schemas/cfn-spec.json" >> $GITHUB_ENV
+        echo "AZURE_PIPELINES_SCHEMA_PATH=${{ github.workspace }}/schemas/azure-pipelines.json" >> $GITHUB_ENV
+      
     - name: Run ESLint
       run: npm run lint
       continue-on-error: false

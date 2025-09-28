@@ -52,8 +52,15 @@ Security
 - See docs/secure-yaml.md for enforced limits (2 MiB, 15k lines), MIME/type checks, disallowed anchors/tags, and Docker sandboxing.
 
 Schema updates (keeping specs up to date)
-- AWS CFN: set CFN_SPEC_PATH to the official CloudFormation Resource Specification JSON. You can refresh in CI or via MCP.
-- Azure Pipelines: set AZURE_PIPELINES_SCHEMA_PATH to a local copy of https://json.schemastore.org/azure-pipelines.json. You may refresh this file in CI or via MCP/context provider and point the env var to it.
+- Script: npm run schemas:fetch
+  - Downloads latest Azure Pipelines schema to schemas/azure-pipelines.json
+  - Downloads latest AWS CloudFormation Resource Specification to schemas/cfn-spec.json
+- Use at runtime:
+  - Set CFN_SPEC_PATH=scripts/cfn-spec.json (or absolute path)
+  - Set AZURE_PIPELINES_SCHEMA_PATH=scripts/azure-pipelines.json
+- Override sources via env:
+  - CFN_SPEC_URL, AZURE_PIPELINES_SCHEMA_URL
+- CI suggestion: add a step to run schemas:fetch and export CFN_SPEC_PATH/AZURE_PIPELINES_SCHEMA_PATH into the environment for subsequent steps.
 - Optional: set PROVIDER=aws|azure to force provider selection during suggest.
 
 Troubleshooting

@@ -20,7 +20,8 @@
     "type-check:test": "tsc --noEmit --project tsconfig.test.json",
     "yaml:validate": "tsx src/backend/yaml/cli.ts validate",
     "yaml:fix": "tsx src/backend/yaml/cli.ts fix",
-    "yaml:suggest": "tsx src/backend/yaml/cli.ts suggest"
+    "yaml:suggest": "tsx src/backend/yaml/cli.ts suggest",
+    "schemas:fetch": "tsx src/backend/yaml/schemaFetch.ts fetch"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.16",
