@@ -43,16 +43,33 @@ async function doFix() {
 async function doSuggestInteractive() {
   const p = getFile()
   const content = readFileSync(p, 'utf8')
-  const { analyze, applySuggestions } = await import('./cfnSuggest')
+  const providerArgIdx = process.argv.indexOf('--provider')
+  const forcedProv = providerArgIdx !== -1 ? String(process.argv[providerArgIdx + 1] || '') as any : undefined
+  const forced = (process.env.PROVIDER as any) || forcedProv
+  const { detectProvider } = await import('./detect')
+  const prov = detectProvider(content, forced)
+
   const YAML = (await import('yaml')).default
   const doc = YAML.parse(content)
+
+  let analyze: any, applySuggestions: any
+  if (prov === 'aws') {
+    ({ analyze, applySuggestions } = await import('./cfnSuggest'))
+  } else if (prov === 'azure') {
+    ({ analyze, applySuggestions } = await import('./azureSuggest'))
+  } else {
+    console.log('Generic YAML detected: suggestion engine currently supports AWS CloudFormation and Azure Pipelines. No suggestions available for generic YAML.')
+    return
+  }
+
   const { suggestions } = analyze(doc)
   if (!suggestions.length) {
     console.log('No suggestions found')
     return
   }
+  console.log(`Provider: ${prov}`)
   console.log('Suggestions:')
-  suggestions.forEach((s, i) => console.log(`[${i}] ${s.kind.toUpperCase()} ${s.path} - ${s.message}`))
+  suggestions.forEach((s: any, i: number) => console.log(`[${i}] ${s.kind.toUpperCase()} ${s.path} - ${s.message}`))
   const rl = await import('node:readline/promises')
   const itf = rl.createInterface({ input: process.stdin, output: process.stdout })
   const ans = await itf.question('Enter indexes to apply (comma-separated), or press Enter to skip: ')
@@ -80,7 +97,7 @@ async function main() {
     console.log(JSON.stringify(res, null, 2))
     process.exit(res.ok ? 0 : 1)
   }
-  console.error('Usage: tsx src/backend/yaml/cli.ts <validate|fix|validate:dir>')
+  console.error('Usage: tsx src/backend/yaml/cli.ts <validate|fix|suggest|validate:dir>')
   process.exit(2)
 }
 

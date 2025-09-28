@@ -1,5 +1,5 @@
 import { parseWithTimeout } from './parseSafe'
-import { isLikelyCloudFormation } from './detect'
+import { isLikelyCloudFormation, isLikelyAzurePipelines } from './detect'
 import type { LintMessage, LintResult, ValidateOptions, ToolRunner } from './types'
 import { defaultToolRunner } from './toolRunner'
 import { preflightContentGuards, validateFileMeta } from './security'
@@ -100,6 +100,20 @@ const res = await runner.run('docker', ['run', '--rm', '--network=none', '-v', `
       }
     } catch {
       messages.push({ source: 'cfn-lint', message: 'cfn-lint not available; skipped', severity: 'info' })
+    }
+  }
+
+  // Azure Pipelines schema checks (internal), only if detected or forced
+  const runAzure = options.assumeAzurePipelines || isLikelyAzurePipelines(content)
+  if (runAzure) {
+    try {
+      const YAML = (await import('yaml')).default
+      const doc = YAML.parse(content)
+      const { analyze } = await import('./azureSuggest')
+      const { messages: azureMsgs } = analyze(doc)
+      messages.push(...azureMsgs)
+    } catch {
+      messages.push({ source: 'azure-schema', message: 'Azure analyzer not available; skipped', severity: 'info' })
     }
   }
 

@@ -5,6 +5,7 @@ This document describes setup and usage for YAML validation in this repo.
 Tools
 - yamllint (general YAML): prefer local pip install; Docker fallback (cytopia/yamllint)
 - cfn-lint (CloudFormation): prefer Docker ghcr.io/aws-cloudformation/cfn-lint:latest; pip fallback
+- Azure Pipelines (schema-based checks): built-in analyzer using Azure Pipelines schema (JSON Schema Store)
 - Spectral CLI (@stoplight/spectral-cli): npm devDependency
 
 MCP integration
@@ -29,6 +30,10 @@ Usage
     - $env:YAML_FILE = "path\\to\\file.yaml"; npm run yaml:validate
 - Auto-fix (Prettier + optional Spectral fix):
   - $env:YAML_FILE = "path\\to\\file.yaml"; npm run yaml:fix
+- Suggestions (interactive) for provider-aware fixes (AWS CFN, Azure Pipelines):
+  - $env:YAML_FILE = "path\\to\\file.yaml"; npm run yaml:suggest
+  - Auto-detects provider. Override with --provider aws|azure or env PROVIDER=aws|azure
+    - Example: tsx src/backend/yaml/cli.ts suggest --provider azure
 - Disable Docker-based cfn-lint temporarily:
   - $env:DISABLE_CFN_LINT = "1"; npm run yaml:validate
 
@@ -45,6 +50,11 @@ Examples
 Security
 - Parse timeout defaults to 5s; override via env YAML_PARSE_TIMEOUT_MS or CLI flag --parse-timeout-ms (max 10s).
 - See docs/secure-yaml.md for enforced limits (2 MiB, 15k lines), MIME/type checks, disallowed anchors/tags, and Docker sandboxing.
+
+Schema updates (keeping specs up to date)
+- AWS CFN: set CFN_SPEC_PATH to the official CloudFormation Resource Specification JSON. You can refresh in CI or via MCP.
+- Azure Pipelines: set AZURE_PIPELINES_SCHEMA_PATH to a local copy of https://json.schemastore.org/azure-pipelines.json. You may refresh this file in CI or via MCP/context provider and point the env var to it.
+- Optional: set PROVIDER=aws|azure to force provider selection during suggest.
 
 Troubleshooting
 - Docker not reachable:
