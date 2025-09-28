@@ -38,39 +38,66 @@ function ensureDir(p: string) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
 }
 
-async function main() {
-  const azureUrl = process.env.AZURE_PIPELINES_SCHEMA_URL || 'https://json.schemastore.org/azure-pipelines.json'
-  const cfnUrl = process.env.CFN_SPEC_URL || 'https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json'
+type Downloader = (url: string) => Promise<Buffer>
 
-  const argOutIdx = process.argv.findIndex((a) => a === '--out-dir')
-  const outDir = resolve(process.cwd(), argOutIdx > -1 && process.argv[argOutIdx + 1] ? process.argv[argOutIdx + 1] : (process.env.SCHEMAS_OUT_DIR || 'schemas'))
+export async function fetchSchemas(options: { outDir?: string; azureUrl?: string; cfnUrl?: string; retries?: number; downloader?: Downloader } = {}) {
+  const azureUrl = options.azureUrl || process.env.AZURE_PIPELINES_SCHEMA_URL || 'https://json.schemastore.org/azure-pipelines.json'
+  const cfnUrl = options.cfnUrl || process.env.CFN_SPEC_URL || 'https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json'
+
+  const retries = options.retries && Number.isFinite(options.retries) ? options.retries! : 3
+
+  const outDir = resolve(process.cwd(), options.outDir || (process.env.SCHEMAS_OUT_DIR || 'schemas'))
   const azureOut = resolve(outDir, 'azure-pipelines.json')
   const cfnOut = resolve(outDir, 'cfn-spec.json')
   ensureDir(azureOut)
 
   const summary: Record<string, string> = {}
 
+  const downloader: Downloader = options.downloader || fetchBuffer
+
   const tryN = async (fn: () => Promise<void>, label: string) => {
     let lastErr: unknown
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < retries; i++) {
       try { await fn(); return } catch (e) { lastErr = e; await new Promise(r=>setTimeout(r, 500*(i+1))) }
     }
     console.error(`Failed after retries: ${label}`, lastErr)
   }
 
+  const decodeJson = (b: Buffer) => {
+    // If buffer is gzipped, gunzip; otherwise treat as utf8 JSON
+    try {
+      // gzip magic 0x1f8b
+      if (b.length > 2 && b[0] === 0x1f && b[1] === 0x8b) {
+        const unz = zlib.gunzipSync(b)
+        return JSON.parse(unz.toString('utf8'))
+      }
+      return JSON.parse(b.toString('utf8'))
+    } catch (e) {
+      throw e
+    }
+  }
+
   await tryN(async () => {
-    const azure = await downloadJson(azureUrl)
+    const buf = await downloader(azureUrl)
+    const azure = decodeJson(buf)
     writeFileSync(azureOut, JSON.stringify(azure, null, 2), 'utf8')
     summary.azure = azureOut
   }, 'azure')
 
   await tryN(async () => {
-    const cfn = await downloadJson(cfnUrl)
+    const buf = await downloader(cfnUrl)
+    const cfn = decodeJson(buf)
     writeFileSync(cfnOut, JSON.stringify(cfn, null, 2), 'utf8')
     summary.cfn = cfnOut
   }, 'cfn')
 
-  // Helpful export lines for CI: write to a summary file
+  return summary
+}
+
+async function main() {
+  const argOutIdx = process.argv.findIndex((a) => a === '--out-dir')
+  const outDir = argOutIdx > -1 && process.argv[argOutIdx + 1] ? process.argv[argOutIdx + 1] : undefined
+  const summary = await fetchSchemas({ outDir })
   console.log(JSON.stringify({ ok: true, ...summary }, null, 2))
 }
 
