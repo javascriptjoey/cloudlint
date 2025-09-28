@@ -2,6 +2,7 @@ import YAML from 'yaml'
 import { isLikelyCloudFormation } from './detect'
 import type { LintMessage, LintResult, ValidateOptions, ToolRunner } from './types'
 import { defaultToolRunner } from './toolRunner'
+import { preflightContentGuards, validateFileMeta } from './security'
 
 function pushParserError(e: unknown, messages: LintMessage[]) {
   const msg = e instanceof Error ? e.message : String(e)
@@ -11,9 +12,16 @@ function pushParserError(e: unknown, messages: LintMessage[]) {
 export async function validateYaml(content: string, options: ValidateOptions = {}): Promise<LintResult> {
   const messages: LintMessage[] = []
 
-  // Basic parse validation first
+  // Security preflight checks (size, lines, anchors/tags, extension/mime)
+  const metaIssues = [
+    ...validateFileMeta(options.filename, options.mimeType),
+    ...preflightContentGuards(content, options.filename),
+  ]
+  if (metaIssues.length) return { ok: false, messages: metaIssues }
+
+  // Basic parse validation with safe options
   try {
-    YAML.parse(content)
+    YAML.parse(content, { version: '1.2', schema: 'core', uniqueKeys: true })
   } catch (e) {
     pushParserError(e, messages)
     return { ok: false, messages }
@@ -63,7 +71,7 @@ export async function validateYaml(content: string, options: ValidateOptions = {
       if (!options.filename) {
         messages.push({ source: 'cfn-lint', message: 'CFN detection true but no filename provided; cfn-lint requires a file path. Skipped.', severity: 'info' })
       } else {
-        const res = await runner.run('docker', ['run', '--rm', '-v', `${process.cwd()}:${process.cwd()}`, '-w', process.cwd(), 'ghcr.io/aws-cloudformation/cfn-lint:latest', 'cfn-lint', '-f', 'json', options.filename])
+const res = await runner.run('docker', ['run', '--rm', '--network=none', '-v', `${process.cwd()}:${process.cwd()}:ro`, '-w', process.cwd(), 'giammbo/cfn-lint:latest', 'cfn-lint', '-f', 'json', options.filename])
         if (res.code !== 0 && res.stdout) {
           try {
             type CFNFinding = {

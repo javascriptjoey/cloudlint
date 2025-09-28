@@ -42,6 +42,9 @@ Examples
   - $env:YAML_FILE = "tests\\backend\\yaml\\fixtures\\complex-general.yaml"; npm run yaml:validate
   - $env:YAML_FILE = "tests\\backend\\yaml\\fixtures\\complex-general.yaml"; npm run yaml:fix
 
+Security
+- See docs/secure-yaml.md for enforced limits (2 MiB, 15k lines), MIME/type checks, disallowed anchors/tags, and Docker sandboxing.
+
 Troubleshooting
 - Docker not reachable:
   - Ensure Docker Desktop is running; re-run `docker --version` and `docker info`.
