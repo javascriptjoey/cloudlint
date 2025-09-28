@@ -1,6 +1,6 @@
 import { parseWithTimeout } from './parseSafe'
 import { isLikelyCloudFormation, isLikelyAzurePipelines, detectProvider } from './detect'
-import type { LintMessage, LintResult, ValidateOptions, ToolRunner, ProviderSummary, LintSource } from './types'
+import type { LintMessage, LintResult, ValidateOptions, ToolRunner, ProviderSummary } from './types'
 import { defaultToolRunner } from './toolRunner'
 import { preflightContentGuards, validateFileMeta } from './security'
 import fs from 'node:fs'
@@ -165,7 +165,7 @@ const res = await runner.run('docker', ['run', '--rm', '--network=none', '-v', `
       spectralRulesetPath,
       cfnLintDockerImage: runCfn ? cfnDockerImage : undefined,
     },
-    counts: counts as any,
+    counts: counts as unknown as ProviderSummary['counts'],
   }
 
   const ok = messages.every((m) => m.severity !== 'error')
