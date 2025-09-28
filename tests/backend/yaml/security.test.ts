@@ -17,7 +17,7 @@ describe('Security guards', () => {
     const resA = await validateYaml(withAnchor)
     expect(resA.ok).toBe(false)
 
-    const withTag = '!!js/function \"() => 1\"\n'
+const withTag = '!!js/function "() => 1"\n'
     const resT = await validateYaml(withTag)
     expect(resT.ok).toBe(false)
   })

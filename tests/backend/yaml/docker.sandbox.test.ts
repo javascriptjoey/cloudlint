@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { validateYaml } from '@/backend/yaml'
+import type { ToolRunner } from '@/backend/yaml'
 
 function capRunner() {
   const calls: string[] = []
@@ -18,7 +19,7 @@ describe('Docker sandboxing', () => {
   it('uses read-only bind and no network for cfn-lint', async () => {
     const runner = capRunner()
     const content = 'AWSTemplateFormatVersion: "2010-09-09"\nResources: {}\n'
-    await validateYaml(content, { filename: 'tests/backend/yaml/fixtures/complex-cdk.yaml', toolRunner: runner as any })
+await validateYaml(content, { filename: 'tests/backend/yaml/fixtures/complex-cdk.yaml', toolRunner: runner as unknown as ToolRunner })
     const joined = runner.calls.join('\n')
     expect(joined).toMatch(/--network=none/)
     expect(joined).toMatch(/:ro(\s|$)/)

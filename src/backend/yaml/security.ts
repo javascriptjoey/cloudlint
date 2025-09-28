@@ -11,7 +11,15 @@ const YAML_MIME_WHITELIST = new Set([
 ])
 
 export function sanitizeSnippet(input: string, max = 200): string {
-  return input.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '�').slice(0, max)
+  // Avoid control-char regex to satisfy no-control-regex: filter by code points
+  let out = ''
+  for (const ch of input) {
+    const code = ch.charCodeAt(0)
+    const printable = (code >= 0x20 && code <= 0x7e) || code === 0x09 || code === 0x0a || code === 0x0d
+    out += printable ? ch : '�'
+    if (out.length >= max) break
+  }
+  return out
 }
 
 export function validateFileMeta(filename?: string, mimeType?: string): LintMessage[] {
@@ -76,7 +84,7 @@ export function preflightContentGuards(content: string, filename?: string): Lint
     })
   }
   // Forbid explicit custom tags starting with '!' (e.g., !!js/function)
-  if (/^[\s\-]*!(?:!|<|[A-Za-z])/m.test(content)) {
+if (/^[\s-]*!(?:!|<|[A-Za-z])/m.test(content)) {
     messages.push({
       source: 'parser',
       severity: 'error',
