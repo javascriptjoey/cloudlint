@@ -6,7 +6,7 @@ export type Suggestion = {
   path: string // YAML path such as Resources.MyRes.Properties
   message: string
   kind: 'add' | 'rename' | 'type'
-  fix?: (doc: any) => void // applies in-memory fix to the parsed YAML doc
+  fix?: (doc: unknown) => void // applies in-memory fix to the parsed YAML doc
 }
 
 function levenshtein(a: string, b: string): number {
@@ -21,13 +21,13 @@ function levenshtein(a: string, b: string): number {
   return m[a.length][b.length]
 }
 
-function isPrimitiveOk(val: any, t?: string): boolean {
+function isPrimitiveOk(val: unknown, t?: string): boolean {
   if (!t) return true
   switch (t) {
     case 'String': return typeof val === 'string'
     case 'Integer':
     case 'Long':
-      return Number.isInteger(val)
+      return Number.isInteger(val as number)
     case 'Double':
       return typeof val === 'number'
     case 'Boolean': return typeof val === 'boolean'
@@ -35,17 +35,21 @@ function isPrimitiveOk(val: any, t?: string): boolean {
   }
 }
 
-export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMessage[] } {
+type CFNResourceNode = { Type?: string; Properties?: Record<string, unknown> } & Record<string, unknown>
+type CFNRoot = { Resources: Record<string, CFNResourceNode> }
+
+export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: LintMessage[] } {
   const spec = loadSpec()
   const suggestions: Suggestion[] = []
   const messages: LintMessage[] = []
 
-  const res = doc?.Resources
+  const res = (doc as { Resources?: Record<string, unknown> })?.Resources
   if (!res || typeof res !== 'object') return { suggestions, messages }
 
-  for (const [logicalId, resDef] of Object.entries<any>(res)) {
+  for (const [logicalId, resNode] of Object.entries(res as Record<string, unknown>)) {
+    const resDef = resNode as CFNResourceNode
     const type = resDef?.Type
-    const props = resDef?.Properties ?? {}
+    const props = (resDef?.Properties ?? {}) as Record<string, unknown>
     if (!type || typeof type !== 'string') {
       suggestions.push({
         path: `Resources.${logicalId}.Type`,
@@ -71,7 +75,11 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
           path: `Resources.${logicalId}.Properties.${pName}`,
           message: `Add required property ${pName}`,
           kind: 'add',
-          fix: (root) => { root.Resources[logicalId].Properties = { ...root.Resources[logicalId].Properties, [pName]: null } },
+          fix: (root: unknown) => {
+            const r = root as CFNRoot
+            const orig = (r.Resources[logicalId].Properties ?? {}) as Record<string, unknown>
+            r.Resources[logicalId].Properties = { ...orig, [pName]: null }
+          },
         })
       }
     }
@@ -85,10 +93,13 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
             path: `Resources.${logicalId}.Properties.${pName}`,
             message: `Unknown property ${pName}. Did you mean ${guess}?`,
             kind: 'rename',
-            fix: (root) => {
-              const val = root.Resources[logicalId].Properties[pName]
-              delete root.Resources[logicalId].Properties[pName]
-              root.Resources[logicalId].Properties[guess] = val
+            fix: (root: unknown) => {
+              const r = root as CFNRoot
+              const propsObj = (r.Resources[logicalId].Properties ?? {}) as Record<string, unknown>
+              const val = propsObj[pName]
+              delete propsObj[pName]
+              propsObj[guess] = val
+              r.Resources[logicalId].Properties = propsObj
             },
           })
         } else {
@@ -96,8 +107,8 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
         }
       } else {
         // Primitive type checks (best-effort)
-        const s = propSpec[pName]
-        const v = props[pName]
+        const s = (propSpec as Record<string, { PrimitiveType?: string }>)[pName]
+        const v = (props as Record<string, unknown>)[pName]
         if (s.PrimitiveType && !isPrimitiveOk(v, s.PrimitiveType)) {
           suggestions.push({
             path: `Resources.${logicalId}.Properties.${pName}`,

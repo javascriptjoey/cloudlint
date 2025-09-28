@@ -1,11 +1,12 @@
 import YAML from 'yaml'
 import type { LintMessage } from './types'
 import { loadAzureSchema } from './azureSpec'
+
 export type Suggestion = {
   path: string
   message: string
   kind: 'add' | 'rename' | 'type'
-  fix?: (doc: any) => void
+  fix?: (doc: unknown) => void
 }
 
 function levenshtein(a: string, b: string): number {
@@ -27,10 +28,14 @@ function bestGuess(target: string, candidates: string[]): string | undefined {
     .sort((a,b)=>a[1]-b[1])[0]?.[0]
 }
 
-function isArray(x: any): x is any[] { return Array.isArray(x) }
-function isObject(x: any): x is Record<string, any> { return x && typeof x === 'object' && !Array.isArray(x) }
+function isArray(x: unknown): x is unknown[] { return Array.isArray(x) }
+function isObject(x: unknown): x is Record<string, unknown> { return !!x && typeof x === 'object' && !Array.isArray(x) }
 
-export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMessage[] } {
+type AzureStep = Record<string, unknown>
+type AzureJob = { steps?: AzureStep[] } & Record<string, unknown>
+type AzureDoc = { steps?: AzureStep[]; jobs?: AzureJob[] } & Record<string, unknown>
+
+export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: LintMessage[] } {
   const schema = loadAzureSchema()
   const suggestions: Suggestion[] = []
   const messages: LintMessage[] = []
@@ -38,7 +43,7 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
   if (!doc || typeof doc !== 'object') return { suggestions, messages }
 
   // Unknown top-level keys (warn) + rename suggestions
-  for (const k of Object.keys(doc)) {
+  for (const k of Object.keys(doc as Record<string, unknown>)) {
     if (!schema.allowedRootKeys.includes(k)) {
       const guess = bestGuess(k, schema.allowedRootKeys)
       if (guess) {
@@ -46,7 +51,12 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
           path: k,
           message: `Unknown root key ${k}. Did you mean ${guess}?`,
           kind: 'rename',
-          fix: (root: any) => { const v = root[k]; delete root[k]; root[guess] = v },
+          fix: (root: unknown) => {
+            const obj = root as Record<string, unknown>
+            const v = obj[k as keyof typeof obj]
+            delete obj[k as keyof typeof obj]
+            ;(obj as Record<string, unknown>)[guess] = v
+          },
         })
         messages.push({ source: 'azure-schema', severity: 'warning', message: `Unknown root key ${k} (suggest: ${guess})`, path: k })
       } else {
@@ -56,8 +66,8 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
   }
 
   // Validate top-level steps/jobs if present
-  const steps = doc.steps
-  const jobs = doc.jobs
+  const steps = (doc as AzureDoc).steps
+  const jobs = (doc as AzureDoc).jobs
 
   if (steps !== undefined && !isArray(steps)) {
     suggestions.push({ path: 'steps', message: 'steps should be an array', kind: 'type' })
@@ -68,7 +78,7 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
     messages.push({ source: 'azure-schema', severity: 'warning', message: 'jobs should be an array', path: 'jobs' })
   }
 
-  const checkStepArray = (arr: any[], ptr: string) => {
+  const checkStepArray = (arr: AzureStep[], ptr: string) => {
     for (let i = 0; i < arr.length; i++) {
       const step = arr[i]
       if (!isObject(step)) {
@@ -92,11 +102,22 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
               path: `${ptr}[${i}].${k}`,
               message: `Unknown step key ${k}. Did you mean ${guess}?`,
               kind: 'rename',
-              fix: (root: any) => {
-                const node = ptr.split('.').reduce((acc:any, seg) => acc[seg], root)
-                const val = node[i][k]
-                delete node[i][k]
-                node[i][guess] = val
+              fix: (root: unknown) => {
+                const r = root as AzureDoc
+                if (ptr === 'steps' && Array.isArray(r.steps)) {
+                  const val = (r.steps[i] as Record<string, unknown>)[k]
+                  delete (r.steps[i] as Record<string, unknown>)[k]
+                  ;(r.steps[i] as Record<string, unknown>)[guess] = val
+                } else {
+                  const m = ptr.match(/^jobs\[(\d+)\]\.steps$/)
+                  if (m && r.jobs && r.jobs[Number(m[1])]?.steps) {
+                    const j = Number(m[1])
+                    const stepObj = (r.jobs[j].steps as AzureStep[])[i] as Record<string, unknown>
+                    const val = stepObj[k]
+                    delete stepObj[k]
+                    stepObj[guess] = val
+                  }
+                }
               },
             })
             messages.push({ source: 'azure-schema', severity: 'warning', message: `Unknown step key ${k} (suggest: ${guess})`, path: `${ptr}[${i}].${k}` })
@@ -109,7 +130,7 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
       } else {
         // Type checks for common step kinds
         const k = present[0]
-        const v = step[k]
+        const v = (step as Record<string, unknown>)[k]
         if ((k === 'script' || k === 'bash' || k === 'powershell' || k === 'pwsh') && typeof v !== 'string') {
           suggestions.push({ path: `${ptr}[${i}].${k}`, message: `${k} should be a string`, kind: 'type' })
           messages.push({ source: 'azure-schema', severity: 'warning', message: `${k} should be a string`, path: `${ptr}[${i}].${k}` })
@@ -120,7 +141,8 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
             messages.push({ source: 'azure-schema', severity: 'warning', message: 'task should be a string identifier like AzureCLI@2', path: `${ptr}[${i}].task` })
           }
           // Optional: verify inputs is object if present
-          if ('inputs' in step && !isObject(step.inputs)) {
+          const stepObj = step as Record<string, unknown>
+          if ('inputs' in stepObj && !isObject(stepObj.inputs)) {
             suggestions.push({ path: `${ptr}[${i}].inputs`, message: 'inputs should be an object', kind: 'type' })
             messages.push({ source: 'azure-schema', severity: 'warning', message: 'inputs should be an object', path: `${ptr}[${i}].inputs` })
           }
@@ -129,25 +151,29 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
     }
   }
 
-  if (isArray(steps)) checkStepArray(steps, 'steps')
+  if (isArray(steps)) checkStepArray(steps as AzureStep[], 'steps')
 
   if (isArray(jobs)) {
-    for (let j = 0; j < jobs.length; j++) {
-      const job = jobs[j]
+    for (let j = 0; j < (jobs as AzureJob[]).length; j++) {
+      const job = (jobs as AzureJob[])[j]
       if (!isObject(job)) {
         suggestions.push({ path: `jobs[${j}]`, message: 'job should be an object', kind: 'type' })
         continue
       }
       // If job has steps, validate them
       if (isArray(job.steps)) {
-        checkStepArray(job.steps, `jobs[${j}].steps`)
+        checkStepArray(job.steps as AzureStep[], `jobs[${j}].steps`)
       } else if (job.steps !== undefined && !isArray(job.steps)) {
         suggestions.push({ path: `jobs[${j}].steps`, message: 'steps should be an array', kind: 'type' })
       }
       // Suggest adding steps if missing in common job forms
       if (!Array.isArray(job.steps)) {
-        suggestions.push({ path: `jobs[${j}].steps`, message: 'Add steps array to job', kind: 'add', fix: (root: any) => {
-          root.jobs[j].steps = []
+        suggestions.push({ path: `jobs[${j}].steps`, message: 'Add steps array to job', kind: 'add', fix: (root: unknown) => {
+          const r = root as AzureDoc
+          if (Array.isArray(r.jobs)) {
+            if (!r.jobs[j]) r.jobs[j] = {} as AzureJob
+            r.jobs[j].steps = []
+          }
         } })
         messages.push({ source: 'azure-schema', severity: 'warning', message: 'Job missing steps array', path: `jobs[${j}].steps` })
       }
@@ -159,6 +185,11 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
 
 export function applySuggestions(yamlContent: string, selected: number[]): { content: string } {
   const doc = YAML.parse(yamlContent)
+  const { suggestions } = analyze(doc)
+  selected.forEach((idx) => suggestions[idx]?.fix?.(doc))
+  const newYaml = YAML.stringify(doc)
+  return { content: newYaml }
+}
   const { suggestions } = analyze(doc)
   selected.forEach((idx) => suggestions[idx]?.fix?.(doc))
   const newYaml = YAML.stringify(doc)
