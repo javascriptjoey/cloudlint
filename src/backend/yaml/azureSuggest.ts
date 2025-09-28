@@ -190,8 +190,3 @@ export function applySuggestions(yamlContent: string, selected: number[]): { con
   const newYaml = YAML.stringify(doc)
   return { content: newYaml }
 }
-  const { suggestions } = analyze(doc)
-  selected.forEach((idx) => suggestions[idx]?.fix?.(doc))
-  const newYaml = YAML.stringify(doc)
-  return { content: newYaml }
-}
