@@ -29,4 +29,25 @@ describe('Azure suggestions', () => {
     const addIdx = suggestions.findIndex((s) => s.kind === 'add' && String(s.path).includes('jobs[0].steps'))
     expect(addIdx).toBeGreaterThanOrEqual(0)
   })
+
+  it('validates stages structure and nested steps', () => {
+    const yaml = `stages:\n  - stage: Build\n    jobs:\n      - job: build\n        steps:\n          - scirpt: echo hi\n`
+    const doc = YAML.parse(yaml)
+    const { suggestions } = analyze(doc)
+    // Should suggest rename for scirpt within nested stage/job/steps
+    const hasRename = suggestions.some(s => s.kind === 'rename' && String(s.path).includes('stages[0].jobs[0].steps[0].scirpt'))
+    expect(hasRename).toBe(true)
+  })
+
+  it('types checks task.inputs as object within nested jobs', () => {
+    const yaml = `stages:\n  - stage: Build\n    jobs:\n      - job: build\n        steps:\n          - task: AzureCLI@2\n            inputs: 'not-an-object'\n`
+    const { suggestions } = analyze(YAML.parse(yaml))
+    expect(suggestions.some(s => s.kind === 'type' && String(s.path).includes('stages[0].jobs[0].steps[0].inputs'))).toBe(true)
+  })
+
+  it('types checks stages to be an array', () => {
+    const yaml = `stages: {}`
+    const { suggestions } = analyze(YAML.parse(yaml))
+    expect(suggestions.some(s => s.kind === 'type' && s.path === 'stages')).toBe(true)
+  })
 })

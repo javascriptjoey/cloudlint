@@ -33,7 +33,8 @@ function isObject(x: unknown): x is Record<string, unknown> { return !!x && type
 
 type AzureStep = Record<string, unknown>
 type AzureJob = { steps?: AzureStep[] } & Record<string, unknown>
-type AzureDoc = { steps?: AzureStep[]; jobs?: AzureJob[] } & Record<string, unknown>
+type AzureStage = { jobs?: AzureJob[] } & Record<string, unknown>
+type AzureDoc = { steps?: AzureStep[]; jobs?: AzureJob[]; stages?: AzureStage[] } & Record<string, unknown>
 
 export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: LintMessage[] } {
   const schema = loadAzureSchema()
@@ -68,6 +69,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
   // Validate top-level steps/jobs if present
   const steps = (doc as AzureDoc).steps
   const jobs = (doc as AzureDoc).jobs
+  const stages = (doc as AzureDoc).stages
 
   if (steps !== undefined && !isArray(steps)) {
     suggestions.push({ path: 'steps', message: 'steps should be an array', kind: 'type' })
@@ -76,6 +78,10 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
   if (jobs !== undefined && !isArray(jobs)) {
     suggestions.push({ path: 'jobs', message: 'jobs should be an array', kind: 'type' })
     messages.push({ source: 'azure-schema', severity: 'warning', message: 'jobs should be an array', path: 'jobs' })
+  }
+  if (stages !== undefined && !isArray(stages)) {
+    suggestions.push({ path: 'stages', message: 'stages should be an array', kind: 'type' })
+    messages.push({ source: 'azure-schema', severity: 'warning', message: 'stages should be an array', path: 'stages' })
   }
 
   const checkStepArray = (arr: AzureStep[], ptr: string) => {
@@ -153,29 +159,57 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
 
   if (isArray(steps)) checkStepArray(steps as AzureStep[], 'steps')
 
-  if (isArray(jobs)) {
-    for (let j = 0; j < (jobs as AzureJob[]).length; j++) {
-      const job = (jobs as AzureJob[])[j]
+  const checkJobArray = (arr: AzureJob[], ptr: string) => {
+    for (let j = 0; j < arr.length; j++) {
+      const job = arr[j]
       if (!isObject(job)) {
-        suggestions.push({ path: `jobs[${j}]`, message: 'job should be an object', kind: 'type' })
+        suggestions.push({ path: `${ptr}[${j}]`, message: 'job should be an object', kind: 'type' })
         continue
       }
-      // If job has steps, validate them
       if (isArray(job.steps)) {
-        checkStepArray(job.steps as AzureStep[], `jobs[${j}].steps`)
+        checkStepArray(job.steps as AzureStep[], `${ptr}[${j}].steps`)
       } else if (job.steps !== undefined && !isArray(job.steps)) {
-        suggestions.push({ path: `jobs[${j}].steps`, message: 'steps should be an array', kind: 'type' })
+        suggestions.push({ path: `${ptr}[${j}].steps`, message: 'steps should be an array', kind: 'type' })
+        messages.push({ source: 'azure-schema', severity: 'warning', message: 'steps should be an array', path: `${ptr}[${j}].steps` })
       }
-      // Suggest adding steps if missing in common job forms
       if (!Array.isArray(job.steps)) {
-        suggestions.push({ path: `jobs[${j}].steps`, message: 'Add steps array to job', kind: 'add', fix: (root: unknown) => {
+        suggestions.push({ path: `${ptr}[${j}].steps`, message: 'Add steps array to job', kind: 'add', fix: (root: unknown) => {
           const r = root as AzureDoc
-          if (Array.isArray(r.jobs)) {
-            if (!r.jobs[j]) r.jobs[j] = {} as AzureJob
-            r.jobs[j].steps = []
+          const target = ptr === 'jobs' ? r.jobs : (ptr.startsWith('stages[') ? (r.stages?.[Number(ptr.match(/^stages\[(\d+)\]\.jobs$/)?.[1] ?? -1)]?.jobs) : undefined)
+          if (Array.isArray(target)) {
+            if (!target[j]) target[j] = {} as AzureJob
+            target[j].steps = []
           }
         } })
-        messages.push({ source: 'azure-schema', severity: 'warning', message: 'Job missing steps array', path: `jobs[${j}].steps` })
+        messages.push({ source: 'azure-schema', severity: 'warning', message: 'Job missing steps array', path: `${ptr}[${j}].steps` })
+      }
+    }
+  }
+
+  if (isArray(jobs)) {
+    checkJobArray(jobs as AzureJob[], 'jobs')
+  }
+
+  if (isArray(stages)) {
+    for (let s = 0; s < (stages as AzureStage[]).length; s++) {
+      const stage = (stages as AzureStage[])[s]
+      if (!isObject(stage)) {
+        suggestions.push({ path: `stages[${s}]`, message: 'stage should be an object', kind: 'type' })
+        continue
+      }
+      if (stage.jobs === undefined) {
+        suggestions.push({ path: `stages[${s}].jobs`, message: 'Add jobs array to stage', kind: 'add', fix: (root: unknown) => {
+          const r = root as AzureDoc
+          if (!Array.isArray(r.stages)) return
+          if (!r.stages[s]) r.stages[s] = {} as AzureStage
+          r.stages[s].jobs = []
+        } })
+        messages.push({ source: 'azure-schema', severity: 'warning', message: 'Stage missing jobs array', path: `stages[${s}].jobs` })
+      } else if (!isArray(stage.jobs)) {
+        suggestions.push({ path: `stages[${s}].jobs`, message: 'jobs should be an array', kind: 'type' })
+        messages.push({ source: 'azure-schema', severity: 'warning', message: 'jobs should be an array', path: `stages[${s}].jobs` })
+      } else {
+        checkJobArray(stage.jobs as AzureJob[], `stages[${s}].jobs`)
       }
     }
   }
