@@ -72,6 +72,45 @@ export function preflightContentGuards(content: string, filename?: string): Lint
       path: filename,
     })
   }
+
+  // Reject likely-binary content (presence of NUL or high ratio of control chars)
+  const nulIdx = content.indexOf('\u0000')
+  let controlCount = 0
+  for (const ch of content) {
+    const code = ch.charCodeAt(0)
+    const printable = (code >= 0x20 && code <= 0x7e) || code === 0x09 || code === 0x0a || code === 0x0d
+    if (!printable) controlCount++
+  }
+  const controlRatio = content.length ? controlCount / content.length : 0
+  if (nulIdx !== -1 || controlRatio > 0.01) {
+    messages.push({
+      source: 'parser',
+      severity: 'error',
+      message: 'Binary or non-text content detected; only plain-text YAML is allowed',
+      kind: 'syntax',
+      suggestion: 'Provide a plain-text .yaml/.yml file',
+      path: filename,
+    })
+  }
+
+  // Reject JSON input (even though JSON is valid YAML) to enforce YAML-only policy
+  const trimmed = content.trim()
+  if ((trimmed.startsWith('{') || trimmed.startsWith('['))) {
+    try {
+      JSON.parse(trimmed)
+      messages.push({
+        source: 'parser',
+        severity: 'error',
+        message: 'JSON detected; only YAML is accepted',
+        kind: 'syntax',
+        suggestion: 'Convert JSON to YAML or provide a YAML file',
+        path: filename,
+      })
+    } catch {
+      // ignore if not strictly JSON
+    }
+  }
+
   // Block anchors & aliases (billion laughs). Simple heuristic; cfn-lint also catches issues.
   if (/(^|\s)&[A-Za-z0-9_]+/m.test(content) || /(^|\s)\*[A-Za-z0-9_]+/m.test(content)) {
     messages.push({
@@ -84,7 +123,7 @@ export function preflightContentGuards(content: string, filename?: string): Lint
     })
   }
   // Forbid explicit custom tags starting with '!' (e.g., !!js/function)
-if (/^[\s-]*!(?:!|<|[A-Za-z])/m.test(content)) {
+  if (/^[\s-]*!(?:!|<|[A-Za-z])/m.test(content)) {
     messages.push({
       source: 'parser',
       severity: 'error',
