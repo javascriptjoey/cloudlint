@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { analyze, applySuggestions } from '@/backend/yaml/cfnSuggest'
 import YAML from 'yaml'
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs'

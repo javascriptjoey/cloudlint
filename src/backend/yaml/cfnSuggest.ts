@@ -58,7 +58,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
       })
       continue
     }
-    let rt = spec.ResourceTypes[type]
+    const rt = spec.ResourceTypes[type]
     if (!rt) {
       const types = Object.keys(spec.ResourceTypes)
       const guess = types
@@ -70,7 +70,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
           message: `Unknown resource Type ${type}. Did you mean ${guess}?`,
           kind: 'rename',
           fix: (root: unknown) => {
-            (root as any).Resources[logicalId].Type = guess
+            (root as CFNRoot).Resources[logicalId].Type = guess
           },
         })
       }
