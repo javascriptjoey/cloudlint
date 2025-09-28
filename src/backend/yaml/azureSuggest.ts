@@ -1,9 +1,12 @@
 import YAML from 'yaml'
 import type { LintMessage } from './types'
 import { loadAzureSchema } from './azureSpec'
-import type { Suggestion as CFNSuggestion } from './cfnSuggest'
-
-export type Suggestion = CFNSuggestion
+export type Suggestion = {
+  path: string
+  message: string
+  kind: 'add' | 'rename' | 'type'
+  fix?: (doc: any) => void
+}
 
 function levenshtein(a: string, b: string): number {
   const m = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)])
@@ -43,7 +46,7 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
           path: k,
           message: `Unknown root key ${k}. Did you mean ${guess}?`,
           kind: 'rename',
-          fix: (root) => { const v = root[k]; delete root[k]; root[guess] = v },
+          fix: (root: any) => { const v = root[k]; delete root[k]; root[guess] = v },
         })
         messages.push({ source: 'azure-schema', severity: 'warning', message: `Unknown root key ${k} (suggest: ${guess})`, path: k })
       } else {
@@ -89,7 +92,7 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
               path: `${ptr}[${i}].${k}`,
               message: `Unknown step key ${k}. Did you mean ${guess}?`,
               kind: 'rename',
-              fix: (root) => {
+              fix: (root: any) => {
                 const node = ptr.split('.').reduce((acc:any, seg) => acc[seg], root)
                 const val = node[i][k]
                 delete node[i][k]
@@ -143,7 +146,7 @@ export function analyze(doc: any): { suggestions: Suggestion[]; messages: LintMe
       }
       // Suggest adding steps if missing in common job forms
       if (!Array.isArray(job.steps)) {
-        suggestions.push({ path: `jobs[${j}].steps`, message: 'Add steps array to job', kind: 'add', fix: (root) => {
+        suggestions.push({ path: `jobs[${j}].steps`, message: 'Add steps array to job', kind: 'add', fix: (root: any) => {
           root.jobs[j].steps = []
         } })
         messages.push({ source: 'azure-schema', severity: 'warning', message: 'Job missing steps array', path: `jobs[${j}].steps` })
