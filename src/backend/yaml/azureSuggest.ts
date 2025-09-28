@@ -130,7 +130,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
       } else {
         // Type checks for common step kinds
         const k = present[0]
-        const v = step[k]
+        const v = (step as Record<string, unknown>)[k]
         if ((k === 'script' || k === 'bash' || k === 'powershell' || k === 'pwsh') && typeof v !== 'string') {
           suggestions.push({ path: `${ptr}[${i}].${k}`, message: `${k} should be a string`, kind: 'type' })
           messages.push({ source: 'azure-schema', severity: 'warning', message: `${k} should be a string`, path: `${ptr}[${i}].${k}` })
@@ -141,7 +141,8 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
             messages.push({ source: 'azure-schema', severity: 'warning', message: 'task should be a string identifier like AzureCLI@2', path: `${ptr}[${i}].task` })
           }
           // Optional: verify inputs is object if present
-          if ('inputs' in step && !isObject(step.inputs)) {
+          const stepObj = step as Record<string, unknown>
+          if ('inputs' in stepObj && !isObject(stepObj.inputs)) {
             suggestions.push({ path: `${ptr}[${i}].inputs`, message: 'inputs should be an object', kind: 'type' })
             messages.push({ source: 'azure-schema', severity: 'warning', message: 'inputs should be an object', path: `${ptr}[${i}].inputs` })
           }
@@ -150,18 +151,18 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
     }
   }
 
-  if (isArray(steps)) checkStepArray(steps, 'steps')
+  if (isArray(steps)) checkStepArray(steps as AzureStep[], 'steps')
 
   if (isArray(jobs)) {
-    for (let j = 0; j < jobs.length; j++) {
-      const job = jobs[j]
+    for (let j = 0; j < (jobs as AzureJob[]).length; j++) {
+      const job = (jobs as AzureJob[])[j]
       if (!isObject(job)) {
         suggestions.push({ path: `jobs[${j}]`, message: 'job should be an object', kind: 'type' })
         continue
       }
       // If job has steps, validate them
       if (isArray(job.steps)) {
-        checkStepArray(job.steps, `jobs[${j}].steps`)
+        checkStepArray(job.steps as AzureStep[], `jobs[${j}].steps`)
       } else if (job.steps !== undefined && !isArray(job.steps)) {
         suggestions.push({ path: `jobs[${j}].steps`, message: 'steps should be an array', kind: 'type' })
       }

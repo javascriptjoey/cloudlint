@@ -85,7 +85,6 @@ async function doSuggestInteractive() {
     console.log('No changes applied')
   }
 }
-
 async function main() {
   const cmd = process.argv[2]
   if (cmd === 'validate') return doValidate()
