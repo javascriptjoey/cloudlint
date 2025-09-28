@@ -58,8 +58,24 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
       })
       continue
     }
-    const rt = spec.ResourceTypes[type]
-    if (!rt) continue
+    let rt = spec.ResourceTypes[type]
+    if (!rt) {
+      const types = Object.keys(spec.ResourceTypes)
+      const guess = types
+        .map(t => [t, levenshtein(t.toLowerCase(), String(type).toLowerCase())] as const)
+        .sort((a,b)=>a[1]-b[1])[0]?.[0]
+      if (guess) {
+        suggestions.push({
+          path: `Resources.${logicalId}.Type`,
+          message: `Unknown resource Type ${type}. Did you mean ${guess}?`,
+          kind: 'rename',
+          fix: (root: unknown) => {
+            (root as any).Resources[logicalId].Type = guess
+          },
+        })
+      }
+      continue
+    }
     const allowed = new Set(['Type','Properties','Metadata','DependsOn','DeletionPolicy','UpdateReplacePolicy','Condition'])
     for (const k of Object.keys(resDef)) {
       if (!allowed.has(k)) {
@@ -106,13 +122,27 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
           messages.push({ source: 'cfn-lint', severity: 'warning', message: `Unknown property ${pName}`, path: `Resources.${logicalId}.Properties.${pName}` })
         }
       } else {
-        // Primitive type checks (best-effort)
-        const s = (propSpec as Record<string, { PrimitiveType?: string }>)[pName]
+        // Primitive and container type checks (best-effort)
+        const s = (propSpec as Record<string, { PrimitiveType?: string; Type?: string }>)[pName]
         const v = (props as Record<string, unknown>)[pName]
         if (s.PrimitiveType && !isPrimitiveOk(v, s.PrimitiveType)) {
           suggestions.push({
             path: `Resources.${logicalId}.Properties.${pName}`,
             message: `Property ${pName} expects ${s.PrimitiveType}`,
+            kind: 'type',
+          })
+        }
+        if (s.Type === 'List' && !Array.isArray(v)) {
+          suggestions.push({
+            path: `Resources.${logicalId}.Properties.${pName}`,
+            message: `Property ${pName} expects a List (array)`,
+            kind: 'type',
+          })
+        }
+        if (s.Type === 'Map' && (v === null || typeof v !== 'object' || Array.isArray(v))) {
+          suggestions.push({
+            path: `Resources.${logicalId}.Properties.${pName}`,
+            message: `Property ${pName} expects a Map (object)`,
             kind: 'type',
           })
         }
