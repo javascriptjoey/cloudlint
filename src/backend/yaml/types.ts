@@ -1,4 +1,4 @@
-export type LintSource = 'yamllint' | 'cfn-lint' | 'spectral' | 'parser'
+export type LintSource = 'yamllint' | 'cfn-lint' | 'spectral' | 'parser' | 'azure-schema'
 
 export interface LintMessage {
   source: LintSource
@@ -21,6 +21,7 @@ export interface ValidateOptions {
   filename?: string
   mimeType?: string
   assumeCloudFormation?: boolean
+  assumeAzurePipelines?: boolean
   toolRunner?: ToolRunner
   spectralRulesetPath?: string
   parseTimeoutMs?: number

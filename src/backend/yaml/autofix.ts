@@ -22,6 +22,22 @@ export async function autoFixYaml(content: string, opts: AutoFixOptions = {}): P
     if (current !== before) fixesApplied.push('cfn-typo-fix')
   }
 
+  // CFN suggestions (safe non-semantic fixes like rename typos)
+  try {
+    const { analyze, applySuggestions } = await import('./cfnSuggest')
+    const parsed = await (async () => content)()
+    const doc = (await import('yaml')).default.parse(parsed)
+    const { suggestions } = analyze(doc)
+    const renameIdxs = suggestions.map((s, i) => [s.kind, i] as const).filter(([k]) => k === 'rename').map(([,i])=>i)
+    if (renameIdxs.length) {
+      const applied = applySuggestions(parsed, renameIdxs)
+      current = applied.content
+      fixesApplied.push('cfn-rename-typos')
+    }
+  } catch {
+    // ignore if analyze not available
+  }
+
   if (opts.spectralFix) {
     // Use spectral CLI via npx if available, feed content via stdin.
     const args = ['spectral', 'lint', '--stdin', '--fix']
