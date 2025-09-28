@@ -26,13 +26,6 @@ try { buf = zlib.gunzipSync(buf) } catch { console.warn('gzip decompression fail
   })
 }
 
-async function downloadJson(url: string): Promise<unknown> {
-  const buf = await fetchBuffer(url)
-  // try as text JSON; if gzipped JSON, we already unzipped
-  const txt = buf.toString('utf8')
-  return JSON.parse(txt) as unknown
-}
-
 function ensureDir(p: string) {
   const dir = dirname(p)
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
@@ -65,16 +58,11 @@ export async function fetchSchemas(options: { outDir?: string; azureUrl?: string
 
   const decodeJson = (b: Buffer) => {
     // If buffer is gzipped, gunzip; otherwise treat as utf8 JSON
-    try {
-      // gzip magic 0x1f8b
-      if (b.length > 2 && b[0] === 0x1f && b[1] === 0x8b) {
-        const unz = zlib.gunzipSync(b)
-        return JSON.parse(unz.toString('utf8'))
-      }
-      return JSON.parse(b.toString('utf8'))
-    } catch (e) {
-      throw e
+    if (b.length > 2 && b[0] === 0x1f && b[1] === 0x8b) {
+      const unz = zlib.gunzipSync(b)
+      return JSON.parse(unz.toString('utf8'))
     }
+    return JSON.parse(b.toString('utf8'))
   }
 
   await tryN(async () => {
