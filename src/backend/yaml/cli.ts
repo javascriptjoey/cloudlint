@@ -40,10 +40,38 @@ async function doFix() {
   console.log(JSON.stringify({ file: p, fixesApplied }, null, 2))
 }
 
+async function doSuggestInteractive() {
+  const p = getFile()
+  const content = readFileSync(p, 'utf8')
+  const { analyze, applySuggestions } = await import('./cfnSuggest')
+  const YAML = (await import('yaml')).default
+  const doc = YAML.parse(content)
+  const { suggestions } = analyze(doc)
+  if (!suggestions.length) {
+    console.log('No suggestions found')
+    return
+  }
+  console.log('Suggestions:')
+  suggestions.forEach((s, i) => console.log(`[${i}] ${s.kind.toUpperCase()} ${s.path} - ${s.message}`))
+  const rl = await import('node:readline/promises')
+  const itf = rl.createInterface({ input: process.stdin, output: process.stdout })
+  const ans = await itf.question('Enter indexes to apply (comma-separated), or press Enter to skip: ')
+  itf.close()
+  const selected = ans.trim() ? ans.split(',').map(s=>Number(s.trim())).filter(n=>Number.isFinite(n)) : []
+  if (selected.length) {
+    const { content: newContent } = applySuggestions(content, selected)
+    writeFileSync(p, newContent, 'utf8')
+    console.log('Applied changes to', p)
+  } else {
+    console.log('No changes applied')
+  }
+}
+
 async function main() {
   const cmd = process.argv[2]
   if (cmd === 'validate') return doValidate()
   if (cmd === 'fix') return doFix()
+  if (cmd === 'suggest') return doSuggestInteractive()
   if (cmd === 'validate:dir') {
     const dir = process.env.YAML_DIR || process.cwd()
     const { validateDirectory } = await import('./batch')
