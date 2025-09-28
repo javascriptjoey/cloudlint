@@ -55,6 +55,7 @@ Schema updates (keeping specs up to date)
 - Script: npm run schemas:fetch
   - Downloads latest Azure Pipelines schema to schemas/azure-pipelines.json
   - Downloads latest AWS CloudFormation Resource Specification to schemas/cfn-spec.json
+  - Options: SCHEMAS_OUT_DIR or --out-dir to change destination
 - Use at runtime:
   - Set CFN_SPEC_PATH=scripts/cfn-spec.json (or absolute path)
   - Set AZURE_PIPELINES_SCHEMA_PATH=scripts/azure-pipelines.json

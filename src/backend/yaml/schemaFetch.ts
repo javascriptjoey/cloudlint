@@ -42,28 +42,33 @@ async function main() {
   const azureUrl = process.env.AZURE_PIPELINES_SCHEMA_URL || 'https://json.schemastore.org/azure-pipelines.json'
   const cfnUrl = process.env.CFN_SPEC_URL || 'https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json'
 
-  const outDir = resolve(process.cwd(), 'schemas')
+  const argOutIdx = process.argv.findIndex((a) => a === '--out-dir')
+  const outDir = resolve(process.cwd(), argOutIdx > -1 && process.argv[argOutIdx + 1] ? process.argv[argOutIdx + 1] : (process.env.SCHEMAS_OUT_DIR || 'schemas'))
   const azureOut = resolve(outDir, 'azure-pipelines.json')
   const cfnOut = resolve(outDir, 'cfn-spec.json')
   ensureDir(azureOut)
 
   const summary: Record<string, string> = {}
 
-  try {
+  const tryN = async (fn: () => Promise<void>, label: string) => {
+    let lastErr: unknown
+    for (let i = 0; i < 3; i++) {
+      try { await fn(); return } catch (e) { lastErr = e; await new Promise(r=>setTimeout(r, 500*(i+1))) }
+    }
+    console.error(`Failed after retries: ${label}`, lastErr)
+  }
+
+  await tryN(async () => {
     const azure = await downloadJson(azureUrl)
     writeFileSync(azureOut, JSON.stringify(azure, null, 2), 'utf8')
     summary.azure = azureOut
-  } catch (e) {
-    console.error('Failed to download Azure Pipelines schema:', e)
-  }
+  }, 'azure')
 
-  try {
+  await tryN(async () => {
     const cfn = await downloadJson(cfnUrl)
     writeFileSync(cfnOut, JSON.stringify(cfn, null, 2), 'utf8')
     summary.cfn = cfnOut
-  } catch (e) {
-    console.error('Failed to download CFN spec:', e)
-  }
+  }, 'cfn')
 
   // Helpful export lines for CI: write to a summary file
   console.log(JSON.stringify({ ok: true, ...summary }, null, 2))
