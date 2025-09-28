@@ -19,11 +19,12 @@ export interface LintResult {
 
 export interface ValidateOptions {
   filename?: string
+  mimeType?: string
   assumeCloudFormation?: boolean
   toolRunner?: ToolRunner
   spectralRulesetPath?: string
+  parseTimeoutMs?: number
 }
-
 export interface AutoFixOptions {
   prettier?: boolean
   spectralFix?: boolean

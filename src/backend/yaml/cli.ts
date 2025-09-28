@@ -12,11 +12,22 @@ function getFile(): string {
   return resolve(process.cwd(), f)
 }
 
+function readParseTimeoutArg(): number | undefined {
+  const idx = process.argv.indexOf('--parse-timeout-ms')
+  if (idx !== -1 && process.argv[idx + 1]) {
+    const v = Number(process.argv[idx + 1])
+    if (Number.isFinite(v)) return v
+  }
+  const envV = Number(process.env.YAML_PARSE_TIMEOUT_MS ?? '')
+  if (Number.isFinite(envV)) return envV
+  return undefined
+}
+
 async function doValidate() {
   const p = getFile()
   const content = readFileSync(p, 'utf8')
   const disableCfn = !!process.env.DISABLE_CFN_LINT
-  const res = await validateYaml(content, { filename: disableCfn ? undefined : p })
+  const res = await validateYaml(content, { filename: disableCfn ? undefined : p, parseTimeoutMs: readParseTimeoutArg() })
   console.log(JSON.stringify(res, null, 2))
   process.exit(res.ok ? 0 : 1)
 }

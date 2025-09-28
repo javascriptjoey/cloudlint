@@ -12,6 +12,14 @@ export const defaultToolRunner: ToolRunner = {
 
       let stdout = ''
       let stderr = ''
+      let resolved = false
+
+      // If the command is not found (ENOENT), resolve gracefully with a non-zero code
+      child.on('error', (err) => {
+        if (resolved) return
+        resolved = true
+        resolve({ code: 127, stdout, stderr: (stderr ? stderr + '\n' : '') + String(err) })
+      })
 
       if (opts.input) {
         child.stdin.write(opts.input)
@@ -28,6 +36,8 @@ export const defaultToolRunner: ToolRunner = {
 
       child.on('close', (code) => {
         clearTimeout(timer)
+        if (resolved) return
+        resolved = true
         resolve({ code: code ?? 0, stdout, stderr })
       })
     })
