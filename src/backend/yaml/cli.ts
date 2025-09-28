@@ -43,6 +43,7 @@ async function doFix() {
 async function doSuggestInteractive() {
   const p = getFile()
   const content = readFileSync(p, 'utf8')
+
   const providerArgIdx = process.argv.indexOf('--provider')
   const forcedProv = providerArgIdx !== -1 ? String(process.argv[providerArgIdx + 1] || '') as any : undefined
   const forced = (process.env.PROVIDER as any) || forcedProv
