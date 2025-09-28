@@ -12,5 +12,7 @@ describe('Azure validation integration', () => {
     const res = await validateYaml(azureBad, { assumeAzurePipelines: true, toolRunner: { run: async () => ({ code: 0, stdout: '', stderr: '' }) } })
     // Should not be ok due to type/unknown issues promoted as warnings; ok=true if no errors
     expect(res.messages.some(m => m.source === 'azure-schema')).toBe(true)
+    expect(res.providerSummary).toBeDefined()
+    expect(['azure','aws','generic']).toContain(res.providerSummary?.provider)
   })
 })
