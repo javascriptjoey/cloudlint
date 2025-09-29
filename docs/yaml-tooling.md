@@ -38,6 +38,10 @@ Usage
   - $env:YAML_FILE = "path\\to\\file.yaml"; npm run yaml:suggest
   - Auto-detects provider. Override with --provider aws|azure or env PROVIDER=aws|azure
     - Example: tsx src/backend/yaml/cli.ts suggest --provider azure
+- Directory validate with caching + parallelism:
+  - $env:YAML_DIR = "."; $env:YAML_CONCURRENCY = "4"; tsx src/backend/yaml/cli.ts validate:dir
+  - In-memory cache keyed by file content + options for faster re-runs
+  - YAML_CONCURRENCY bounds parallel validations (default 4)
 - Disable Docker-based cfn-lint temporarily:
   - $env:DISABLE_CFN_LINT = "1"; npm run yaml:validate
 
