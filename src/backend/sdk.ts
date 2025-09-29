@@ -1,6 +1,8 @@
 import type { LintResult, ValidateOptions, LintMessage } from './yaml'
 import { validateYaml as coreValidate } from './yaml'
 import { detectProvider, type YamlProvider } from './yaml/detect'
+import { unifiedDiff } from './diff'
+import { schemaValidateYaml, type SchemaValidationResult } from './yaml/schemaValidate'
 
 export type SdkSuggestion = {
   path: string
@@ -41,6 +43,14 @@ export async function applySuggestions(content: string, indexes: number[], provi
     return applySuggestions(content, indexes)
   }
   return { content }
+}
+
+export function diffPreview(before: string, after: string, filename?: string): string {
+  return unifiedDiff(before, after, filename)
+}
+
+export function schemaValidate(yaml: string, schema: unknown): SchemaValidationResult {
+  return schemaValidateYaml(yaml, schema)
 }
 
 function mapSug(s: { path: string; message: string; kind: 'add'|'rename'|'type'; confidence?: number }): SdkSuggestion {
