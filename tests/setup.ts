@@ -60,5 +60,21 @@ afterEach(() => {
   document.documentElement.className = ''
 })
 
+// Suppress noisy YAML unresolved tag warnings (e.g., !Ref) during tests only.
+// This does not change runtime behavior; it only filters specific YAML warnings.
+const originalEmitWarning = process.emitWarning.bind(process)
+function isYamlTagWarning(w: unknown): boolean {
+  if (typeof w === 'string') return w.includes('YAMLWarning') || w.includes('TAG_RESOLVE_FAILED')
+  const name = (w as { name?: string })?.name
+  const code = (w as { code?: string })?.code
+  return name === 'YAMLWarning' || code === 'TAG_RESOLVE_FAILED'
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+;(process as any).emitWarning = ((warning: unknown, ...args: unknown[]) => {
+  if (isYamlTagWarning(warning)) return
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (originalEmitWarning as unknown as (...a: any[]) => void)(warning as any, ...(args as any[]))
+}) as unknown as typeof process.emitWarning
+
 // Export mocks for individual test use
 export { localStorageMock, matchMediaMock }
