@@ -23,6 +23,10 @@ Installation
   - docker pull ghcr.io/aws-cloudformation/cfn-lint:latest
 - Spectral:
   - Already installed as devDependency; run via `npx spectral ...`
+  - Included rulesets:
+    - rulesets/default.spectral.yaml (provider-agnostic)
+    - rulesets/aws.spectral.yaml (extends default)
+    - rulesets/azure.spectral.yaml (extends default)
 
 Usage
 - Validate a YAML file:

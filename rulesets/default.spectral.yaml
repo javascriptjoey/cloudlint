@@ -1,0 +1,19 @@
+extends: []
+rules:
+  default-root-object:
+    description: Document must be a YAML/JSON object at the root
+    message: Root document must be an object
+    severity: error
+    given: $
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+  no-scirpt-typo:
+    description: Flag common typo 'scirpt' (did you mean 'script'?)
+    message: Unknown key 'scirpt' (did you mean 'script'?)
+    severity: warn
+    given: $..scirpt
+    then:
+      function: falsy

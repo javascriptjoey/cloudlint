@@ -1,0 +1,33 @@
+extends:
+  - ./default.spectral.yaml
+rules:
+  azure-steps-array:
+    description: steps must be an array when present
+    message: steps should be an array
+    severity: warn
+    given: $.steps
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+  azure-jobs-array:
+    description: jobs must be an array when present
+    message: jobs should be an array
+    severity: warn
+    given: $.jobs
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+  azure-stages-array:
+    description: stages must be an array when present
+    message: stages should be an array
+    severity: warn
+    given: $.stages
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
