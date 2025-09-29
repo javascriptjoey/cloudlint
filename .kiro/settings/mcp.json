@@ -8,7 +8,8 @@
       },
       "disabled": false,
       "autoApprove": [],
-      "disabledTools": []
+      "disabledTools": [],
+      "description": "Shadcn/ui MCP server for component management"
     },
     "github": {
       "command": "npx",
@@ -19,7 +20,8 @@
       },
       "disabled": false,
       "autoApprove": [],
-      "disabledTools": []
+      "disabledTools": [],
+      "description": "GitHub MCP server for repository operations"
     },
     "context7": {
       "command": "npx",
@@ -27,15 +29,17 @@
       "env": {},
       "disabled": false,
       "autoApprove": [],
-      "disabledTools": []
+      "disabledTools": [],
+      "description": "Context7 MCP server for enhanced context awareness"
     },
     "spectral": {
       "command": "docker",
-      "args": ["run", "-i", "--rm", "marksivill/mcp-spectral"],
+      "args": ["run", "-i", "--rm", "-v", "${workspaceFolder}:/workspace:ro", "marksivill/mcp-spectral"],
       "env": {},
       "disabled": false,
       "autoApprove": [],
-      "disabledTools": []
+      "disabledTools": [],
+      "description": "Spectral MCP server for API specification linting"
     }
   }
 }
