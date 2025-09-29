@@ -7,10 +7,39 @@ export async function autoFixYaml(content: string, opts: AutoFixOptions = {}): P
   const runner: ToolRunner = opts.toolRunner ?? defaultToolRunner
   let current = content
 
+  // Normalize EOLs to \n
+  if (/\r\n/.test(current)) {
+    current = current.replace(/\r\n/g, '\n')
+    fixesApplied.push('normalize-eol')
+  }
+
+  // Tabs to two spaces (basic safety)
+  if (/\t/.test(current)) {
+    current = current.replace(/\t/g, '  ')
+    fixesApplied.push('tabs-to-spaces')
+  }
+
   // Ensure document start if missing
   if (!/^---\s/m.test(current)) {
     current = `---\n${current}`
     fixesApplied.push('add-document-start')
+  }
+
+  // Remove anchors/aliases and de-duplicate keys by parse -> stringify roundtrip
+  try {
+    const YAML = (await import('yaml')).default
+    const before = current
+    const doc = YAML.parseDocument(current, { uniqueKeys: false })
+    const obj = doc.toJS({ mapAsMap: false })
+    let normalized = YAML.stringify(obj)
+    if (!/\n$/.test(normalized)) normalized += '\n'
+    if (normalized !== before) {
+      current = normalized
+      fixesApplied.push('remove-anchors-aliases')
+      fixesApplied.push('dedupe-keys-last-wins')
+    }
+  } catch {
+    // If parse fails here, prettier might still fix formatting; validator covers syntax errors
   }
 
   // Simple CFN property typo fixes
@@ -25,7 +54,7 @@ export async function autoFixYaml(content: string, opts: AutoFixOptions = {}): P
   // CFN suggestions (safe non-semantic fixes like rename typos)
   try {
     const { analyze, applySuggestions } = await import('./cfnSuggest')
-    const parsed = await (async () => content)()
+    const parsed = await (async () => current)()
     const doc = (await import('yaml')).default.parse(parsed)
     const { suggestions } = analyze(doc)
     const renameIdxs = suggestions.map((s, i) => [s.kind, i] as const).filter(([k]) => k === 'rename').map(([,i])=>i)
@@ -55,6 +84,12 @@ export async function autoFixYaml(content: string, opts: AutoFixOptions = {}): P
   if (opts.prettier !== false) {
     current = await prettier.format(current, { parser: 'yaml' })
     fixesApplied.push('prettier-yaml')
+  }
+
+  // Ensure trailing newline
+  if (!/\n$/.test(current)) {
+    current += '\n'
+    fixesApplied.push('ensure-trailing-newline')
   }
 
   return { content: current, fixesApplied }
