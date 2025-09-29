@@ -15,6 +15,8 @@ describe('Azure suggestions', () => {
     // Should have a rename suggestion for scirpt->script
     const renameIdxs = suggestions.map((s, i) => s.kind === 'rename' ? i : -1).filter((i) => i >= 0)
     expect(renameIdxs.length).toBeGreaterThan(0)
+    // confidence present for at least one rename
+    expect(suggestions.some(s => s.kind === 'rename' && typeof s.confidence === 'number' && s.confidence > 0)).toBe(true)
     // Should also include type suggestion for task numeric value
     expect(suggestions.some((s) => s.kind === 'type' && String(s.path).includes('task'))).toBe(true)
 

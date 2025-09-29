@@ -38,6 +38,9 @@ Usage
   - $env:YAML_FILE = "path\\to\\file.yaml"; npm run yaml:suggest
   - Auto-detects provider. Override with --provider aws|azure or env PROVIDER=aws|azure
     - Example: tsx src/backend/yaml/cli.ts suggest --provider azure
+  - Auto-apply options:
+    - --apply-safe-only: apply safe renames/adds with confidence >= 0.8
+    - --apply-all: apply all suggestions that have fixes
 - Directory validate with caching + parallelism:
   - $env:YAML_DIR = "."; $env:YAML_CONCURRENCY = "4"; tsx src/backend/yaml/cli.ts validate:dir
   - In-memory cache keyed by file content + options for faster re-runs
