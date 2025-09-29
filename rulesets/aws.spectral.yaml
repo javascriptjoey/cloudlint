@@ -1,0 +1,13 @@
+extends:
+  - ./default.spectral.yaml
+rules:
+  cfn-resources-object:
+    description: Resources (when present) should be an object in CloudFormation
+    message: Resources should be an object
+    severity: warn
+    given: $.Resources
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
