@@ -16,7 +16,7 @@ export async function validateYaml(content: string, options: ValidateOptions = {
   // Security preflight checks (size, lines, anchors/tags, extension/mime)
   const metaIssues = [
     ...validateFileMeta(options.filename, options.mimeType),
-    ...preflightContentGuards(content, options.filename),
+    ...preflightContentGuards(content, { filename: options.filename, relaxSecurity: options.relaxSecurity, allowAnchors: options.allowAnchors, allowAliases: options.allowAliases, allowedTags: options.allowedTags }),
   ]
   if (metaIssues.length) return { ok: false, messages: metaIssues }
 

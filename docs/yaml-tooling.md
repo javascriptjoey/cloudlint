@@ -64,6 +64,10 @@ Examples
 Security
 - Parse timeout defaults to 5s; override via env YAML_PARSE_TIMEOUT_MS or CLI flag --parse-timeout-ms (max 10s).
 - See docs/secure-yaml.md for enforced limits (2 MiB, 15k lines), MIME/type checks, disallowed anchors/tags, and Docker sandboxing.
+- Allowances (advanced):
+  - --relax-security or RELAX_SECURITY=1: downgrade some blocks (JSON, anchors/aliases, custom tags) to warnings
+  - ALLOW_ANCHORS=1 / ALLOW_ALIASES=1: permit anchors/aliases
+  - ALLOWED_TAGS="!Ref,!Sub": allow specific custom tags
 
 Schema updates (keeping specs up to date)
 - Script: npm run schemas:fetch

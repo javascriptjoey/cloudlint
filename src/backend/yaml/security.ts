@@ -48,8 +48,13 @@ export function validateFileMeta(filename?: string, mimeType?: string): LintMess
   return messages
 }
 
-export function preflightContentGuards(content: string, filename?: string): LintMessage[] {
+export function preflightContentGuards(content: string, opts?: { filename?: string; relaxSecurity?: boolean; allowAnchors?: boolean; allowAliases?: boolean; allowedTags?: string[] }): LintMessage[] {
   const messages: LintMessage[] = []
+  const filename = opts?.filename
+  const relax = !!opts?.relaxSecurity
+  const allowAnchors = !!opts?.allowAnchors
+  const allowAliases = !!opts?.allowAliases
+  const allowedTags = new Set((opts?.allowedTags ?? []).map(s => String(s)))
   const byteLen = Buffer.byteLength(content, 'utf8')
   const lineCount = content.split(/\r?\n/).length
   if (byteLen > MAX_BYTES) {
@@ -100,7 +105,7 @@ export function preflightContentGuards(content: string, filename?: string): Lint
       JSON.parse(trimmed)
       messages.push({
         source: 'parser',
-        severity: 'error',
+        severity: relax ? 'warning' : 'error',
         message: 'JSON detected; only YAML is accepted',
         kind: 'syntax',
         suggestion: 'Convert JSON to YAML or provide a YAML file',
@@ -111,27 +116,44 @@ export function preflightContentGuards(content: string, filename?: string): Lint
     }
   }
 
-  // Block anchors & aliases (billion laughs). Simple heuristic; cfn-lint also catches issues.
-  if (/(^|\s)&[A-Za-z0-9_]+/m.test(content) || /(^|\s)\*[A-Za-z0-9_]+/m.test(content)) {
+  // Block anchors & aliases; allow overrides.
+  const anchorMatch = content.match(/(^|\s)&([A-Za-z0-9_]+)/m)
+  const aliasMatch = content.match(/(^|\s)\*([A-Za-z0-9_]+)/m)
+  if ((anchorMatch && !allowAnchors) || (aliasMatch && !allowAliases)) {
     messages.push({
       source: 'parser',
-      severity: 'error',
+      severity: relax ? 'warning' : 'error',
       message: 'YAML anchors or aliases are not allowed for security reasons',
       kind: 'syntax',
-      suggestion: 'Inline values instead of using &anchor/*alias',
+      suggestion: 'Inline values or enable allowAnchors/allowAliases explicitly',
       path: filename,
     })
   }
-  // Forbid explicit custom tags starting with '!' (e.g., !!js/function)
-  if (/^[\s-]*!(?:!|<|[A-Za-z])/m.test(content)) {
+  // Forbid dangerous custom tags anywhere: !! (double-bang) or !<tag> forms
+  if (/(^|\s)!!/m.test(content) || /(^|\s)!</m.test(content)) {
     messages.push({
       source: 'parser',
-      severity: 'error',
-      message: 'Custom YAML tags are not allowed',
+      severity: relax ? 'warning' : 'error',
+      message: 'Dangerous YAML tag usage (e.g., !! or !<...>) is not allowed',
       kind: 'syntax',
-      suggestion: 'Remove tag prefixes like !! or !<tag>',
+      suggestion: 'Remove double-bang or !<custom> tags',
       path: filename,
     })
+  }
+  // Block start-of-line custom single-bang tags unless allowlisted
+  const solTag = content.match(/^[\s-]*!([A-Za-z][\w:-]*)/m)
+  if (solTag) {
+    const tag = `!${solTag[1]}`
+    if (!allowedTags.has(tag)) {
+      messages.push({
+        source: 'parser',
+        severity: relax ? 'warning' : 'error',
+        message: `Custom YAML tag ${tag} is not allowed`,
+        kind: 'syntax',
+        suggestion: 'Remove tag or add to allowedTags',
+        path: filename,
+      })
+    }
   }
   return messages
 }

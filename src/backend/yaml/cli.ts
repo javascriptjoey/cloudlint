@@ -33,7 +33,11 @@ async function doValidate() {
   const argProv = forcedProv as 'aws' | 'azure' | 'generic' | undefined
   const forced = envProv ?? argProv
   const provider = (forced === 'aws' || forced === 'azure' || forced === 'generic') ? forced : undefined
-  const res = await validateYaml(content, { filename: disableCfn ? undefined : p, parseTimeoutMs: readParseTimeoutArg(), provider })
+  const relax = process.argv.includes('--relax-security') || process.env.RELAX_SECURITY === '1'
+  const allowAnchors = process.env.ALLOW_ANCHORS === '1'
+  const allowAliases = process.env.ALLOW_ALIASES === '1'
+  const allowedTags = (process.env.ALLOWED_TAGS || '').split(',').map(s=>s.trim()).filter(Boolean)
+  const res = await validateYaml(content, { filename: disableCfn ? undefined : p, parseTimeoutMs: readParseTimeoutArg(), provider, relaxSecurity: relax, allowAnchors, allowAliases, allowedTags })
   console.log(JSON.stringify(res, null, 2))
   process.exit(res.ok ? 0 : 1)
 }

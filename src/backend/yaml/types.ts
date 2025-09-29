@@ -44,6 +44,10 @@ export interface ValidateOptions {
   toolRunner?: ToolRunner
   spectralRulesetPath?: string
   parseTimeoutMs?: number
+  relaxSecurity?: boolean
+  allowAnchors?: boolean
+  allowAliases?: boolean
+  allowedTags?: string[]
 }
 export interface AutoFixOptions {
   prettier?: boolean
