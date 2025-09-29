@@ -1,7 +1,4 @@
 {
-  "mcp.configPath": ".kiro/settings/mcp.json",
-  "mcp.enable": true,
-  "mcp.autoStart": true,
   "files.associations": {
     "*.yaml": "yaml",
     "*.yml": "yaml"
