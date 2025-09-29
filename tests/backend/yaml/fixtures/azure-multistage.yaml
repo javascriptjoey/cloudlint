@@ -1,0 +1,15 @@
+stages:
+  - stage: Build
+    jobs:
+      - job: build
+        steps:
+          - script: echo "Building"
+  - stage: Deploy
+    jobs:
+      - job: deploy
+        steps:
+          - task: AzureCLI@2
+            inputs:
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: echo "Deploying"

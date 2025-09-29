@@ -1,0 +1,7 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Simple S3 bucket
+Resources:
+  AppBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: example-bucket-12345
