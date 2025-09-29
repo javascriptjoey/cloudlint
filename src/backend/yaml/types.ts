@@ -38,6 +38,7 @@ export interface LintResult {
 export interface ValidateOptions {
   filename?: string
   mimeType?: string
+  provider?: 'aws' | 'azure' | 'generic'
   assumeCloudFormation?: boolean
   assumeAzurePipelines?: boolean
   toolRunner?: ToolRunner

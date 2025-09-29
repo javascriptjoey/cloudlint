@@ -32,6 +32,9 @@ Usage
 - Validate a YAML file:
   - PowerShell:
     - $env:YAML_FILE = "path\\to\\file.yaml"; npm run yaml:validate
+  - Force provider detection (CLI or env):
+    - tsx src/backend/yaml/cli.ts validate --provider aws|azure|generic
+    - $env:PROVIDER = "azure"; npm run yaml:validate
 - Auto-fix (Prettier + optional Spectral fix):
   - $env:YAML_FILE = "path\\to\\file.yaml"; npm run yaml:fix
 - Suggestions (interactive) for provider-aware fixes (AWS CFN, Azure Pipelines):
