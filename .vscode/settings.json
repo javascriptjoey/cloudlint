@@ -1,0 +1,15 @@
+{
+  "files.associations": {
+    "*.yaml": "yaml",
+    "*.yml": "yaml"
+  },
+  "yaml.validate": true,
+  "yaml.completion": true,
+  "yaml.hover": true,
+  "yaml.format.enable": true,
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  }
+}
