@@ -141,7 +141,7 @@ export function preflightContentGuards(content: string, opts?: { filename?: stri
     })
   }
   // Block start-of-line custom single-bang tags unless allowlisted
-  const solTag = content.match(/^[\s-]*!([A-Za-z][\w:-]*)/m)
+  const solTag = content.match(/^[\s]*!([A-Za-z][\w:-]*)/m)
   if (solTag) {
     const tag = `!${solTag[1]}`
     if (!allowedTags.has(tag)) {

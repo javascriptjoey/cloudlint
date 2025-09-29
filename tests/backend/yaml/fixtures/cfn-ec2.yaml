@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: EC2 instance with Security Group
+Resources:
+  AppSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+  AppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-1234567890abcdef0
+      InstanceType: t3.micro
+      SecurityGroupIds:
+        - !Ref AppSG
