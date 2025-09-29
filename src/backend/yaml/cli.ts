@@ -53,7 +53,7 @@ async function doSuggestInteractive() {
   const YAML = (await import('yaml')).default
   const doc = YAML.parse(content)
 
-  let analyze: (doc: unknown) => { suggestions: { kind: string; path: string; message: string; fix?: (doc: unknown) => void }[]; messages: unknown[] }
+  let analyze: (doc: unknown) => { suggestions: { kind: string; path: string; message: string; confidence?: number; fix?: (doc: unknown) => void }[]; messages: unknown[] }
   let applySuggestions: (content: string, selected: number[]) => { content: string }
   if (prov === 'aws') {
     ({ analyze, applySuggestions } = await import('./cfnSuggest'))
@@ -69,18 +69,34 @@ async function doSuggestInteractive() {
     console.log('No suggestions found')
     return
   }
+  const applySafeOnly = process.argv.includes('--apply-safe-only')
+  const applyAll = process.argv.includes('--apply-all')
+  const SAFE_THRESHOLD = 0.8
+
   console.log(`Provider: ${prov}`)
   console.log('Suggestions:')
-  suggestions.forEach((s, i) => console.log(`[${i}] ${s.kind.toUpperCase()} ${s.path} - ${s.message}`))
-  const rl = await import('node:readline/promises')
-  const itf = rl.createInterface({ input: process.stdin, output: process.stdout })
-  const ans = await itf.question('Enter indexes to apply (comma-separated), or press Enter to skip: ')
-  itf.close()
-  const selected = ans.trim() ? ans.split(',').map(s=>Number(s.trim())).filter(n=>Number.isFinite(n)) : []
+  suggestions.forEach((s, i) => {
+    const conf = typeof s.confidence === 'number' ? ` (conf=${s.confidence.toFixed(2)})` : ''
+    console.log(`[${i}] ${s.kind.toUpperCase()} ${s.path} - ${s.message}${conf}`)
+  })
+
+  let selected: number[] = []
+  if (applyAll) {
+    selected = suggestions.map((s, i) => (s.fix ? i : -1)).filter(i => i >= 0)
+  } else if (applySafeOnly) {
+    selected = suggestions.map((s, i) => (s.fix && (s.kind === 'rename' || s.kind === 'add') && (s.confidence ?? 0) >= SAFE_THRESHOLD ? i : -1)).filter(i => i >= 0)
+  } else {
+    const rl = await import('node:readline/promises')
+    const itf = rl.createInterface({ input: process.stdin, output: process.stdout })
+    const ans = await itf.question('Enter indexes to apply (comma-separated), or press Enter to skip: ')
+    itf.close()
+    selected = ans.trim() ? ans.split(',').map(s=>Number(s.trim())).filter(n=>Number.isFinite(n)) : []
+  }
+
   if (selected.length) {
     const { content: newContent } = applySuggestions(content, selected)
     writeFileSync(p, newContent, 'utf8')
-    console.log('Applied changes to', p)
+    console.log(`Applied ${selected.length} suggestion(s) to`, p)
   } else {
     console.log('No changes applied')
   }

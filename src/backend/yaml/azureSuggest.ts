@@ -6,6 +6,7 @@ export type Suggestion = {
   path: string
   message: string
   kind: 'add' | 'rename' | 'type'
+  confidence?: number
   fix?: (doc: unknown) => void
 }
 
@@ -26,6 +27,13 @@ function bestGuess(target: string, candidates: string[]): string | undefined {
   return candidates
     .map(c => [c, levenshtein(c.toLowerCase(), t)] as const)
     .sort((a,b)=>a[1]-b[1])[0]?.[0]
+}
+function guessConfidence(input: string, guess: string | undefined): number | undefined {
+  if (!guess) return undefined
+  const d = levenshtein(input.toLowerCase(), guess.toLowerCase())
+  const denom = Math.max(input.length, guess.length, 1)
+  const c = 1 - d / denom
+  return Math.max(0, Math.min(1, c))
 }
 
 function isArray(x: unknown): x is unknown[] { return Array.isArray(x) }
@@ -52,6 +60,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
           path: k,
           message: `Unknown root key ${k}. Did you mean ${guess}?`,
           kind: 'rename',
+          confidence: guessConfidence(k, guess),
           fix: (root: unknown) => {
             const obj = root as Record<string, unknown>
             const v = obj[k as keyof typeof obj]
@@ -93,7 +102,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
         }
       const keys = Object.keys(step)
       if (!keys.length) {
-        suggestions.push({ path: `${ptr}[${i}]`, message: 'empty step - add a step key like script/task', kind: 'add' })
+        suggestions.push({ path: `${ptr}[${i}]`, message: 'empty step - add a step key like script/task', kind: 'add', confidence: 0.9 })
         continue
       }
       // Azure steps are discriminator-style: exactly one of known step keys typically appears
@@ -108,6 +117,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
               path: `${ptr}[${i}].${k}`,
               message: `Unknown step key ${k}. Did you mean ${guess}?`,
               kind: 'rename',
+              confidence: guessConfidence(k, guess),
               fix: (root: unknown) => {
                 const r = root as AzureDoc
                 if (ptr === 'steps' && Array.isArray(r.steps)) {
@@ -163,17 +173,17 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
     for (let j = 0; j < arr.length; j++) {
       const job = arr[j]
       if (!isObject(job)) {
-        suggestions.push({ path: `${ptr}[${j}]`, message: 'job should be an object', kind: 'type' })
+        suggestions.push({ path: `${ptr}[${j}]`, message: 'job should be an object', kind: 'type', confidence: 0.7 })
         continue
       }
       if (isArray(job.steps)) {
         checkStepArray(job.steps as AzureStep[], `${ptr}[${j}].steps`)
       } else if (job.steps !== undefined && !isArray(job.steps)) {
-        suggestions.push({ path: `${ptr}[${j}].steps`, message: 'steps should be an array', kind: 'type' })
+        suggestions.push({ path: `${ptr}[${j}].steps`, message: 'steps should be an array', kind: 'type', confidence: 0.7 })
         messages.push({ source: 'azure-schema', severity: 'warning', message: 'steps should be an array', path: `${ptr}[${j}].steps` })
       }
       if (!Array.isArray(job.steps)) {
-        suggestions.push({ path: `${ptr}[${j}].steps`, message: 'Add steps array to job', kind: 'add', fix: (root: unknown) => {
+        suggestions.push({ path: `${ptr}[${j}].steps`, message: 'Add steps array to job', kind: 'add', confidence: 0.9, fix: (root: unknown) => {
           const r = root as AzureDoc
           const target = ptr === 'jobs' ? r.jobs : (ptr.startsWith('stages[') ? (r.stages?.[Number(ptr.match(/^stages\[(\d+)\]\.jobs$/)?.[1] ?? -1)]?.jobs) : undefined)
           if (Array.isArray(target)) {
@@ -194,11 +204,11 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
     for (let s = 0; s < (stages as AzureStage[]).length; s++) {
       const stage = (stages as AzureStage[])[s]
       if (!isObject(stage)) {
-        suggestions.push({ path: `stages[${s}]`, message: 'stage should be an object', kind: 'type' })
+        suggestions.push({ path: `stages[${s}]`, message: 'stage should be an object', kind: 'type', confidence: 0.7 })
         continue
       }
       if (stage.jobs === undefined) {
-        suggestions.push({ path: `stages[${s}].jobs`, message: 'Add jobs array to stage', kind: 'add', fix: (root: unknown) => {
+        suggestions.push({ path: `stages[${s}].jobs`, message: 'Add jobs array to stage', kind: 'add', confidence: 0.9, fix: (root: unknown) => {
           const r = root as AzureDoc
           if (!Array.isArray(r.stages)) return
           if (!r.stages[s]) r.stages[s] = {} as AzureStage
@@ -206,7 +216,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
         } })
         messages.push({ source: 'azure-schema', severity: 'warning', message: 'Stage missing jobs array', path: `stages[${s}].jobs` })
       } else if (!isArray(stage.jobs)) {
-        suggestions.push({ path: `stages[${s}].jobs`, message: 'jobs should be an array', kind: 'type' })
+        suggestions.push({ path: `stages[${s}].jobs`, message: 'jobs should be an array', kind: 'type', confidence: 0.7 })
         messages.push({ source: 'azure-schema', severity: 'warning', message: 'jobs should be an array', path: `stages[${s}].jobs` })
       } else {
         checkJobArray(stage.jobs as AzureJob[], `stages[${s}].jobs`)

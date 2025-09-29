@@ -10,6 +10,8 @@ describe('CFN suggestions', () => {
     const { suggestions } = analyze(doc)
     const renameIdxs = suggestions.map((s, i) => (s.kind === 'rename' ? i : -1)).filter((i) => i >= 0)
     expect(renameIdxs.length).toBeGreaterThan(0)
+    // confidence present for rename
+    expect(suggestions.some(s => s.kind === 'rename' && typeof s.confidence === 'number' && s.confidence > 0)).toBe(true)
     const { content } = applySuggestions(base, renameIdxs)
     expect(content).toContain('BucketName:')
   })

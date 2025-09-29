@@ -6,6 +6,7 @@ export type Suggestion = {
   path: string // YAML path such as Resources.MyRes.Properties
   message: string
   kind: 'add' | 'rename' | 'type'
+  confidence?: number // 0..1 confidence score
   fix?: (doc: unknown) => void // applies in-memory fix to the parsed YAML doc
 }
 
@@ -15,10 +16,16 @@ function levenshtein(a: string, b: string): number {
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1
-      m[i][j] = Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + cost)
+      m[i][j] = Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j] + cost)
     }
   }
   return m[a.length][b.length]
+}
+
+function confidenceFromDistance(source: string, target: string): number {
+  const d = levenshtein(source.toLowerCase(), target.toLowerCase())
+  const denom = Math.max(source.length, target.length, 1)
+  return Math.max(0, Math.min(1, 1 - d / denom))
 }
 
 function isPrimitiveOk(val: unknown, t?: string): boolean {
@@ -55,6 +62,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
         path: `Resources.${logicalId}.Type`,
         message: `Resource ${logicalId} is missing Type`,
         kind: 'add',
+        confidence: 0.95,
       })
       continue
     }
@@ -69,6 +77,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
           path: `Resources.${logicalId}.Type`,
           message: `Unknown resource Type ${type}. Did you mean ${guess}?`,
           kind: 'rename',
+          confidence: confidenceFromDistance(String(type), guess),
           fix: (root: unknown) => {
             (root as CFNRoot).Resources[logicalId].Type = guess
           },
@@ -91,6 +100,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
           path: `Resources.${logicalId}.Properties.${pName}`,
           message: `Add required property ${pName}`,
           kind: 'add',
+          confidence: 0.9,
           fix: (root: unknown) => {
             const r = root as CFNRoot
             const orig = (r.Resources[logicalId].Properties ?? {}) as Record<string, unknown>
@@ -109,6 +119,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
             path: `Resources.${logicalId}.Properties.${pName}`,
             message: `Unknown property ${pName}. Did you mean ${guess}?`,
             kind: 'rename',
+            confidence: confidenceFromDistance(pName, guess),
             fix: (root: unknown) => {
               const r = root as CFNRoot
               const propsObj = (r.Resources[logicalId].Properties ?? {}) as Record<string, unknown>
@@ -130,6 +141,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
             path: `Resources.${logicalId}.Properties.${pName}`,
             message: `Property ${pName} expects ${s.PrimitiveType}`,
             kind: 'type',
+            confidence: 0.6,
           })
         }
         if (s.Type === 'List' && !Array.isArray(v)) {
@@ -137,6 +149,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
             path: `Resources.${logicalId}.Properties.${pName}`,
             message: `Property ${pName} expects a List (array)`,
             kind: 'type',
+            confidence: 0.7,
           })
         }
         if (s.Type === 'Map' && (v === null || typeof v !== 'object' || Array.isArray(v))) {
@@ -144,6 +157,7 @@ export function analyze(doc: unknown): { suggestions: Suggestion[]; messages: Li
             path: `Resources.${logicalId}.Properties.${pName}`,
             message: `Property ${pName} expects a Map (object)`,
             kind: 'type',
+            confidence: 0.7,
           })
         }
       }
