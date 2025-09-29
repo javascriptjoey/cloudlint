@@ -6,6 +6,11 @@ on:
     - cron: '0 9 * * 1'
   workflow_dispatch: # Allow manual trigger
 
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
 jobs:
   update-dependencies:
     runs-on: ubuntu-latest
@@ -82,5 +87,5 @@ jobs:
         gh pr create \
           --title "chore: Update dependencies $(date +%Y-%m-%d)" \
           --body "Automated dependency updates. Please review and merge if tests pass." \
-          --base develop \
+          --base main \
           --head $BRANCH_NAME
