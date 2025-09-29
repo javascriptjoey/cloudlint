@@ -106,7 +106,14 @@ This project uses [shadcn/ui](https://ui.shadcn.com/) for components:
 - Persistent theme selection
 - Zinc color scheme
 
-## 🤖 MCP Integration
+## 🤖 SDK and MCP Integration
+
+### SDK
+- Import from `@/backend/sdk` for app/service integration:
+  - `validateYaml(content, options)`
+  - `autoFixYaml(content, options)`
+  - `suggest(content, provider?)` → returns `provider`, `suggestions`, `messages`
+  - `applySuggestions(content, indexes, provider?)` → returns modified content
 
 Configured MCP servers:
 - **shadcn**: UI component management
