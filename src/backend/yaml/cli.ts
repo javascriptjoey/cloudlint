@@ -27,7 +27,13 @@ async function doValidate() {
   const p = getFile()
   const content = readFileSync(p, 'utf8')
   const disableCfn = !!process.env.DISABLE_CFN_LINT
-  const res = await validateYaml(content, { filename: disableCfn ? undefined : p, parseTimeoutMs: readParseTimeoutArg() })
+  const providerArgIdx = process.argv.indexOf('--provider')
+  const forcedProv: string | undefined = providerArgIdx !== -1 ? String(process.argv[providerArgIdx + 1] || '') : undefined
+  const envProv = process.env.PROVIDER as 'aws' | 'azure' | 'generic' | undefined
+  const argProv = forcedProv as 'aws' | 'azure' | 'generic' | undefined
+  const forced = envProv ?? argProv
+  const provider = (forced === 'aws' || forced === 'azure' || forced === 'generic') ? forced : undefined
+  const res = await validateYaml(content, { filename: disableCfn ? undefined : p, parseTimeoutMs: readParseTimeoutArg(), provider })
   console.log(JSON.stringify(res, null, 2))
   process.exit(res.ok ? 0 : 1)
 }
@@ -110,7 +116,9 @@ async function main() {
     const dir = process.env.YAML_DIR || process.cwd()
     const { validateDirectory } = await import('./batch')
     const spectralRulesetPath = process.env.SPECTRAL_RULESET
-    const res = await validateDirectory(dir, { spectralRulesetPath })
+    const forced = process.env.PROVIDER as 'aws' | 'azure' | 'generic' | undefined
+    const provider = (forced === 'aws' || forced === 'azure' || forced === 'generic') ? forced : undefined
+    const res = await validateDirectory(dir, { spectralRulesetPath, provider })
     console.log(JSON.stringify(res, null, 2))
     process.exit(res.ok ? 0 : 1)
   }

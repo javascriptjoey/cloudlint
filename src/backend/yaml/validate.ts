@@ -62,8 +62,8 @@ export async function validateYaml(content: string, options: ValidateOptions = {
     }
   }
 
-  // cfn-lint (CloudFormation), only if CFN detected or forced
-  const runCfn = options.assumeCloudFormation || isLikelyCloudFormation(content)
+// cfn-lint (CloudFormation), only if CFN detected or forced
+  const runCfn = options.provider === 'aws' ? true : options.provider ? false : (options.assumeCloudFormation || isLikelyCloudFormation(content))
   const cfnDockerImage = 'giammbo/cfn-lint:latest'
   if (runCfn) {
     try {
@@ -102,8 +102,8 @@ const res = await runner.run('docker', ['run', '--rm', '--network=none', '-v', `
     }
   }
 
-  // Azure Pipelines schema checks (internal), only if detected or forced
-  const runAzure = options.assumeAzurePipelines || isLikelyAzurePipelines(content)
+// Azure Pipelines schema checks (internal), only if detected or forced
+  const runAzure = options.provider === 'azure' ? true : options.provider ? false : (options.assumeAzurePipelines || isLikelyAzurePipelines(content))
   if (runAzure) {
     try {
       const YAML = (await import('yaml')).default
@@ -142,8 +142,8 @@ const res = await runner.run('docker', ['run', '--rm', '--network=none', '-v', `
     }
   }
 
-  // Build provider summary
-  const provider = detectProvider(content)
+// Build provider summary
+  const provider = detectProvider(content, options.provider)
   const counts: Record<string, { errors: number; warnings: number; infos: number }> = {}
   const bump = (src: string, sev: 'error'|'warning'|'info') => {
     if (!counts[src]) counts[src] = { errors: 0, warnings: 0, infos: 0 }
