@@ -38,7 +38,7 @@ describe('REST API', () => {
   it('POST /apply-suggestions applies rename suggestions for CFN', async () => {
     const cfn = "AWSTemplateFormatVersion: '2010-09-09'\nResources:\n  B:\n    Type: AWS::S3::Buckets\n"
     const s = await request(app).post('/suggest').send({ yaml: cfn })
-    const renameIdxs = (s.body.suggestions || []).map((x: any, i: number) => x.kind === 'rename' ? i : -1).filter((i: number) => i >= 0)
+    const renameIdxs = (s.body.suggestions || []).map((x: { kind?: string }, i: number) => x.kind === 'rename' ? i : -1).filter((i: number) => i >= 0)
     const res = await request(app).post('/apply-suggestions').send({ yaml: cfn, indexes: renameIdxs, provider: 'aws' })
     expect(res.status).toBe(200)
     expect(res.body.content).toContain('AWS::S3::Bucket')

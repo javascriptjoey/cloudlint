@@ -1,4 +1,4 @@
-import Ajv, { type ErrorObject } from 'ajv'
+import Ajv, { type ErrorObject, type AnySchema } from 'ajv'
 import YAML from 'yaml'
 
 export type SchemaValidationIssue = {
@@ -22,7 +22,7 @@ export function schemaValidateYaml(yamlContent: string, schema: unknown): Schema
   const ajv = new Ajv({ allErrors: true, strict: false })
   let validateFn
   try {
-    validateFn = ajv.compile(schema as any)
+    validateFn = ajv.compile(schema as AnySchema)
   } catch (e) {
     return { ok: false, errors: [{ message: e instanceof Error ? e.message : String(e), keyword: 'schema-compile' }] }
   }

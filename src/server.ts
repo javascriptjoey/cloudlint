@@ -100,7 +100,7 @@ export function createServer() {
   app.post('/diff-preview', async (req, res) => {
     try {
       const { original, modified, indexes, provider, autofixOptions } = req.body || {}
-      let before = String(original ?? '')
+      const before = String(original ?? '')
       let after: string = String(modified ?? '')
       if (!after) {
         if (Array.isArray(indexes)) {
@@ -151,7 +151,6 @@ if (import.meta.main) {
   const port = Number(process.env.PORT || 8787)
   const app = createServer()
   app.listen(port, () => {
-    // eslint-disable-next-line no-console
     console.log(`Server listening on http://localhost:${port}`)
   })
 }
