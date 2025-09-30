@@ -2,13 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Contact from '@/pages/Contact'
-import { HelmetProvider } from 'react-helmet-async'
 
 async function fillAndSubmit(name: string, email: string, message: string) {
   render(
-    <HelmetProvider>
-      <Contact />
-    </HelmetProvider>
+    <Contact />
   )
   await userEvent.type(screen.getByLabelText(/name/i), name)
   await userEvent.type(screen.getByLabelText(/email/i), email)
@@ -31,9 +28,7 @@ describe('Contact page', () => {
 
   it('has a coffee link', () => {
     render(
-      <HelmetProvider>
-        <Contact />
-      </HelmetProvider>
+      <Contact />
     )
     const coffee = screen.getByRole('link', { name: /buy me a coffee/i })
     expect(coffee).toHaveAttribute('href')

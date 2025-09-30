@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async'
+import { Seo } from '@/components/Seo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -22,13 +22,13 @@ function IconDiff() {
 export default function About() {
   return (
     <div className="px-0">
-      <Helmet>
-        <title>About Cloudlint • Provider‑aware YAML validation & automation</title>
-        <meta name="description" content="Cloudlint delivers universal YAML validation, smart auto‑fixes, schema checks, diffs, and a security‑first design. Built for speed with CLI, SDK, and REST." />
-        <link rel="canonical" href="https://cloudlint.local/about" />
-        <meta property="og:title" content="About Cloudlint" />
-        <meta property="og:description" content="Validate YAML for AWS/Azure/generic, auto‑fix safely, preview diffs, and automate with CLI/SDK/REST." />
-      </Helmet>
+      <Seo
+        title="About Cloudlint • Provider‑aware YAML validation & automation"
+        description="Cloudlint delivers universal YAML validation, smart auto‑fixes, schema checks, diffs, and a security‑first design. Built for speed with CLI, SDK, and REST."
+        canonical="https://cloudlint.local/about"
+        ogTitle="About Cloudlint"
+        ogDescription="Validate YAML for AWS/Azure/generic, auto‑fix safely, preview diffs, and automate with CLI/SDK/REST."
+      />
 
       {/* Hero */}
       <section className="relative overflow-hidden border-b">

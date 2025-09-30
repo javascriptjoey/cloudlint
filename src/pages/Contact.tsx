@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet-async'
 import { useState } from 'react'
+import { Seo } from '@/components/Seo'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,13 +42,13 @@ export default function Contact() {
 
   return (
     <div className="px-0">
-      <Helmet>
-        <title>Contact Cloudlint • Share feedback, ideas, and requests</title>
-        <meta name="description" content="Have suggestions, bugs, or feature ideas? Send us a message—Cloudlint is shaped by developers like you." />
-        <link rel="canonical" href="https://cloudlint.local/contact" />
-        <meta property="og:title" content="Contact Cloudlint" />
-        <meta property="og:description" content="Share feedback and help us make YAML workflows effortless." />
-      </Helmet>
+      <Seo
+        title="Contact Cloudlint • Share feedback, ideas, and requests"
+        description="Have suggestions, bugs, or feature ideas? Send us a message—Cloudlint is shaped by developers like you."
+        canonical="https://cloudlint.local/contact"
+        ogTitle="Contact Cloudlint"
+        ogDescription="Share feedback and help us make YAML workflows effortless."
+      />
 
       <section className="border-b bg-gradient-to-b from-primary/5 via-transparent to-transparent">
         <div className="container mx-auto grid gap-8 px-4 py-12 md:grid-cols-2 md:items-center">

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Helmet } from 'react-helmet-async'
+import { Seo } from '@/components/Seo'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -55,13 +55,13 @@ export default function Home() {
 
   return (
     <>
-      <Helmet>
-        <title>Cloudlint • YAML Playground</title>
-        <meta name="description" content="Validate, preview, and fix YAML quickly with Cloudlint UI." />
-        <link rel="canonical" href="https://cloudlint.local/" />
-        <meta property="og:title" content="Cloudlint Playground" />
-        <meta property="og:description" content="Try Cloudlint’s YAML validation and fixes in your browser." />
-      </Helmet>
+      <Seo
+        title="Cloudlint • YAML Playground"
+        description="Validate, preview, and fix YAML quickly with Cloudlint UI."
+        canonical="https://cloudlint.local/"
+        ogTitle="Cloudlint Playground"
+        ogDescription="Try Cloudlint’s YAML validation and fixes in your browser."
+      />
       <div className="container mx-auto grid gap-6 px-4 py-6 md:grid-cols-[1fr_320px]">
         <div>
           <Card>
