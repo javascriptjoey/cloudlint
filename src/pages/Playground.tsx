@@ -143,7 +143,10 @@ export default function Playground() {
       />
 
       <section className="container mx-auto px-4 pt-6 md:pt-10">
-        <div className="mb-4 flex items-center gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight">Cloudlint YAML Playground</h1>
+        <p className="mt-2 text-muted-foreground">Validate and auto-fix YAML with provider-aware analyzers.</p>
+
+        <div className="mt-4 mb-4 flex items-center gap-3">
           <Badge variant="secondary">Provider: {provider}</Badge>
           {schemaName && <Badge title={schemaName}>Schema: {schemaName}</Badge>}
         </div>
