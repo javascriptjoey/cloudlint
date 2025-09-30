@@ -15,11 +15,15 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
+    optimizeDeps: {
+      include: ["@lottiefiles/dotlottie-react", "@lottiefiles/dotlottie-web"],
+    },
     base: isProduction && isGitHubPages ? '/cloudlint/' : '/',
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
       sourcemap: true,
+      target: 'es2020',
     },
   }
 })

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { LottiePlayer } from '@/components/LottiePlayer'
 
 function CoffeeIcon() {
   return (
@@ -64,13 +65,15 @@ export default function Contact() {
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <div className="relative rounded-2xl border bg-background p-8 shadow-sm">
-              <svg aria-hidden className="h-24 w-24 text-primary" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="4">
-                <circle cx="32" cy="32" r="24" className="opacity-20" />
-                <path d="M18 36c4-4 8-4 14-2 6 2 10 2 14-2" />
-                <path d="M22 26h0M32 24h0M42 26h0" strokeLinecap="round" />
-              </svg>
-              <div className="mt-4 text-sm text-muted-foreground">Friendly, developer‑first support</div>
+            <div className="justify-self-center w-full max-w-[520px]">
+              <LottiePlayer
+                src="/animations/Developer_Yoga.lottie"
+                alt="Friendly, developer-first support"
+                loop
+                autoplay
+                className="w-full"
+              />
+              <p className="mt-4 text-sm text-muted-foreground text-center">Friendly, developer‑first support</p>
             </div>
           </div>
         </div>
