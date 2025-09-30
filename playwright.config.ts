@@ -12,7 +12,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 webServer: {
-    command: 'tsx src/server.ts',
+    // Use a node-resolvable path to tsx so Playwright can spawn it outside of npm scripts
+    command: 'node node_modules/tsx/dist/cli.mjs src/server.ts',
     url: 'http://localhost:8787',
     reuseExistingServer: true,
     timeout: 120_000,

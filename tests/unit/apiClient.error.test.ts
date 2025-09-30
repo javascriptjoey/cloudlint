@@ -13,7 +13,8 @@ describe('apiClient error handling', () => {
   it('validate throws ApiError on 400/500', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => err(400)))
     await expect(api.validate('x')).rejects.toBeInstanceOf(ApiError)
-;(fetch as unknown as MockedFunction<any>).mockImplementation(async () => err(500))
+type FetchMock = typeof fetch
+;(fetch as unknown as MockedFunction<FetchMock>).mockImplementation(async () => err(500))
     await expect(api.validate('x')).rejects.toMatchObject({ status: 500 })
   })
 
