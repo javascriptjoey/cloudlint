@@ -7,18 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { LottiePlayer } from '@/components/LottiePlayer'
-
-function CoffeeIcon() {
-  return (
-    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8h2a3 3 0 0 1 0 6h-2" />
-      <path d="M2 8h16v6a6 6 0 0 1-6 6H8a6 6 0 0 1-6-6V8Z" />
-      <line x1="6" y1="2" x2="6" y2="4" />
-      <line x1="10" y1="2" x2="10" y2="4" />
-      <line x1="14" y1="2" x2="14" y2="4" />
-    </svg>
-  )
-}
+import { Coffee } from 'lucide-react'
 
 export default function Contact() {
   const [name, setName] = useState('')
@@ -59,7 +48,7 @@ export default function Contact() {
             <div className="mt-6">
               <Button asChild variant="secondary">
                 <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2">
-                  <CoffeeIcon /> Buy me a coffee
+                  <Coffee className="h-5 w-5" aria-hidden /> Buy me a coffee
                 </a>
               </Button>
             </div>
