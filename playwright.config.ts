@@ -12,11 +12,15 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 webServer: {
-    // Use a node-resolvable path to tsx so Playwright can spawn it outside of npm scripts
-    command: 'node node_modules/tsx/dist/cli.mjs src/server.ts',
+    command: 'npm run start:server',
     url: 'http://localhost:8787',
     reuseExistingServer: true,
-    timeout: 120_000,
+    timeout: 180_000,
+    env: {
+      SERVE_STATIC: '1',
+      PORT: '8787',
+      NODE_ENV: 'test',
+    },
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
