@@ -2,6 +2,7 @@ import { Seo } from '@/components/Seo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { LottiePlayer } from '@/components/LottiePlayer'
 
 function IconCloud() {
   return (
@@ -46,9 +47,15 @@ export default function About() {
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <div className="relative rounded-2xl border bg-gradient-to-br from-primary/5 to-cyan-500/5 p-8 shadow-sm">
-              <IconCloud />
-              <div className="mt-4 text-sm text-muted-foreground">Provider‑aware YAML Intelligence</div>
+            <div className="justify-self-center w-full max-w-[520px]">
+              <LottiePlayer
+                src="/animations/data-security.lottie"
+                alt="Data security animation"
+                loop
+                autoplay
+                className="w-full"
+              />
+              <p className="mt-4 text-sm text-muted-foreground text-center">Provider‑aware YAML Intelligence</p>
             </div>
           </div>
         </div>

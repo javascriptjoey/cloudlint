@@ -62,6 +62,17 @@ export default function Home() {
         ogTitle="Cloudlint Playground"
         ogDescription="Try Cloudlint’s YAML validation and fixes in your browser."
       />
+      {/* Hero */}
+      <section className="container mx-auto px-4 pt-6 md:pt-10">
+        <div className="grid items-center gap-6 md:grid-cols-2">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">Cloudlint YAML Playground</h1>
+            <p className="mt-2 text-muted-foreground">Validate and auto-fix YAML with provider-aware analyzers.</p>
+          </div>
+          {/* Removed temporary animation */}
+        </div>
+      </section>
+
       <div className="container mx-auto grid gap-6 px-4 py-6 md:grid-cols-[1fr_320px]">
         <div>
           <Card>
