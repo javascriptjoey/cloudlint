@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import React from 'react'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Playground from '@/pages/Playground'
 
@@ -10,7 +10,7 @@ vi.mock('@/lib/apiClient', async () => {
     ...actual,
     api: {
       ...actual.api,
-      suggest: vi.fn(async (_yaml: string) => ({ provider: 'azure-cloud' as unknown as string, suggestions: [] })),
+      suggest: vi.fn(async () => ({ provider: 'azure-cloud' as unknown as string, suggestions: [] })),
       validate: vi.fn(async () => ({ ok: true, messages: [] })),
     },
   }

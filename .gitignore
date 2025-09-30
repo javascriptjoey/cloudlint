@@ -25,6 +25,10 @@ dist-ssr
 *.sln
 *.sw?
 
+# Playwright artifacts
+playwright-report/
+test-results/
+
 # Environment variables
 .env
 .env.local

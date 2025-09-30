@@ -9,13 +9,13 @@ const goToPlayground = async (page) => {
   try {
     await expect(yamlBox).toBeVisible({ timeout: 2000 })
     return
-  } catch {}
+  } catch { /* ignore */ void 0 }
   // Fallback path: try home -> navbar -> playground, then reload once
   try {
     await page.goto('/', { waitUntil: 'networkidle' })
     const nav = page.getByRole('link', { name: 'Playground', exact: true })
     await nav.click({ timeout: 1500 })
-  } catch {}
+  } catch { /* ignore */ void 0 }
   await page.goto('/playground', { waitUntil: 'domcontentloaded' })
   try {
     await expect(yamlBox).toBeVisible({ timeout: 5000 })

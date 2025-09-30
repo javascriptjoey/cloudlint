@@ -9,12 +9,12 @@ const goToPlayground = async (page) => {
   try {
     await expect(yamlBox).toBeVisible({ timeout: 2000 })
     return
-  } catch {}
+  } catch { /* ignore */ void 0 }
   try {
     await page.goto('/', { waitUntil: 'networkidle' })
     const nav = page.getByRole('link', { name: 'Playground', exact: true })
     await nav.click({ timeout: 1500 })
-  } catch {}
+  } catch { /* ignore */ void 0 }
   await page.goto('/playground', { waitUntil: 'domcontentloaded' })
   try {
     await expect(yamlBox).toBeVisible({ timeout: 5000 })
@@ -45,7 +45,7 @@ test('Decline diff preview keeps editor unchanged and closes preview', async ({ 
 })
 
 // Copy JSON to clipboard
-test('Copy JSON to clipboard', async ({ page, context, baseURL, browserName }) => {
+test('Copy JSON to clipboard', async ({ page }) => {
   await goToPlayground(page)
   await yamlBox(page).fill('foo: 1\n')
   // Render JSON view first
@@ -61,7 +61,7 @@ test('Copy JSON to clipboard', async ({ page, context, baseURL, browserName }) =
 })
 
 // Download JSON button
-test('Download JSON saves expected file contents', async ({ page, browserName }) => {
+test('Download JSON saves expected file contents', async ({ page }) => {
   await goToPlayground(page)
   await yamlBox(page).fill('foo: 1\n')
   await page.getByRole('button', { name: 'Convert to JSON', exact: true }).click()

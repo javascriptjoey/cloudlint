@@ -28,8 +28,8 @@ const matchMediaMock = vi.fn().mockImplementation((query: string) => ({
 // Harmonize AbortController between window and global to avoid cross-realm issues in jsdom.
 if (typeof window !== 'undefined') {
   try {
-    const w: any = window as unknown as any
-    const g: any = globalThis as unknown as any
+    const w = window as unknown as { AbortController?: typeof AbortController; AbortSignal?: typeof AbortSignal }
+    const g = globalThis as unknown as { AbortController?: typeof AbortController; AbortSignal?: typeof AbortSignal }
     if (!w.AbortController && g.AbortController) w.AbortController = g.AbortController
     if (!w.AbortSignal && g.AbortSignal) w.AbortSignal = g.AbortSignal
   } catch {
@@ -97,10 +97,8 @@ function isYamlTagWarning(w: unknown): boolean {
 // Provide a simple div that preserves role/aria props for accessibility assertions
 import React from 'react'
 vi.mock('@lottiefiles/dotlottie-react', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  DotLottieReact: (rawProps: any) => {
-    const { autoplay, renderConfig, dotLottieRefCallback, ...rest } = rawProps || {}
-    return React.createElement('div', { 'data-testid': 'mock-lottie', ...rest })
+  DotLottieReact: (props: Record<string, unknown>) => {
+    return React.createElement('div', { 'data-testid': 'mock-lottie', ...props })
   },
 }))
 
