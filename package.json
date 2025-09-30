@@ -22,9 +22,9 @@
     "yaml:fix": "tsx src/backend/yaml/cli.ts fix",
     "yaml:suggest": "tsx src/backend/yaml/cli.ts suggest",
     "schemas:fetch": "tsx src/backend/yaml/schemaFetch.ts fetch",
-    "start:server": "tsx src/server.ts",
+"start:server": "node node_modules/tsx/dist/cli.mjs src/server.ts",
     "e2e": "playwright install && playwright test",
-"start:e2e": "npm run build && tsx src/server.ts",
+"start:e2e": "npm run build && node node_modules/tsx/dist/cli.mjs src/server.ts",
     "start:prod:pwsh": "npm run build && pwsh -NoLogo -NoProfile -Command \"$env:SERVE_STATIC='1'; $env:PORT='8787'; npm run start:server\""
   },
   "dependencies": {
