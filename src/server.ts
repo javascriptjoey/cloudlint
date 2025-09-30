@@ -1,6 +1,9 @@
 import express from 'express'
 import rateLimit from 'express-rate-limit'
 import cors from 'cors'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { validateYaml, autoFixYaml } from './backend/yaml'
 import { suggest as sdkSuggest, applySuggestions as sdkApplySuggestions } from './backend/sdk'
 import { yamlToJson, jsonToYaml } from './backend/yaml/convert'
@@ -16,6 +19,15 @@ export function createServer() {
   const max = Number(process.env.RATE_LIMIT_MAX || 120)
   const limiter = rateLimit({ windowMs, max, standardHeaders: true, legacyHeaders: false })
   app.use(limiter)
+
+  // Serve built frontend for E2E/production (and whenever build output exists)
+  {
+    const __dirname_es = path.dirname(fileURLToPath(import.meta.url))
+    const distDir = path.resolve(__dirname_es, '../dist')
+    if (fs.existsSync(distDir)) {
+      app.use(express.static(distDir))
+    }
+  }
 
   function handleDownload(req: express.Request, res: express.Response, defaultName: string, mime: string) {
     const download = req.query.download === '1' || req.query.download === 'true'
@@ -143,6 +155,18 @@ export function createServer() {
   })
 
   app.get('/health', (_req, res) => res.json({ ok: true }))
+
+  // Fallback to index.html for SPA routes when serving static
+  if (process.env.SERVE_STATIC === '1' || process.env.NODE_ENV === 'production') {
+    const __dirname_es = path.dirname(fileURLToPath(import.meta.url))
+    const distDir = path.resolve(__dirname_es, '../dist')
+    const indexHtml = path.join(distDir, 'index.html')
+    if (fs.existsSync(indexHtml)) {
+      app.get('*', (_req, res) => {
+        res.sendFile(indexHtml)
+      })
+    }
+  }
 
   return app
 }

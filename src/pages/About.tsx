@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { LottiePlayer } from '@/components/LottiePlayer'
 import { Cloud, Shield, GitCompare } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function About() {
   return (
@@ -27,8 +28,8 @@ export default function About() {
               Cloudlint validates any YAML—style, structure, and provider specifics—then suggests safe fixes you can preview.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild><a href="/">Try the Playground</a></Button>
-              <Button variant="secondary" asChild><a href="/contact">Contact</a></Button>
+              <Button asChild><Link to="/playground">Try the Playground</Link></Button>
+              <Button variant="secondary" asChild><Link to="/contact">Contact</Link></Button>
             </div>
           </div>
           <div className="flex items-center justify-center">
@@ -135,8 +136,8 @@ export default function About() {
               <li>• Mobile‑ready layout that shines on desktop</li>
             </ul>
             <div className="mt-6 flex gap-3">
-              <Button asChild><a href="/">Open Playground</a></Button>
-              <Button variant="secondary" asChild><a href="/contact">Talk to us</a></Button>
+              <Button asChild><Link to="/playground">Open Playground</Link></Button>
+              <Button variant="secondary" asChild><Link to="/contact">Talk to us</Link></Button>
             </div>
           </div>
           <div className="order-1 md:order-2">

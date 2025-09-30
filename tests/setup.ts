@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
 import { vi } from 'vitest'
+import { server } from './mocks/server'
 
 // Mock localStorage globally for all tests
 const localStorageMock = {
@@ -24,40 +25,56 @@ const matchMediaMock = vi.fn().mockImplementation((query: string) => ({
   dispatchEvent: vi.fn(),
 }))
 
+// Harmonize AbortController between window and global to avoid cross-realm issues in jsdom.
+if (typeof window !== 'undefined') {
+  try {
+    const w: any = window as unknown as any
+    const g: any = globalThis as unknown as any
+    if (!w.AbortController && g.AbortController) w.AbortController = g.AbortController
+    if (!w.AbortSignal && g.AbortSignal) w.AbortSignal = g.AbortSignal
+  } catch {
+    // ignore if cannot assign
+  }
+}
+
 // Setup global mocks
 beforeEach(() => {
-  // Reset localStorage mock
-  localStorageMock.getItem.mockClear()
-  localStorageMock.setItem.mockClear()
-  localStorageMock.removeItem.mockClear()
-  localStorageMock.clear.mockClear()
-  
-  // Apply localStorage mock
-  Object.defineProperty(window, 'localStorage', {
-    value: localStorageMock,
-    writable: true,
-  })
-  
-  // Apply matchMedia mock
-  Object.defineProperty(window, 'matchMedia', {
-    value: matchMediaMock,
-    writable: true,
-  })
-  
-  // Clean up document classes
-  document.documentElement.className = ''
-  
-  // Reset matchMedia mock
-  matchMediaMock.mockClear()
+  if (typeof window !== 'undefined') {
+    // Reset localStorage mock
+    localStorageMock.getItem.mockClear()
+    localStorageMock.setItem.mockClear()
+    localStorageMock.removeItem.mockClear()
+    localStorageMock.clear.mockClear()
+    
+    // Apply localStorage mock
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      writable: true,
+    })
+    
+    // Apply matchMedia mock
+    Object.defineProperty(window, 'matchMedia', {
+      value: matchMediaMock,
+      writable: true,
+    })
+    
+    // Clean up document classes
+    document.documentElement.className = ''
+    
+    // Reset matchMedia mock
+    matchMediaMock.mockClear()
+  }
 })
 
 afterEach(() => {
   // Clean up React components
-  cleanup()
-  
-  // Clean up DOM after each test
-  document.body.innerHTML = ''
-  document.documentElement.className = ''
+  if (typeof window !== 'undefined') {
+    cleanup()
+    
+    // Clean up DOM after each test
+    document.body.innerHTML = ''
+    document.documentElement.className = ''
+  }
 })
 
 // Suppress noisy YAML unresolved tag warnings (e.g., !Ref) during tests only.
@@ -81,10 +98,22 @@ function isYamlTagWarning(w: unknown): boolean {
 import React from 'react'
 vi.mock('@lottiefiles/dotlottie-react', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  DotLottieReact: (props: any) => React.createElement('div', { 'data-testid': 'mock-lottie', ...props }),
+  DotLottieReact: (rawProps: any) => {
+    const { autoplay, renderConfig, dotLottieRefCallback, ...rest } = rawProps || {}
+    return React.createElement('div', { 'data-testid': 'mock-lottie', ...rest })
+  },
 }))
 
-// Minimal fetch mock for API endpoints used in Playground
+// Start MSW only in jsdom (frontend tests). Backend tests run in Node and should not be intercepted.
+const isJsdom = typeof window !== 'undefined' && typeof document !== 'undefined'
+if (isJsdom) {
+  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+  afterEach(() => server.resetHandlers())
+  afterAll(() => server.close())
+}
+
+// Remove previous manual fetch mock (replaced by MSW)
+/*
 const originalFetch = global.fetch
 beforeEach(() => {
   global.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -121,14 +150,7 @@ beforeEach(() => {
     return originalFetch ? originalFetch(input, init) : okJson({})
   }) as unknown as typeof fetch
 })
-
-afterEach(() => {
-  if (originalFetch) {
-    // restore if it existed
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    global.fetch = originalFetch as any
-  }
-})
+*/
 
 // Export mocks for individual test use
 export { localStorageMock, matchMediaMock }
