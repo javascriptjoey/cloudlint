@@ -1,9 +1,9 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
 
-const goToPlayground = async (page) => {
+const goToPlayground = async (page: Page) => {
   await page.goto('/playground', { waitUntil: 'networkidle' })
   const yamlBox = page.getByRole('textbox', { name: 'YAML input' })
   try {
@@ -25,11 +25,11 @@ const goToPlayground = async (page) => {
   }
 }
 
-const yamlBox = (page) => page.getByRole('textbox', { name: 'YAML input' })
-const validateBtn = (page) => page.getByRole('button', { name: 'Validate' })
-const convertBtn = (page) => page.getByRole('button', { name: 'Convert to JSON' })
-const uploadYamlInput = (page) => page.locator('input[aria-label="Upload YAML file"]')
-const uploadSchemaInput = (page) => page.locator('input[aria-label="Upload JSON Schema"]')
+const yamlBox = (page: Page) => page.getByRole('textbox', { name: 'YAML input' })
+const validateBtn = (page: Page) => page.getByRole('button', { name: 'Validate' })
+const convertBtn = (page: Page) => page.getByRole('button', { name: 'Convert to JSON' })
+const uploadYamlInput = (page: Page) => page.locator('input[aria-label="Upload YAML file"]')
+const uploadSchemaInput = (page: Page) => page.locator('input[aria-label="Upload JSON Schema"]')
 
 function tmpFileWith(contents: string, ext = '.txt') {
   const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-')), `file${ext}`)

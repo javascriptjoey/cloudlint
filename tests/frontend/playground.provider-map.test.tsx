@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import React from 'react'
 import { render, screen } from '@testing-library/react'
+import type { MockedFunction } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import Playground from '@/pages/Playground'
 
@@ -29,7 +29,7 @@ describe('Playground provider mapping', () => {
 
   it('defaults to Generic for unknown provider strings', async () => {
     const { api } = await import('@/lib/apiClient')
-    ;(api.suggest as unknown as vi.Mock).mockResolvedValueOnce({ provider: 'unknown-cloud' })
+(api.suggest as unknown as MockedFunction<typeof api.suggest>).mockResolvedValueOnce({ provider: 'unknown-cloud' })
     render(<Playground />)
     const validate = screen.getByRole('button', { name: /validate/i })
     await userEvent.click(validate)

@@ -11,8 +11,8 @@ export default defineConfig({
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  webServer: {
-    command: 'npm run start:e2e',
+webServer: {
+    command: 'tsx src/server.ts',
     url: 'http://localhost:8787',
     reuseExistingServer: true,
     timeout: 120_000,

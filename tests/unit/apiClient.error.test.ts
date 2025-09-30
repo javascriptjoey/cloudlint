@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest'
 import { api, ApiError } from '@/lib/apiClient'
 
 const ok = (data: unknown, init?: Partial<ResponseInit>) => new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' }, ...init })
@@ -13,7 +13,7 @@ describe('apiClient error handling', () => {
   it('validate throws ApiError on 400/500', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => err(400)))
     await expect(api.validate('x')).rejects.toBeInstanceOf(ApiError)
-    ;(fetch as unknown as vi.Mock).mockImplementation(async () => err(500))
+;(fetch as unknown as MockedFunction<any>).mockImplementation(async () => err(500))
     await expect(api.validate('x')).rejects.toMatchObject({ status: 500 })
   })
 

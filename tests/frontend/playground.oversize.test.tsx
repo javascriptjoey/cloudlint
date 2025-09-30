@@ -1,5 +1,4 @@
-import React from 'react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, type MockedFunction } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Playground from '@/pages/Playground'
@@ -26,6 +25,6 @@ describe('Playground oversize check', () => {
     // Alert should be visible and validate not called
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent(/File too large/i)
-    expect((api.validate as unknown as vi.Mock).mock.calls.length).toBe(0)
+expect((api.validate as unknown as MockedFunction<typeof api.validate>).mock.calls.length).toBe(0)
   })
 })
