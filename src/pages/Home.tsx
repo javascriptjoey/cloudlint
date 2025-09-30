@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Upload } from 'lucide-react'
 
 function mockValidate(yaml: string): Promise<{ ok: boolean; messages: { message: string; severity: 'error'|'warning'|'info' }[]; fixed?: string }> {
   return new Promise((resolve) => {
@@ -87,7 +88,7 @@ export default function Home() {
               <div className="flex flex-wrap items-center gap-3">
                 <Button onClick={validate} disabled={validating}>{validating ? 'Validating…' : 'Validate'}</Button>
                 <Button variant="secondary" type="button" onClick={()=>fileRef.current?.click()} aria-describedby="upload-hint">
-                  <svg aria-hidden="true" className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <Upload className="mr-2 h-4 w-4" aria-hidden />
                   Upload YAML
                 </Button>
                 <span id="upload-hint" className="sr-only">Choose a .yaml or .yml file to load into the editor</span>
