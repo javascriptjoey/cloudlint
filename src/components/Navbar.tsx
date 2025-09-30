@@ -13,7 +13,7 @@ export function Navbar() {
           <Link to="/" className="font-semibold">Cloudlint</Link>
         </div>
         <nav className="hidden items-center gap-6 md:flex">
-          <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground">About</Link>
+          <Link to="/playground" className="text-sm text-muted-foreground hover:text-foreground">Playground</Link>
           <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground">Contact</Link>
           <div className="ml-2"><ModeToggle /></div>
         </nav>
@@ -29,7 +29,7 @@ export function Navbar() {
                   <Link className="text-lg" to="/">Home</Link>
                 </SheetClose>
                 <SheetClose asChild>
-                  <Link className="text-lg" to="/about">About</Link>
+                  <Link className="text-lg" to="/playground">Playground</Link>
                 </SheetClose>
                 <SheetClose asChild>
                   <Link className="text-lg" to="/contact">Contact</Link>

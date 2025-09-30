@@ -110,6 +110,13 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
+/* Prevent site-wide horizontal scroll while preserving local scroll areas */
+html, body {
+  max-width: 100%;
+  overflow-x: clip; /* hide accidental horizontal overflow */
+  overscroll-behavior-x: none; /* prevent horizontal bounce on touch */
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

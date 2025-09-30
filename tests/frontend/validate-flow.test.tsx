@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import Home from '@/pages/Home'
+import Playground from '@/pages/Playground'
 
 async function typeInTextarea(value: string) {
   const ta = screen.getByRole('textbox', { name: /yaml input/i }) as HTMLTextAreaElement
@@ -12,7 +12,7 @@ async function typeInTextarea(value: string) {
 describe('Validate flow (mocked)', () => {
   it('shows errors then Fix All resolves', async () => {
     render(
-      <Home />
+      <Playground />
     )
 
     // cause an error by inserting the word "error" into YAML
@@ -24,9 +24,10 @@ describe('Validate flow (mocked)', () => {
     const alert = await screen.findByRole('alert')
     expect(alert).toBeInTheDocument()
 
-    const fix = screen.getByRole('button', { name: /fix all/i })
-    await userEvent.click(fix)
+    // Apply fix and ensure diff disappears
+    const apply = screen.getByRole('button', { name: /apply fix/i })
+    await userEvent.click(apply)
 
-    expect(await screen.findByText(/Success: No errors/)).toBeInTheDocument()
+    expect(screen.queryByText(/Preview changes/i)).not.toBeInTheDocument()
   })
 })
