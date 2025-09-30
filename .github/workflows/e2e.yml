@@ -40,6 +40,24 @@ jobs:
       - name: Install Playwright browsers and deps
         run: npx playwright install --with-deps
 
+      - name: Start server (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          export SERVE_STATIC=1
+          export PORT=8787
+          nohup node node_modules/tsx/dist/cli.mjs src/server.ts > server.log 2>&1 &
+
+      - name: Start server (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:SERVE_STATIC='1'
+          $env:PORT='8787'
+          Start-Process -NoNewWindow node -ArgumentList "node_modules/tsx/dist/cli.mjs","src/server.ts" -RedirectStandardOutput server.log -RedirectStandardError server.log
+
+      - name: Wait for server
+        run: npx wait-on -t 180000 http://localhost:8787/health
+
       - name: Run Playwright E2E
         env:
           CI: 'true'
