@@ -84,5 +84,51 @@ vi.mock('@lottiefiles/dotlottie-react', () => ({
   DotLottieReact: (props: any) => React.createElement('div', { 'data-testid': 'mock-lottie', ...props }),
 }))
 
+// Minimal fetch mock for API endpoints used in Playground
+const originalFetch = global.fetch
+beforeEach(() => {
+  global.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === 'string' ? input : input.toString()
+    const body = init?.body ? JSON.parse(init.body as string) : {}
+    const okJson = (data: unknown) => new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } })
+
+    if (url.endsWith('/validate')) {
+      const messages = !body.yaml || /error/i.test(body.yaml) ? [
+        { message: 'Indentation issue on line 2', severity: 'error' },
+        { message: 'Unknown key "scirpt"', severity: 'warning' },
+      ] : []
+      const fixed = messages.length ? String(body.yaml).replace(/\bscirpt\b/g, 'script').trimEnd() + '\n' : undefined
+      return okJson({ ok: messages.length === 0, messages, fixed })
+    }
+    if (url.endsWith('/schema-validate')) {
+      // pretend invalid when yaml lacks "name:" for our tests
+      const invalid = String(body.yaml || '').includes('name:') ? false : true
+      return okJson({ ok: !invalid, errors: invalid ? ['/: must have required property `name`'] : [] })
+    }
+    if (url.endsWith('/convert')) {
+      if (body.yaml) return okJson({ json: JSON.stringify({ converted: true }, null, 2) })
+      if (body.json) return okJson({ yaml: 'converted: true\n' })
+      return okJson({ json: '{}' })
+    }
+    if (url.endsWith('/diff-preview')) {
+      return okJson({ diff: '@@\n-a\n+b', before: body.original, after: body.modified })
+    }
+    if (url.endsWith('/autofix')) {
+      return okJson({ content: String(body.yaml || '').replace(/\bscirpt\b/g, 'script'), fixesApplied: true })
+    }
+
+    // fallback to original if provided
+    return originalFetch ? originalFetch(input, init) : okJson({})
+  }) as unknown as typeof fetch
+})
+
+afterEach(() => {
+  if (originalFetch) {
+    // restore if it existed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    global.fetch = originalFetch as any
+  }
+})
+
 // Export mocks for individual test use
 export { localStorageMock, matchMediaMock }

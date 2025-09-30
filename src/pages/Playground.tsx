@@ -8,8 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Upload, Check, FileJson, Diff, Copy, Download } from 'lucide-react'
 import { diffLines } from 'diff'
-import YAML from 'yaml'
-import Ajv from 'ajv'
+import { api } from '@/lib/apiClient'
 
 function detectProvider(yaml: string): 'AWS' | 'Azure' | 'Generic' {
   const y = yaml.toLowerCase()
@@ -61,44 +60,32 @@ export default function Playground() {
 
   async function validateYaml() {
     setValidating(true)
-    // mocked validate: error if contains word "error" or empty
-    const messages: { message: string; severity: 'error'|'warning'|'info' }[] = []
-    if (yaml.trim() === '' || /error/i.test(yaml)) {
-      messages.push({ message: 'Indentation issue on line 2', severity: 'error' })
-      messages.push({ message: 'Unknown key "scirpt"', severity: 'warning' })
-    }
-    let fixed: string | undefined
-    if (messages.length) {
-      fixed = yaml.replace(/\bscirpt\b/g, 'script').trimEnd() + '\n'
-    }
-
-    // optional schema validation
+    setSchemaErrors(null)
     try {
+      const controller = new AbortController()
+      const res = await api.validate(yaml, { signal: controller.signal })
+      // Optional schema validation (server-side) if a schema was uploaded
       if (schemaText) {
-        const json = YAML.parse(yaml || '{}')
-        const ajv = new Ajv({ allErrors: true })
-        const schema = JSON.parse(schemaText)
-        const validate = ajv.compile(schema)
-        const valid = validate(json)
-        if (!valid && validate.errors) {
-          const errs = validate.errors.map(e => `${e.instancePath || '/'} ${e.message}`)
-          setSchemaErrors(errs)
-        } else {
-          setSchemaErrors(null)
+        try {
+          const schema = JSON.parse(schemaText)
+          const sv = await api.schemaValidate(yaml, schema)
+          if (!sv.ok) setSchemaErrors(sv.errors ?? ['Schema validation failed'])
+        } catch (e) {
+          setSchemaErrors([`Schema validation failed: ${(e as Error).message}`])
         }
       }
+      setResult({ ok: res.ok, messages: res.messages, fixed: res.fixed })
     } catch (e) {
-      setSchemaErrors([`Schema validation failed: ${(e as Error).message}`])
+      setResult({ ok: false, messages: [{ message: (e as Error).message, severity: 'error' }] })
+    } finally {
+      setValidating(false)
     }
-
-    setResult({ ok: messages.length === 0, messages, fixed })
-    setValidating(false)
   }
 
-  function showJson() {
+  async function showJson() {
     try {
-      const json = YAML.parse(yaml || '{}')
-      setJsonView(JSON.stringify(json, null, 2))
+      const res = await api.convert({ yaml })
+      setJsonView(res.json ?? '// No JSON produced')
     } catch (e) {
       setJsonView(`// Failed to convert: ${(e as Error).message}`)
     }
