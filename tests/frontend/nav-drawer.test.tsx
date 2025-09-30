@@ -19,7 +19,7 @@ describe('Navbar drawer', () => {
     const btn = screen.getByRole('button', { name: /open menu/i })
     await userEvent.click(btn)
     const dialog = await screen.findByRole('dialog')
-    expect(within(dialog).getByText(/About/i)).toBeInTheDocument()
+    expect(within(dialog).getByText(/Playground/i)).toBeInTheDocument()
     expect(within(dialog).getByText(/Contact/i)).toBeInTheDocument()
   })
 })
