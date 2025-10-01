@@ -160,8 +160,11 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Build app
-      run: npm run build
+    - name: Download built frontend
+      uses: actions/download-artifact@v4
+      with:
+        name: build-files
+        path: dist
 
     - name: Install Playwright browsers and deps
       run: npx playwright install --with-deps
@@ -184,11 +187,16 @@ jobs:
           Set-Item Env:NODE_ENV 'test'
           node node_modules/tsx/dist/cli.mjs src/server.ts *>> server.out.log
         } -ArgumentList $workspace | Out-Null
-        Start-Sleep -Seconds 1
+        Start-Sleep -Seconds 5
+        Write-Host 'Jobs:'
         Get-Job | Format-Table -AutoSize | Out-String | Write-Host
+        Write-Host 'Netstat:'
+        netstat -ano | Select-String ':8787' | ForEach-Object { $_.ToString() } | Write-Host
+        Write-Host 'Node tasks:'
+        tasklist /FI "IMAGENAME eq node.exe" | Out-String | Write-Host
 
     - name: Wait for server
-      run: npx wait-on -t 180000 http://localhost:8787/health
+      run: npx wait-on -t 180000 http://127.0.0.1:8787/health
 
     - name: Print server logs on failure
       if: failure()

@@ -7,7 +7,7 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   use: {
-    baseURL: 'http://localhost:8787',
+    baseURL: 'http://127.0.0.1:8787',
     headless: true,
     trace: 'on-first-retry',
     video: 'retain-on-failure',
