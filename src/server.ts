@@ -12,8 +12,28 @@ import { schemaValidateYaml } from './backend/yaml/schemaValidate'
 
 export function createServer() {
   const app = express()
-  app.use(cors())
-  app.use(express.json({ limit: '2mb' }))
+  
+  // Security headers
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('X-Frame-Options', 'DENY')
+    res.setHeader('X-XSS-Protection', '1; mode=block')
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+    next()
+  })
+  
+  app.use(cors({
+    origin: process.env.NODE_ENV === 'production' ? false : true,
+    credentials: false,
+    maxAge: 86400 // 24 hours
+  }))
+  
+  app.use(express.json({ 
+    limit: '2mb',
+    strict: true,
+    type: 'application/json'
+  }))
 
   const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000)
   const max = Number(process.env.RATE_LIMIT_MAX || 120)
@@ -23,6 +43,20 @@ export function createServer() {
   if (process.env.NODE_ENV !== 'test') {
     app.use(limiter)
   }
+  
+  // Request logging middleware
+  app.use((req, res, next) => {
+    const start = Date.now()
+    const originalSend = res.send
+    res.send = function(data) {
+      const duration = Date.now() - start
+      if (process.env.NODE_ENV !== 'test') {
+        console.log(`${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`)
+      }
+      return originalSend.call(this, data)
+    }
+    next()
+  })
 
   // Serve built frontend for E2E/production (and whenever build output exists)
   {
@@ -173,6 +207,17 @@ export function createServer() {
       })
     }
   }
+  
+  // Global error handler
+  app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error(`[ERROR] ${req.method} ${req.path}:`, err)
+    const statusCode = res.statusCode !== 200 ? res.statusCode : 500
+    res.status(statusCode).json({
+      message: err.message,
+      stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+    })
+    next()
+  })
 
   return app
 }

@@ -6,8 +6,9 @@ export const defaultToolRunner: ToolRunner = {
     return new Promise((resolve) => {
       const child = spawn(cmd, args, {
         cwd: opts.cwd,
-        shell: process.platform === 'win32',
+        shell: process.platform === 'win32' ? true : false,
         stdio: ['pipe', 'pipe', 'pipe'],
+        windowsHide: true,
       })
 
       let stdout = ''

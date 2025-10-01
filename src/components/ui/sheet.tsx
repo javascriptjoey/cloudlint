@@ -6,6 +6,18 @@ const Sheet = DialogPrimitive.Root
 const SheetTrigger = DialogPrimitive.Trigger
 const SheetClose = DialogPrimitive.Close
 
+const SheetTitle = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn('text-lg font-semibold', className)}
+    {...props}
+  />
+))
+SheetTitle.displayName = DialogPrimitive.Title.displayName
+
 function SheetContent({ side = 'left', className, ...props }: React.ComponentProps<typeof DialogPrimitive.Content> & { side?: 'left'|'right'|'top'|'bottom' }) {
   const sides: Record<string, string> = {
     left: 'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left',
@@ -31,4 +43,4 @@ function SheetContent({ side = 'left', className, ...props }: React.ComponentPro
   )
 }
 
-export { Sheet, SheetTrigger, SheetClose, SheetContent }
+export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetTitle }
