@@ -18,7 +18,11 @@ export function createServer() {
   const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000)
   const max = Number(process.env.RATE_LIMIT_MAX || 120)
   const limiter = rateLimit({ windowMs, max, standardHeaders: true, legacyHeaders: false })
-  app.use(limiter)
+  
+  // Disable rate limiting in test environment to avoid hitting limits during E2E tests
+  if (process.env.NODE_ENV !== 'test') {
+    app.use(limiter)
+  }
 
   // Serve built frontend for E2E/production (and whenever build output exists)
   {

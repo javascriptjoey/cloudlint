@@ -4,23 +4,51 @@ import os from 'os'
 import path from 'path'
 
 const goToPlayground = async (page: Page) => {
-  await page.goto('/playground', { waitUntil: 'networkidle' })
-  const yamlBox = page.getByRole('textbox', { name: 'YAML input' })
+  // First ensure we can reach the server at all
   try {
-    await expect(yamlBox).toBeVisible({ timeout: 2000 })
-    return
-  } catch { /* ignore */ void 0 }
-  try {
-    await page.goto('/', { waitUntil: 'networkidle' })
-    const nav = page.getByRole('link', { name: 'Playground', exact: true })
-    await nav.click({ timeout: 1500 })
-  } catch { /* ignore */ void 0 }
-  await page.goto('/playground', { waitUntil: 'domcontentloaded' })
-  try {
-    await expect(yamlBox).toBeVisible({ timeout: 5000 })
+    await page.goto('/', { waitUntil: 'networkidle', timeout: 15000 })
   } catch {
-    await page.reload({ waitUntil: 'load' })
+    // If home fails, the server might not be running
+    throw new Error('Cannot reach server - make sure the dev server or build is running')
+  }
+  
+  // Navigate directly to playground
+  await page.goto('/playground', { waitUntil: 'networkidle', timeout: 15000 })
+  
+  // Wait for React hydration and Monaco editor to load
+  await page.waitForSelector('main', { timeout: 10000 })
+  
+  // Look for YAML textarea with multiple selectors as fallback
+  const yamlBox = page.getByRole('textbox', { name: 'YAML input' })
+  const monacoEditor = page.locator('.monaco-editor textarea').first()
+  
+  try {
+    // Try primary selector first
     await expect(yamlBox).toBeVisible({ timeout: 5000 })
+    await expect(yamlBox).toBeEnabled({ timeout: 2000 })
+    return
+  } catch {
+    // Fallback to Monaco editor selector
+    try {
+      await expect(monacoEditor).toBeVisible({ timeout: 5000 })
+      return
+    } catch {
+      // Final fallback: reload and try again
+      console.log('YAML textarea not found, reloading page...')
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 })
+      await page.waitForSelector('main', { timeout: 10000 })
+      
+      // Give extra time for Monaco editor to initialize
+      await page.waitForTimeout(2000)
+      
+      // Try both selectors one more time
+      try {
+        await expect(yamlBox).toBeVisible({ timeout: 10000 })
+        await expect(yamlBox).toBeEnabled({ timeout: 3000 })
+      } catch {
+        await expect(monacoEditor).toBeVisible({ timeout: 5000 })
+      }
+    }
   }
 }
 

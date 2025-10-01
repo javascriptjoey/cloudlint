@@ -40,6 +40,8 @@ export default function About() {
                 loop
                 autoplay
                 className="w-full"
+                fallbackIcon={Shield}
+                fallbackSize="120px"
               />
               <p className="mt-4 text-sm text-muted-foreground text-center">Provider‑aware YAML Intelligence</p>
             </div>

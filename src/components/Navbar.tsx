@@ -2,23 +2,20 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet'
 import { Menu, CloudCog } from 'lucide-react'
-import { ModeToggle } from '@/components/mode-toggle'
 
 export function Navbar() {
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          <CloudCog aria-hidden className="h-6 w-6 text-primary" />
+          <CloudCog aria-hidden className="h-8 w-8 text-primary" />
           <Link to="/" className="font-semibold">Cloudlint</Link>
         </div>
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-6 md:flex mr-6">
           <Link to="/playground" className="text-sm text-muted-foreground hover:text-foreground">Playground</Link>
           <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground">Contact</Link>
-          <div className="ml-2"><ModeToggle /></div>
         </nav>
-        <div className="md:hidden flex items-center gap-2">
-          <ModeToggle />
+        <div className="md:hidden">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Open menu"><Menu className="h-5 w-5" /></Button>
