@@ -311,7 +311,7 @@ test.describe('Navbar Layout Stability E2E Tests', () => {
     await expect(page.getByText('Light')).toBeVisible()
     
     // Check dropdown is positioned correctly relative to trigger
-    const trigger = themeToggle(page)
+    // const trigger = themeToggle(page)
     const dropdown = page.locator('[data-slot="dropdown-menu-content"]')
     
     // Wait for dropdown to be fully positioned

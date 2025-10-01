@@ -11,7 +11,7 @@ vi.mock('@/lib/apiClient', async () => {
     api: {
       ...actual.api,
       validate: vi.fn(),
-      diffPreview: vi.fn(async (_a,_b)=>({ diff: '@@', before: 'a', after: 'b' })),
+      diffPreview: vi.fn(async ()=>({ diff: '@@', before: 'a', after: 'b' })),
     },
   }
 })

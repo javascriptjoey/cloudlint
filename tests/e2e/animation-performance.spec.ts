@@ -160,7 +160,7 @@ test.describe('Animation Performance & Accessibility', () => {
     await page.keyboard.press('Tab')
     
     // Should be able to navigate to interactive elements
-    const ctaButton = page.getByRole('link', { name: /try the playground/i })
+    // const ctaButton = page.getByRole('link', { name: /try the playground/i })
     
     // Focus should eventually reach the CTA button
     let attempts = 0
@@ -231,7 +231,7 @@ test.describe('Animation Performance & Accessibility', () => {
     // Animation state should not interfere with routing
   })
 
-  test('Memory usage does not grow excessively with animation', async ({ page, context }) => {
+  test('Memory usage does not grow excessively with animation', async ({ page }) => {
     // This is a basic memory leak test
     await page.goto('/about')
     

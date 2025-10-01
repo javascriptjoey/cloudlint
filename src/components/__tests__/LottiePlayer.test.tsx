@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { Shield, UserCheck } from 'lucide-react'
 import { server } from '../../../tests/mocks/server'
@@ -58,9 +58,11 @@ describe('LottiePlayer', () => {
       }
       
       setTimeout(() => {
+        // @ts-expect-error - Mocking DotLottie instance for testing
         dotLottieRefCallback?.(mockInstance)
       }, 0)
       
+      // @ts-expect-error - Mock component with mismatched props for testing
       return <div data-testid="lottie-animation" {...props} />
     })
 
@@ -242,6 +244,7 @@ describe('LottiePlayer', () => {
     })
 
     it('handles DotLottie render errors', async () => {
+      // @ts-expect-error - Mock implementation for testing
       mockDotLottieReact.mockImplementation(({ dotLottieRefCallback }) => {
         // Simulate error in DotLottie
         const mockInstance = {
@@ -587,6 +590,7 @@ describe('LottiePlayer', () => {
         removeEventListener: vi.fn()
       }
       
+      // @ts-expect-error - Mock implementation for testing
       mockDotLottieReact.mockImplementation(({ dotLottieRefCallback }) => {
         // Simulate the ref callback being called with mock instance
         React.useEffect(() => {

@@ -38,11 +38,12 @@ export function LottiePlayer({
   // Prefetch when extension suggests binary .lottie to avoid content-type quirks
   React.useEffect(() => {
     let cancelled = false
-    let timeoutId: NodeJS.Timeout
+    let timeoutId: NodeJS.Timeout | undefined
     
     const isDotlottie = /\.lottie($|\?)/i.test(src)
     
     // Set loading timeout
+    // eslint-disable-next-line prefer-const
     timeoutId = setTimeout(() => {
       if (!cancelled) {
         setLoadError('Loading timeout')
@@ -162,7 +163,9 @@ export function LottiePlayer({
     instance.addEventListener?.('stop', onStop)
     // Some events might not be in the official type definition, so we use any
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(instance as any).addEventListener?.('load', onLoad)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(instance as any).addEventListener?.('error', onError)
     } catch {
       // Ignore if these events don't exist
@@ -173,7 +176,9 @@ export function LottiePlayer({
       instance.removeEventListener?.('pause', onPause)
       instance.removeEventListener?.('stop', onStop)
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ;(instance as any).removeEventListener?.('load', onLoad)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ;(instance as any).removeEventListener?.('error', onError)
       } catch {
         // Ignore if these events don't exist

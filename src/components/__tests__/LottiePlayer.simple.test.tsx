@@ -6,7 +6,8 @@ import { http, HttpResponse } from 'msw'
 
 // Simple mock for DotLottieReact
 vi.mock('@lottiefiles/dotlottie-react', () => ({
-  DotLottieReact: ({ 'data-testid': testId, ...props }: any) => (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+  DotLottieReact: ({ 'data-testid': _testId, ...props }: any) => (
     <div data-testid="lottie-animation" {...props}>
       Mocked Lottie Animation
     </div>
@@ -16,6 +17,7 @@ vi.mock('@lottiefiles/dotlottie-react', () => ({
 import { LottiePlayer } from '../LottiePlayer'
 
 // Mock matchMedia
+// @ts-expect-error - Mocking matchMedia for testing
 global.matchMedia = vi.fn(() => ({
   matches: false,
   addEventListener: vi.fn(),
@@ -149,6 +151,7 @@ describe('LottiePlayer Basic Functionality', () => {
 
   it('respects prefers-reduced-motion when available', () => {
     // Mock matchMedia to return reduced motion preference
+    // @ts-expect-error - Mocking matchMedia for testing
     global.matchMedia = vi.fn(() => ({
       matches: true, // User prefers reduced motion
       addEventListener: vi.fn(),
