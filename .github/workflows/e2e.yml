@@ -1,10 +1,9 @@
 name: E2E
 
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types: [completed]
 
 permissions:
   contents: read
@@ -15,6 +14,7 @@ concurrency:
 
 jobs:
   playwright:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Playwright E2E
     strategy:
       fail-fast: false
@@ -22,8 +22,10 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout
+      - name: Checkout (triggered commit)
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
