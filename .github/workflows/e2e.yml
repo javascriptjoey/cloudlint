@@ -45,6 +45,7 @@ jobs:
         run: |
           export SERVE_STATIC=1
           export PORT=8787
+          export NODE_ENV=test
           nohup node node_modules/tsx/dist/cli.mjs src/server.ts > server.log 2>&1 &
 
       - name: Start server (Windows)
@@ -52,7 +53,8 @@ jobs:
         shell: pwsh
         run: |
           $env:SERVE_STATIC='1'
-          $env:PORT='8787'
+$env:PORT='8787'
+          $env:NODE_ENV='test'
           Start-Process -FilePath node -ArgumentList "node_modules/tsx/dist/cli.mjs","src/server.ts" -NoNewWindow -RedirectStandardOutput "server.out.log" -RedirectStandardError "server.err.log"
 
       - name: Wait for server
