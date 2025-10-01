@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Seo } from '@/components/Seo'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
@@ -6,17 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Upload, Check, FileJson, Diff, Copy, Download } from 'lucide-react'
-import { diffLines } from 'diff'
-import YAML from 'yaml'
-import Ajv from 'ajv'
+import { Upload, Check, FileJson, Diff, Copy, Download, X } from 'lucide-react'
+import { api } from '@/lib/apiClient'
 
-function detectProvider(yaml: string): 'AWS' | 'Azure' | 'Generic' {
-  const y = yaml.toLowerCase()
-  if (y.includes('awstemplateformatversion') || /resources:\s*\n/i.test(yaml)) return 'AWS'
-  if (y.includes('azure') || y.includes('pool:') || y.includes('trigger:')) return 'Azure'
-  return 'Generic'
-}
+const YAML_MAX_BYTES = Number(import.meta.env.VITE_YAML_MAX_BYTES ?? 200_000) // ~200 KB default
 
 export default function Playground() {
   const [yaml, setYaml] = useState('steps:\n  - script: echo hello\n')
@@ -26,10 +19,12 @@ export default function Playground() {
   const [schemaName, setSchemaName] = useState<string | null>(null)
   const [schemaErrors, setSchemaErrors] = useState<string[] | null>(null)
   const [schemaText, setSchemaText] = useState<string | null>(null)
+  const [provider, setProvider] = useState<'AWS'|'Azure'|'Generic'>('Generic')
+  const [oversizeError, setOversizeError] = useState<string | null>(null)
+  const controllerRef = useRef<AbortController | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const schemaRef = useRef<HTMLInputElement>(null)
 
-  const provider = useMemo(() => detectProvider(yaml), [yaml])
   const hasInput = yaml.trim().length > 0
 
   const onUploadYaml: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
@@ -39,7 +34,12 @@ export default function Playground() {
       alert('Please select a .yaml or .yml file.')
       return
     }
+    if (file.size > YAML_MAX_BYTES) {
+      setOversizeError(`File too large (${Math.round(file.size/1024)}KB). Max allowed is ${Math.round(YAML_MAX_BYTES/1024)}KB`)
+      return
+    }
     const text = await file.text()
+    setOversizeError(null)
     setYaml(text)
   }
 
@@ -60,45 +60,65 @@ export default function Playground() {
   }
 
   async function validateYaml() {
+    // client-side size check
+    const bytes = new TextEncoder().encode(yaml).length
+    if (bytes > YAML_MAX_BYTES) {
+      setOversizeError(`Input too large (${Math.round(bytes/1024)}KB). Max allowed is ${Math.round(YAML_MAX_BYTES/1024)}KB`)
+      return
+    }
+    setOversizeError(null)
     setValidating(true)
-    // mocked validate: error if contains word "error" or empty
-    const messages: { message: string; severity: 'error'|'warning'|'info' }[] = []
-    if (yaml.trim() === '' || /error/i.test(yaml)) {
-      messages.push({ message: 'Indentation issue on line 2', severity: 'error' })
-      messages.push({ message: 'Unknown key "scirpt"', severity: 'warning' })
-    }
-    let fixed: string | undefined
-    if (messages.length) {
-      fixed = yaml.replace(/\bscirpt\b/g, 'script').trimEnd() + '\n'
-    }
-
-    // optional schema validation
+    setSchemaErrors(null)
     try {
+      // abort any in-flight request
+      controllerRef.current?.abort()
+      const controller = new AbortController()
+      controllerRef.current = controller
+      const maybeSignal = import.meta.env.MODE === 'test' ? undefined : controller.signal
+      const res = await api.validate(yaml, { signal: maybeSignal })
+      // Also fetch provider hints
+      api.suggest(yaml, { signal: maybeSignal }).then(s => {
+        const p = String(s.provider || '').toLowerCase()
+        if (p.includes('aws')) setProvider('AWS')
+        else if (p.includes('azure')) setProvider('Azure')
+        else setProvider('Generic')
+      }).catch(() => {})
+      // Optional schema validation (server-side) if a schema was uploaded
       if (schemaText) {
-        const json = YAML.parse(yaml || '{}')
-        const ajv = new Ajv({ allErrors: true })
-        const schema = JSON.parse(schemaText)
-        const validate = ajv.compile(schema)
-        const valid = validate(json)
-        if (!valid && validate.errors) {
-          const errs = validate.errors.map(e => `${e.instancePath || '/'} ${e.message}`)
-          setSchemaErrors(errs)
-        } else {
-          setSchemaErrors(null)
+        try {
+          const schema = JSON.parse(schemaText)
+          const sv = await api.schemaValidate(yaml, schema)
+          if (!sv.ok) setSchemaErrors(sv.errors ?? ['Schema validation failed'])
+        } catch (e) {
+          setSchemaErrors([`Schema validation failed: ${(e as Error).message}`])
         }
       }
+      // If server produced a fixed version, compute a unified diff via API
+      if (res.fixed && res.fixed !== yaml) {
+        try {
+          const d = await api.diffPreview(yaml, res.fixed, { signal: maybeSignal })
+          setResult({ ok: res.ok, messages: res.messages, fixed: d.after })
+          setJsonView(null)
+          setDiffText(d.diff)
+        } catch {
+          setResult({ ok: res.ok, messages: res.messages, fixed: res.fixed })
+        }
+      } else {
+        setResult({ ok: res.ok, messages: res.messages, fixed: res.fixed })
+      }
     } catch (e) {
-      setSchemaErrors([`Schema validation failed: ${(e as Error).message}`])
+      if ((e as Error).name === 'AbortError') return
+      setResult({ ok: false, messages: [{ message: (e as Error).message, severity: 'error' }] })
+    } finally {
+      setValidating(false)
+      controllerRef.current = null
     }
-
-    setResult({ ok: messages.length === 0, messages, fixed })
-    setValidating(false)
   }
 
-  function showJson() {
+  async function showJson() {
     try {
-      const json = YAML.parse(yaml || '{}')
-      setJsonView(JSON.stringify(json, null, 2))
+      const res = await api.convert({ yaml })
+      setJsonView(res.json ?? '// No JSON produced')
     } catch (e) {
       setJsonView(`// Failed to convert: ${(e as Error).message}`)
     }
@@ -124,13 +144,19 @@ export default function Playground() {
     if (result?.fixed) {
       setYaml(result.fixed)
       setResult({ ok: true, messages: [] })
+      setDiffText(undefined)
     }
   }
 
-  const diffs = useMemo(() => {
-    if (!result?.fixed) return null
-    return diffLines(yaml, result.fixed)
-  }, [yaml, result])
+  const [diffText, setDiffText] = useState<string | undefined>(undefined)
+
+  // Auto-cancel in-flight validation when input changes (for responsiveness)
+  useEffect(() => {
+    if (validating) {
+      controllerRef.current?.abort()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yaml])
 
   return (
     <>
@@ -169,6 +195,12 @@ export default function Playground() {
 
             <div className="flex flex-wrap items-center gap-3">
               <Button onClick={validateYaml} disabled={!hasInput || validating}>{validating ? 'Validating…' : 'Validate'}</Button>
+              {validating && (
+                <Button variant="ghost" type="button" onClick={()=>{ controllerRef.current?.abort(); }}>
+                  <X className="mr-2 h-4 w-4" aria-hidden />
+                  Cancel
+                </Button>
+              )}
               <Button variant="secondary" type="button" onClick={()=>fileRef.current?.click()} aria-describedby="upload-hint">
                 <Upload className="mr-2 h-4 w-4" aria-hidden />
                 Upload YAML
@@ -186,6 +218,13 @@ export default function Playground() {
               )}
               <span id="upload-hint" className="sr-only">Choose a .yaml or .yml file to load into the editor</span>
             </div>
+
+            {oversizeError && (
+              <Alert className="border-destructive bg-destructive/5" role="alert">
+                <AlertTitle>File too large</AlertTitle>
+                <AlertDescription>{oversizeError}</AlertDescription>
+              </Alert>
+            )}
 
             {schemaErrors && (
               <Alert className="border-destructive bg-destructive/5" role="alert">
@@ -216,8 +255,8 @@ export default function Playground() {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div className="flex items-center gap-2"><FileJson className="h-4 w-4"/> <CardTitle>JSON</CardTitle></div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="secondary" onClick={copyJson}><Copy className="h-4 w-4"/></Button>
-                    <Button size="sm" variant="secondary" onClick={downloadJson}><Download className="h-4 w-4"/></Button>
+                    <Button size="sm" variant="secondary" aria-label="Copy JSON" onClick={copyJson}><Copy className="h-4 w-4"/></Button>
+                    <Button size="sm" variant="secondary" aria-label="Download JSON" onClick={downloadJson}><Download className="h-4 w-4"/></Button>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -226,20 +265,18 @@ export default function Playground() {
               </Card>
             )}
 
-            {diffs && (
+            {diffText && (
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2"><Diff className="h-4 w-4"/> <CardTitle>Preview changes</CardTitle></div>
                   <CardDescription>Changes introduced by fixes</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <pre className="overflow-auto rounded bg-muted p-3 text-xs">
-                    {diffs.map((part, idx) => (
-                      <div key={idx} className={part.added? 'text-green-600' : part.removed? 'text-red-600' : ''}>
-                        {part.value}
-                      </div>
-                    ))}
-                  </pre>
+                <CardContent className="space-y-3">
+                  <pre className="overflow-auto rounded bg-muted p-3 text-xs whitespace-pre-wrap">{diffText}</pre>
+                  <div className="flex gap-2">
+                    <Button variant="default" type="button" onClick={applyFix}><Check className="mr-2 h-4 w-4"/> Accept</Button>
+                    <Button variant="ghost" type="button" onClick={()=>{ setDiffText(undefined); setResult(prev=> prev ? { ...prev, fixed: prev.fixed } : prev) }}>Decline</Button>
+                  </div>
                 </CardContent>
               </Card>
             )}

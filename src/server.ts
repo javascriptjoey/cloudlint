@@ -1,6 +1,9 @@
 import express from 'express'
 import rateLimit from 'express-rate-limit'
 import cors from 'cors'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { validateYaml, autoFixYaml } from './backend/yaml'
 import { suggest as sdkSuggest, applySuggestions as sdkApplySuggestions } from './backend/sdk'
 import { yamlToJson, jsonToYaml } from './backend/yaml/convert'
@@ -16,6 +19,15 @@ export function createServer() {
   const max = Number(process.env.RATE_LIMIT_MAX || 120)
   const limiter = rateLimit({ windowMs, max, standardHeaders: true, legacyHeaders: false })
   app.use(limiter)
+
+  // Serve built frontend for E2E/production (and whenever build output exists)
+  {
+    const __dirname_es = path.dirname(fileURLToPath(import.meta.url))
+    const distDir = path.resolve(__dirname_es, '../dist')
+    if (fs.existsSync(distDir)) {
+      app.use(express.static(distDir))
+    }
+  }
 
   function handleDownload(req: express.Request, res: express.Response, defaultName: string, mime: string) {
     const download = req.query.download === '1' || req.query.download === 'true'
@@ -142,7 +154,21 @@ export function createServer() {
     }
   })
 
-  app.get('/health', (_req, res) => res.json({ ok: true }))
+  app.get('/health', (_req, res) => {
+    res.status(200).type('text/plain').send('ok')
+  })
+
+  // Fallback to index.html for SPA routes when serving static
+  if (process.env.SERVE_STATIC === '1' || process.env.NODE_ENV === 'production') {
+    const __dirname_es = path.dirname(fileURLToPath(import.meta.url))
+    const distDir = path.resolve(__dirname_es, '../dist')
+    const indexHtml = path.join(distDir, 'index.html')
+    if (fs.existsSync(indexHtml)) {
+      app.get('*', (_req, res) => {
+        res.sendFile(indexHtml)
+      })
+    }
+  }
 
   return app
 }
@@ -150,7 +176,28 @@ export function createServer() {
 if (import.meta.main) {
   const port = Number(process.env.PORT || 8787)
   const app = createServer()
-  app.listen(port, () => {
-    console.log(`Server listening on http://localhost:${port}`)
+  const __dirname_es = path.dirname(fileURLToPath(import.meta.url))
+  const distDir = path.resolve(__dirname_es, '../dist')
+  console.log('[server] starting...')
+  console.log('[server] env:', { SERVE_STATIC: process.env.SERVE_STATIC, NODE_ENV: process.env.NODE_ENV, PORT: port })
+  if (fs.existsSync(distDir)) {
+    console.log('[server] serving static from', distDir)
+  } else {
+    console.log('[server] dist directory not found at', distDir)
+  }
+  const server = app.listen(port, () => {
+    console.log(`[server] listening on http://localhost:${port}`)
+  })
+  server.on('error', (err) => {
+    console.error('[server] listen error:', err)
+    process.exitCode = 1
+  })
+  process.on('uncaughtException', (err) => {
+    console.error('[server] uncaughtException:', err)
+    process.exitCode = 1
+  })
+  process.on('unhandledRejection', (err) => {
+    console.error('[server] unhandledRejection:', err)
+    process.exitCode = 1
   })
 }

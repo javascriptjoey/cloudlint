@@ -1,0 +1,71 @@
+name: E2E
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playwright:
+    name: Playwright E2E (manual)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+
+      - name: Install Playwright browsers and deps
+        run: npx playwright install --with-deps
+
+      - name: Start server (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          export SERVE_STATIC=1
+          export PORT=8787
+          export NODE_ENV=test
+          nohup node node_modules/tsx/dist/cli.mjs src/server.ts > server.log 2>&1 &
+
+      - name: Start server (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:SERVE_STATIC='1'
+          $env:PORT='8787'
+          $env:NODE_ENV='test'
+          Start-Process -FilePath node -ArgumentList "node_modules/tsx/dist/cli.mjs","src/server.ts" -NoNewWindow -RedirectStandardOutput "server.out.log" -RedirectStandardError "server.err.log"
+
+      - name: Wait for server
+        run: npx wait-on -t 180000 http://localhost:8787/health
+
+      - name: Print server logs on failure
+        if: failure()
+        shell: bash
+        run: |
+          echo '--- server.log ---' && (test -f server.log && sed -n '1,200p' server.log || echo 'server.log not found')
+          echo '--- server.out.log ---' && (test -f server.out.log && sed -n '1,200p' server.out.log || echo 'server.out.log not found')
+          echo '--- server.err.log ---' && (test -f server.err.log && sed -n '1,200p' server.err.log || echo 'server.err.log not found')
+
+      - name: Run Playwright E2E
+        env:
+          CI: 'true'
+        run: npm run e2e
