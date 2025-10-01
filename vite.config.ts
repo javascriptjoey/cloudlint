@@ -24,6 +24,22 @@ export default defineConfig(({ mode }) => {
       assetsDir: 'assets',
       sourcemap: true,
       target: 'es2020',
+      chunkSizeWarningLimit: 500,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Vendor chunks
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-slot'],
+            'lottie-vendor': ['@lottiefiles/dotlottie-react', '@lottiefiles/dotlottie-web'],
+            'utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
+            // Icon chunks
+            'lucide': ['lucide-react'],
+            // Backend utilities
+            'yaml-utils': ['yaml', 'ajv', 'diff']
+          }
+        }
+      }
     },
   }
 })
