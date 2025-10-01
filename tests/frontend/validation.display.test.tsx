@@ -1,4 +1,3 @@
-import React from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -19,7 +18,7 @@ vi.mock('@/lib/apiClient', async () => {
 describe('Playground validation display logic', () => {
   it('shows issues when ok=true but messages contain errors/warnings', async () => {
     const { api } = await import('@/lib/apiClient')
-    ;(api.validate as unknown as vi.Mock).mockResolvedValueOnce({ ok: true, messages: [ { message: 'bad', severity: 'error' } ] })
+    ;(api.validate as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ok: true, messages: [ { message: 'bad', severity: 'error' } ] })
     render(<Playground />)
     const btn = screen.getByRole('button', { name: 'Validate' })
     await userEvent.click(btn)
@@ -30,7 +29,7 @@ describe('Playground validation display logic', () => {
 
   it('shows success when ok=true and messages are empty', async () => {
     const { api } = await import('@/lib/apiClient')
-    ;(api.validate as unknown as vi.Mock).mockResolvedValueOnce({ ok: true, messages: [] })
+    ;(api.validate as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ok: true, messages: [] })
     render(<Playground />)
     await userEvent.click(screen.getByRole('button', { name: 'Validate' }))
     await screen.findByText(/No errors found/)
@@ -38,7 +37,7 @@ describe('Playground validation display logic', () => {
 
   it('does not shift layout when toggling validating state', async () => {
     const { api } = await import('@/lib/apiClient')
-    ;(api.validate as unknown as vi.Mock).mockImplementationOnce(async () => {
+    ;(api.validate as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
       await new Promise(r => setTimeout(r, 50))
       return { ok: true, messages: [] }
     })
