@@ -37,6 +37,25 @@ export const handlers = [
   }),
   // Serve static animation files in tests to avoid unhandled MSW requests
   http.get('/animations/:file', () => {
-    return HttpResponse.text('', { status: 200, headers: { 'Content-Type': 'application/octet-stream' } })
+    return HttpResponse.text('{"test": "animation"}', { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
+    })
+  }),
+  
+  // Handle direct animation file requests (like /test.lottie)
+  http.get('/*.lottie', () => {
+    return HttpResponse.text('{"test": "animation"}', { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
+    })
+  }),
+  
+  // Handle specific test.lottie requests 
+  http.get('/test.lottie', () => {
+    return HttpResponse.text('{"test": "animation"}', { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
+    })
   }),
 ]

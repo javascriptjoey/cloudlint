@@ -6,6 +6,7 @@ export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,
   expect: { timeout: 10_000 },
+  workers: process.env.CI ? 1 : 2, // Reduce concurrency to avoid resource contention
   use: {
     baseURL: 'http://127.0.0.1:8787',
     headless: true,

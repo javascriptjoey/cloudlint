@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { LottiePlayer } from '@/components/LottiePlayer'
-import { Coffee } from 'lucide-react'
+import { Coffee, UserCheck } from 'lucide-react'
 
 export default function Contact() {
   const [name, setName] = useState('')
@@ -61,6 +61,8 @@ export default function Contact() {
                 loop
                 autoplay
                 className="w-full"
+                fallbackIcon={UserCheck}
+                fallbackSize="120px"
               />
               <p className="mt-4 text-sm text-muted-foreground text-center">Friendly, developer‑first support</p>
             </div>

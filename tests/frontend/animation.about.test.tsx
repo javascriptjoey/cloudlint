@@ -9,7 +9,7 @@ describe('About page animation', () => {
         <About />
       </MemoryRouter>
     )
-    const animation = screen.getByRole('img', { name: /data security animation/i })
-    expect(animation).toBeInTheDocument()
+    const animationRegion = screen.getByRole('region', { name: /data security animation/i })
+    expect(animationRegion).toBeInTheDocument()
   })
 })

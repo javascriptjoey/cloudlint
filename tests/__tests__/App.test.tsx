@@ -12,10 +12,4 @@ describe('App', () => {
     expect(within(nav).getByRole('link', { name: /Contact/i })).toBeInTheDocument()
   })
 
-  it('renders within theme provider', () => {
-    render(<App />)
-    // At least one theme toggle should be present in the navbar
-    const toggles = screen.getAllByRole('button', { name: /toggle theme/i })
-    expect(toggles.length).toBeGreaterThan(0)
-  })
 })

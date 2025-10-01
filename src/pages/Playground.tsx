@@ -14,6 +14,7 @@ const YAML_MAX_BYTES = Number(import.meta.env.VITE_YAML_MAX_BYTES ?? 200_000) //
 export default function Playground() {
   const [yaml, setYaml] = useState('steps:\n  - script: echo hello\n')
   const [validating, setValidating] = useState(false)
+  const [showBusyLabel, setShowBusyLabel] = useState(false)
   const [result, setResult] = useState<null | { ok: boolean; messages: { message: string; severity: 'error'|'warning'|'info' }[]; fixed?: string }>(null)
   const [jsonView, setJsonView] = useState<string | null>(null)
   const [schemaName, setSchemaName] = useState<string | null>(null)
@@ -24,6 +25,8 @@ export default function Playground() {
   const controllerRef = useRef<AbortController | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const schemaRef = useRef<HTMLInputElement>(null)
+  const cancelDelayRef = useRef<number | null>(null)
+  const [showCancel, setShowCancel] = useState(false)
 
   const hasInput = yaml.trim().length > 0
 
@@ -68,6 +71,13 @@ export default function Playground() {
     }
     setOversizeError(null)
     setValidating(true)
+    setShowCancel(false)
+    setShowBusyLabel(false)
+    // Only show Cancel if the request lasts over 250ms to avoid jarring flashes
+    if (cancelDelayRef.current) window.clearTimeout(cancelDelayRef.current)
+    cancelDelayRef.current = window.setTimeout(()=> setShowCancel(true), 250)
+    // Only switch label after 150ms to avoid brief flicker on fast responses
+    window.setTimeout(()=> setShowBusyLabel(true), 150)
     setSchemaErrors(null)
     try {
       // abort any in-flight request
@@ -75,7 +85,9 @@ export default function Playground() {
       const controller = new AbortController()
       controllerRef.current = controller
       const maybeSignal = import.meta.env.MODE === 'test' ? undefined : controller.signal
+      console.info('[ui] POST /validate bytes=', new TextEncoder().encode(yaml).length)
       const res = await api.validate(yaml, { signal: maybeSignal })
+      console.info('[ui] validate result', res)
       // Also fetch provider hints
       api.suggest(yaml, { signal: maybeSignal }).then(s => {
         const p = String(s.provider || '').toLowerCase()
@@ -93,24 +105,41 @@ export default function Playground() {
           setSchemaErrors([`Schema validation failed: ${(e as Error).message}`])
         }
       }
+      // Normalize severities to lowercase, then compute display-OK
+      const normMsgs = (res.messages ?? []).map(m => {
+        const sev = String(m.severity ?? 'info').trim().toLowerCase()
+        let norm: 'error'|'warning'|'info' = 'info'
+        if (sev.startsWith('err')) norm = 'error'
+        else if (sev.startsWith('warn')) norm = 'warning'
+        return { ...m, severity: norm }
+      })
+      const hasErrors = normMsgs.some(m => m.severity === 'error')
+      // Validation is OK if server says OK (warnings are allowed when ok is true)
+      // Only errors should prevent validation success, warnings are informational
+      const displayOk = Boolean(res.ok && !hasErrors)
+
       // If server produced a fixed version, compute a unified diff via API
       if (res.fixed && res.fixed !== yaml) {
         try {
           const d = await api.diffPreview(yaml, res.fixed, { signal: maybeSignal })
-          setResult({ ok: res.ok, messages: res.messages, fixed: d.after })
+          setResult({ ok: displayOk, messages: normMsgs, fixed: d.after })
           setJsonView(null)
           setDiffText(d.diff)
         } catch {
-          setResult({ ok: res.ok, messages: res.messages, fixed: res.fixed })
+          setResult({ ok: displayOk, messages: normMsgs, fixed: res.fixed })
         }
       } else {
-        setResult({ ok: res.ok, messages: res.messages, fixed: res.fixed })
+        setResult({ ok: displayOk, messages: normMsgs, fixed: res.fixed })
       }
     } catch (e) {
       if ((e as Error).name === 'AbortError') return
-      setResult({ ok: false, messages: [{ message: (e as Error).message, severity: 'error' }] })
+      const msg = (e as Error).message || 'Validation failed. Please try again.'
+      setResult({ ok: false, messages: [{ message: msg, severity: 'error' }] })
     } finally {
       setValidating(false)
+      if (cancelDelayRef.current) window.clearTimeout(cancelDelayRef.current)
+      setShowCancel(false)
+      setShowBusyLabel(false)
       controllerRef.current = null
     }
   }
@@ -194,13 +223,22 @@ export default function Playground() {
             <Input ref={schemaRef} className="sr-only" type="file" accept="application/json,.json" onChange={onUploadSchema} aria-label="Upload JSON Schema" />
 
             <div className="flex flex-wrap items-center gap-3">
-              <Button onClick={validateYaml} disabled={!hasInput || validating}>{validating ? 'Validating…' : 'Validate'}</Button>
-              {validating && (
-                <Button variant="ghost" type="button" onClick={()=>{ controllerRef.current?.abort(); }}>
+<Button onClick={validateYaml} disabled={!hasInput || validating} aria-busy={validating} aria-live="polite" className="min-w-[115px] flex items-center">
+                <span>Validate</span>
+                <span aria-hidden className={showBusyLabel ? 'ml-2 inline-block size-3 rounded-full border-2 border-current border-r-transparent animate-spin' : 'ml-2 inline-block size-3 opacity-0'} />
+              </Button>
+              {/* Reserve space to avoid layout shift when Cancel appears */}
+              <div className="min-w-[92px]">
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={()=>{ controllerRef.current?.abort(); }}
+                  className={showCancel ? '' : 'invisible'}
+                >
                   <X className="mr-2 h-4 w-4" aria-hidden />
                   Cancel
                 </Button>
-              )}
+              </div>
               <Button variant="secondary" type="button" onClick={()=>fileRef.current?.click()} aria-describedby="upload-hint">
                 <Upload className="mr-2 h-4 w-4" aria-hidden />
                 Upload YAML
@@ -239,13 +277,30 @@ export default function Playground() {
 
             {result && !result.ok && (
               <Alert className="border-destructive bg-destructive/5" role="alert">
-                <AlertTitle>Found {result.messages.filter(m=>m.severity==='error').length} error(s)</AlertTitle>
+                <AlertTitle>
+                  Found {result.messages.filter(m=>m.severity!=='info').length} issue(s)
+                  {(() => {
+                    const e = result.messages.filter(m=>m.severity==='error').length
+                    const w = result.messages.filter(m=>m.severity==='warning').length
+                    if (e || w) return ` (errors: ${e}, warnings: ${w})`
+                    return ''
+                  })()}
+                </AlertTitle>
                 <AlertDescription>
                   <ul className="list-disc pl-5">
                     {result.messages.map((m,i)=> (
                       <li key={i} className={m.severity==='error'?'text-red-600':m.severity==='warning'?'text-amber-600':'text-muted-foreground'}>{m.message}</li>
                     ))}
                   </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {result && result.ok && (
+              <Alert className="border-green-600/50 bg-green-600/5" role="status">
+                <AlertTitle>No errors found</AlertTitle>
+                <AlertDescription>
+                  Validation completed successfully.
                 </AlertDescription>
               </Alert>
             )}

@@ -52,16 +52,16 @@ export function ThemeProvider({
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
+    setTheme: (newTheme: Theme) => {
       // Safe localStorage access
       if (typeof window !== "undefined") {
         try {
-          localStorage.setItem(storageKey, theme)
+          localStorage.setItem(storageKey, newTheme)
         } catch {
           // Silently fail if localStorage is not available
         }
       }
-      setTheme(theme)
+      setTheme(newTheme)
     },
   }
 

@@ -25,8 +25,9 @@ describe('Playground cancellation edge cases', () => {
     // Try to cancel immediately
     const cancel = await screen.findByRole('button', { name: /cancel/i })
     await userEvent.click(cancel)
-    // Cancel should go away; no crash means the test finishes
+    // Cancel should become invisible; no crash means the test finishes
     await screen.findByRole('button', { name: /validate/i }) // wait back to idle state
-    expect(screen.queryByRole('button', { name: /cancel/i })).toBeNull()
+    const cancelAfter = screen.getByRole('button', { name: /cancel/i })
+    expect(cancelAfter).toHaveClass('invisible')
   })
 })
