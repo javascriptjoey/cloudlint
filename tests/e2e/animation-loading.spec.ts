@@ -80,6 +80,7 @@ test.describe('Animation Placeholders', () => {
   })
 })
 
+test.describe('Animation Loading and Fallback', () => {
   test('Shows fallback icon when animation fails to load (404)', async ({ page }) => {
     // Block the animation file to simulate 404
     await page.route('**/animations/data-security.lottie', route => route.abort())
