@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 // Edge case testing configuration
 const EDGE_CASE_CONFIG = {
@@ -72,7 +72,7 @@ complex_unicode: |
 mixed_scripts:
   - "Hello नमस्ते 你好 مرحبا"
   - "Testing ทดสอบ テスト тест"
-special_chars: "!@#$%^&*()_+-=[]{}|;':\"<>?,./"
+special_chars: "!@#$%^&*()_+-=[]{}|;':"<>?,./"
 `,
     malformedStructures: [
       'key: [unclosed_array',
@@ -112,7 +112,7 @@ test.describe('Network Failures & Connectivity Issues', () => {
       // Error message should be user-friendly
       expect(errorText).toMatch(/network|connection|offline|failed/i)
       
-    } catch (error) {
+    } catch {
       // Application might still work offline if it has client-side validation
       console.log('ℹ️ Application may have offline validation capabilities')
     }
@@ -193,7 +193,7 @@ test.describe('Network Failures & Connectivity Issues', () => {
     try {
       await page.waitForSelector('[role="alert"]', { timeout: 5000 })
       console.log('🔍 First request failed as expected')
-    } catch (error) {
+    } catch {
       console.log('ℹ️ First request may have been handled differently')
     }
     
@@ -302,7 +302,7 @@ test.describe('Backend Service Failures', () => {
         expect(errorText).not.toContain('JSON.parse')
         expect(errorText).not.toContain('SyntaxError')
         
-      } catch (error) {
+      } catch {
         // Some malformed responses might be handled differently
         console.log(`ℹ️ ${response.name} may have been handled silently`)
       }
@@ -340,7 +340,7 @@ test.describe('Backend Service Failures', () => {
       // Should show user-friendly timeout message
       expect(errorText).toMatch(/timeout|slow|try again|taking longer/i)
       
-    } catch (error) {
+    } catch {
       // Check if loading state is maintained
       const loadingIndicator = page.locator('[aria-busy="true"], .loading, .spinner')
       
@@ -390,7 +390,7 @@ test.describe('Extreme Data & Memory Edge Cases', () => {
         console.log('⚠️ Large file processing is slow - consider optimization')
       }
       
-    } catch (error) {
+    } catch {
       console.log('ℹ️ Large file may have been rejected or timed out appropriately')
     }
     
@@ -424,7 +424,7 @@ test.describe('Extreme Data & Memory Edge Cases', () => {
         const processTime = Date.now() - startTime
         console.log(`⏱️ Depth ${depth} processing time: ${processTime}ms`)
         
-      } catch (error) {
+      } catch {
         console.log(`⚠️ Depth ${depth} may have been rejected or timed out`)
       }
     }
@@ -496,7 +496,7 @@ test.describe('Browser Resource Exhaustion', () => {
           console.log(`🔄 Memory pressure test iteration ${i}/50 completed`)
         }
         
-      } catch (error) {
+      } catch {
         console.log(`⚠️ Memory pressure caused timeout at iteration ${i}`)
         break
       }
@@ -505,7 +505,7 @@ test.describe('Browser Resource Exhaustion', () => {
     console.log('✅ Memory pressure handling tested')
   })
 
-  test('recovers from browser crashes or freezes', async ({ page, context }) => {
+  test('recovers from browser crashes or freezes', async ({ page }) => {
     await page.goto('/playground')
     await page.waitForSelector('[aria-label="YAML input"]')
     

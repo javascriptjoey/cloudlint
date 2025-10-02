@@ -151,7 +151,7 @@ test.describe('Large YAML File Performance Tests', () => {
       expect(validationTime).toBeLessThan(PERFORMANCE_THRESHOLDS.XLARGE_FILE.maxValidationTime)
       console.log(`✓ XLarge file (2MB) processed in ${validationTime}ms`)
       
-    } catch (error) {
+    } catch {
       // Should show file too large error
       const sizeAlert = page.getByRole('alert')
       await expect(sizeAlert).toBeVisible()
@@ -209,9 +209,13 @@ test.describe('Memory Usage Tests', () => {
     
     // Monitor memory before upload
     const initialMetrics = await page.evaluate(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (performance as any).memory ? {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit
       } : null
     })
@@ -228,9 +232,13 @@ test.describe('Memory Usage Tests', () => {
     
     // Monitor memory after processing
     const finalMetrics = await page.evaluate(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (performance as any).memory ? {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit
       } : null
     })

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 // API versioning and backward compatibility testing
 const API_VERSIONS = {
@@ -97,25 +97,25 @@ const API_SCHEMAS = {
   }
 }
 
-// Breaking changes documentation
-const BREAKING_CHANGES = {
-  '2.0.0': [
-    'Removed deprecated `format` parameter from validation requests',
-    'Error response structure changed: added `details` object',
-    'Default provider changed from `generic` to `auto-detect`',
-    'Minimum required Node.js version increased to 18.0'
-  ],
-  '1.2.0': [
-    // No breaking changes in 1.2.0
-  ],
-  '1.1.0': [
-    // No breaking changes in 1.1.0
-  ]
-}
+// Breaking changes documentation (for reference)
+// const BREAKING_CHANGES = {
+//   '2.0.0': [
+//     'Removed deprecated `format` parameter from validation requests',
+//     'Error response structure changed: added `details` object',
+//     'Default provider changed from `generic` to `auto-detect`',
+//     'Minimum required Node.js version increased to 18.0'
+//   ],
+//   '1.2.0': [
+//     // No breaking changes in 1.2.0
+//   ],
+//   '1.1.0': [
+//     // No breaking changes in 1.1.0
+//   ]
+// }
 
 test.describe('API Versioning & Backward Compatibility', () => {
   
-  test('supports current API version requests', async ({ page, context }) => {
+  test('supports current API version requests', async ({ context }) => {
     console.log(`🔍 Testing current API version: ${API_VERSIONS.current}`)
     
     // Test with version header
@@ -135,7 +135,7 @@ test.describe('API Versioning & Backward Compatibility', () => {
     const responseData = await response.json()
     
     // Verify response matches current schema
-    const currentSchema = API_SCHEMAS[API_VERSIONS.current].validateEndpoint.response.success.schema
+    // const currentSchema = API_SCHEMAS[API_VERSIONS.current].validateEndpoint.response.success.schema
     expect(responseData).toHaveProperty('valid')
     expect(responseData).toHaveProperty('errors')
     expect(responseData).toHaveProperty('warnings')
@@ -365,17 +365,17 @@ test.describe('API Schema Evolution & Migration', () => {
         console.log(`🔍 Testing ${contentType} with API version ${version}`)
         
         let requestData
-        let requestBody
+        // let requestBody // Commented out as not used in current implementation
         
         if (contentType.includes('json')) {
           requestData = testData
-          requestBody = undefined
+          // requestBody = undefined
         } else if (contentType === 'application/yaml') {
           requestData = undefined
-          requestBody = 'content_type_test: true'
+          // requestBody = 'content_type_test: true'
         } else {
           requestData = undefined
-          requestBody = JSON.stringify(testData)
+          // requestBody = JSON.stringify(testData)
         }
         
         try {
@@ -556,7 +556,7 @@ test.describe('API Documentation Version Compliance', () => {
           console.log(`✅ API documentation available at ${endpoint}`)
           break
         }
-      } catch (error) {
+      } catch {
         console.log(`ℹ️ Documentation not available at ${endpoint}`)
       }
     }

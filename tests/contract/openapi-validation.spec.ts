@@ -337,11 +337,11 @@ const CLOUDLINT_OPENAPI_SCHEMA = {
 }
 
 // JSON Schema validation helper
-function validateJsonSchema(data: any, schema: any): { valid: boolean; errors: string[] } {
+function validateJsonSchema(data: unknown, schema: unknown): { valid: boolean; errors: string[] } {
   const errors: string[] = []
   
   // Simple JSON Schema validator (basic implementation)
-  function validateObject(obj: any, objSchema: any, path = ''): void {
+  function validateObject(obj: unknown, objSchema: unknown, path = ''): void {
     if (objSchema.type === 'object') {
       if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
         errors.push(`${path}: Expected object, got ${typeof obj}`)
@@ -428,7 +428,7 @@ function validateJsonSchema(data: any, schema: any): { valid: boolean; errors: s
 }
 
 // API testing helper
-async function makeApiRequest(endpoint: string, method: 'GET' | 'POST', body?: any) {
+async function makeApiRequest(endpoint: string, method: 'GET' | 'POST', body?: unknown) {
   const url = `http://localhost:3001${endpoint}`
   const options: RequestInit = {
     method,
@@ -515,6 +515,7 @@ malformed indentation
     expect(response.data.messages.length).toBeGreaterThan(0)
     
     // Each message should have required fields
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     response.data.messages.forEach((msg: any) => {
       expect(msg).toHaveProperty('message')
       expect(msg).toHaveProperty('severity')

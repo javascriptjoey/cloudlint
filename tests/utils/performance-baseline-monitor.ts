@@ -85,11 +85,11 @@ export class PerformanceBaselineMonitor {
   }
 
   // Load performance metrics history
-  private async loadMetricsHistory(): Promise<Record<string, any[]>> {
+  private async loadMetricsHistory(): Promise<Record<string, unknown[]>> {
     try {
       const data = await fs.readFile(this.metricsFile, 'utf-8')
       return JSON.parse(data)
-    } catch (error) {
+    } catch {
       // File doesn't exist or is invalid, start fresh
       return {}
     }
@@ -100,7 +100,7 @@ export class PerformanceBaselineMonitor {
     try {
       const data = await fs.readFile(this.baselineFile, 'utf-8')
       return JSON.parse(data)
-    } catch (error) {
+    } catch {
       // File doesn't exist, return empty baselines
       return {}
     }
@@ -231,7 +231,7 @@ export class PerformanceBaselineMonitor {
       try {
         const data = await fs.readFile(this.alertsFile, 'utf-8')
         alerts = JSON.parse(data)
-      } catch (error) {
+      } catch {
         // File doesn't exist, start with empty array
       }
       
@@ -261,21 +261,34 @@ export class PerformanceBaselineMonitor {
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
       return alerts.filter(alert => alert.timestamp > oneDayAgo)
       
-    } catch (error) {
+    } catch {
       return []
     }
   }
 
   // Generate performance report
   async generateReport(): Promise<{
-    summary: any
+    summary: {
+      total_metrics: number
+      active_alerts: number
+      critical_alerts: number
+      warning_alerts: number
+      improving_trends: number
+      degrading_trends: number
+      last_updated: string
+    }
     baselines: Record<string, PerformanceBaseline>
     alerts: PerformanceAlert[]
-    trends: Record<string, any>
+    trends: Record<string, {
+      direction: 'improving' | 'degrading' | 'stable'
+      recent_values: Array<{ value: number; timestamp: string }>
+      average_change: number
+      volatility: number
+    }>
   }> {
     const baselines = await this.loadBaselines()
     const alerts = await this.getCurrentAlerts()
-    const history = await this.loadMetricsHistory()
+    // const history = await this.loadMetricsHistory() // Not currently used
     
     // Calculate summary statistics
     const summary = {
@@ -289,7 +302,12 @@ export class PerformanceBaselineMonitor {
     }
     
     // Calculate trends for each metric
-    const trends: Record<string, any> = {}
+    const trends: Record<string, {
+      direction: 'improving' | 'degrading' | 'stable'
+      recent_values: Array<{ value: number; timestamp: string }>
+      average_change: number
+      volatility: number
+    }> = {}
     Object.entries(baselines).forEach(([name, baseline]) => {
       const recentData = baseline.trend_data.slice(-10)
       trends[name] = {

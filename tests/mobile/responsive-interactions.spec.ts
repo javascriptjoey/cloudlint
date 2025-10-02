@@ -84,12 +84,12 @@ const goToPlaygroundMobile = async (page: Page) => {
   await page.waitForTimeout(300)
 }
 
-// Touch interaction helpers
-const tapElement = async (page: Page, selector: string) => {
-  const element = page.locator(selector).first()
-  await element.tap()
-  await page.waitForTimeout(MOBILE_CONFIG.touch.tapDelay)
-}
+// Touch interaction helpers (not used in tests but available for future use)
+// const tapElement = async (page: Page, selector: string) => {
+//   const element = page.locator(selector).first()
+//   await element.tap()
+//   await page.waitForTimeout(MOBILE_CONFIG.touch.tapDelay)
+// }
 
 const swipeElement = async (page: Page, selector: string, direction: 'up' | 'down' | 'left' | 'right') => {
   const element = page.locator(selector).first()
@@ -129,7 +129,7 @@ const swipeElement = async (page: Page, selector: string, direction: 'up' | 'dow
 
 test.describe('Mobile Responsive Layout Tests', () => {
   test('playground adapts to different mobile screen sizes', async ({ page }) => {
-    for (const [deviceName, device] of Object.entries(MOBILE_CONFIG.devices)) {
+    for (const [deviceName] of Object.entries(MOBILE_CONFIG.devices)) {
       await setupMobileDevice(page, deviceName)
       await goToPlaygroundMobile(page)
       
@@ -238,14 +238,14 @@ test.describe('Mobile Touch Interactions', () => {
     await setupMobileDevice(page, 'Samsung Galaxy S21')
     await goToPlaygroundMobile(page)
     
-    // Create test file
-    const testYaml = `
-name: mobile-upload-test
-version: 1.0.0
-platform: mobile
-config:
-  touchEnabled: true
-`
+    // Create test file (for future use)
+    // const testYaml = `
+    // name: mobile-upload-test
+    // version: 1.0.0
+    // platform: mobile
+    // config:
+    //   touchEnabled: true
+    // `
     
     // Test file upload button tap
     const uploadBtn = page.locator('button').filter({ hasText: 'Upload YAML' })

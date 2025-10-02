@@ -389,7 +389,7 @@ test.describe('Visual Regression - Component States', () => {
     await goToPage(page, '/playground')
     
     const validateBtn = page.getByRole('button', { name: /Validate/ })
-    const convertBtn = page.getByRole('button', { name: 'Convert to JSON' })
+    // const convertBtn = page.getByRole('button', { name: 'Convert to JSON' }) // Not used in this test
     
     // Test default button state
     await expect(validateBtn).toHaveScreenshot('button-validate-default.png', {
