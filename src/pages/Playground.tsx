@@ -8,6 +8,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Upload, Check, FileJson, Diff, Copy, Download, X } from 'lucide-react'
 import { api } from '@/lib/apiClient'
+import { useDebouncedValidation } from '@/hooks/useDebouncedValidation'
+import { RealTimeValidationSettings } from '@/components/RealTimeValidationSettings'
 
 const YAML_MAX_BYTES = Number(import.meta.env.VITE_YAML_MAX_BYTES ?? 200_000) // ~200 KB default
 
@@ -29,6 +31,13 @@ export default function Playground() {
   const busyLabelDelayRef = useRef<number | null>(null)
   const schemaBlurDelayRef = useRef<number | null>(null)
   const [showCancel, setShowCancel] = useState(false)
+  const [realTimeValidationEnabled, setRealTimeValidationEnabled] = useState(true)
+
+  // Set up debounced validation
+  const debouncedValidation = useDebouncedValidation(yaml, validateYaml, {
+    enabled: realTimeValidationEnabled,
+    immediate: true, // Validate initial content immediately
+  })
 
   const hasInput = yaml.trim().length > 0
 
@@ -231,9 +240,17 @@ export default function Playground() {
         <h1 className="text-3xl font-semibold tracking-tight">Cloudlint YAML Playground</h1>
         <p className="mt-2 text-muted-foreground">Validate and auto-fix YAML with provider-aware analyzers.</p>
 
-        <div className="mt-4 mb-4 flex items-center gap-3">
-          <Badge variant="secondary">Provider: {provider}</Badge>
-          {schemaName && <Badge title={schemaName}>Schema: {schemaName}</Badge>}
+        <div className="mt-4 mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary">Provider: {provider}</Badge>
+            {schemaName && <Badge title={schemaName}>Schema: {schemaName}</Badge>}
+          </div>
+          <RealTimeValidationSettings 
+            enabled={realTimeValidationEnabled}
+            onEnabledChange={setRealTimeValidationEnabled}
+            isPending={debouncedValidation.isPending}
+            lastValidatedLength={debouncedValidation.lastValidatedValue.length}
+          />
         </div>
 
         <Card>
@@ -253,8 +270,8 @@ export default function Playground() {
             <Input ref={schemaRef} className="sr-only" type="file" accept="application/json,.json" onChange={onUploadSchema} aria-label="Upload JSON Schema" />
 
             <div className="flex flex-wrap items-center gap-3">
-<Button onClick={validateYaml} disabled={!hasInput || validating} aria-busy={validating} aria-live="polite" className="min-w-[115px] flex items-center">
-                <span>Validate</span>
+<Button onClick={debouncedValidation.validateNow} disabled={!hasInput || validating} aria-busy={validating} aria-live="polite" className="min-w-[115px] flex items-center">
+                <span>{realTimeValidationEnabled ? 'Validate Now' : 'Validate'}</span>
                 <span aria-hidden className={showBusyLabel ? 'ml-2 inline-block size-3 rounded-full border-2 border-current border-r-transparent animate-spin' : 'ml-2 inline-block size-3 opacity-0'} />
               </Button>
               {/* Reserve space to avoid layout shift when Cancel appears */}
