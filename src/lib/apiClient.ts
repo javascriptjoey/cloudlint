@@ -8,6 +8,10 @@ export type ValidateResponse = {
   messages: LintMessage[]
   fixed?: string
   diff?: string
+  suggestedFix?: {
+    yaml: string
+    description: string
+  }
 }
 
 export type AutofixResponse = {

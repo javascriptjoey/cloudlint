@@ -3,11 +3,13 @@ import { EditorView, basicSetup } from 'codemirror'
 import { EditorState } from '@codemirror/state'
 import { keymap, placeholder as placeholderExtension } from '@codemirror/view'
 import { yaml } from '@codemirror/lang-yaml'
+import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { searchKeymap } from '@codemirror/search'
 import { Decoration, type DecorationSet } from '@codemirror/view'
 import { StateField, StateEffect } from '@codemirror/state'
 import { parseValidationErrors, isStructuralError, formatErrorTooltip } from '@/utils/editorUtils'
+import { logger } from '@/utils/logger'
 
 interface ValidationMessage {
   message: string
@@ -110,6 +112,12 @@ export const YAMLEditor: React.FC<YAMLEditorProps> = ({
       extensions: [
         basicSetup,
         yaml(),
+        autocompletion({
+          activateOnTyping: true,
+          closeOnBlur: true,
+          defaultKeymap: true,
+        }),
+        keymap.of(completionKeymap),
         theme === 'dark' ? oneDark : [],
         errorDecorations,
         createKeymapExtension(),
@@ -117,6 +125,10 @@ export const YAMLEditor: React.FC<YAMLEditorProps> = ({
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             const newValue = update.state.doc.toString()
+            logger.editorEvent('content_changed', {
+              length: newValue.length,
+              changeFrom: update.changes.desc.length > 0 ? 'user_edit' : 'programmatic'
+            })
             onChange(newValue)
           }
         }),
@@ -145,21 +157,29 @@ export const YAMLEditor: React.FC<YAMLEditorProps> = ({
             lineHeight: '1.6'
           },
           '.cm-error-highlight': {
-            backgroundColor: 'rgba(239, 68, 68, 0.2)',
-            borderBottom: '2px wavy rgb(239, 68, 68)'
+            backgroundColor: 'hsl(var(--destructive) / 0.1)',
+            borderBottom: '2px wavy hsl(var(--destructive))',
+            borderRadius: '2px',
+            padding: '0 1px'
           },
           '.cm-warning-highlight': {
-            backgroundColor: 'rgba(245, 158, 11, 0.2)',
-            borderBottom: '2px wavy rgb(245, 158, 11)'
+            backgroundColor: 'hsl(43 96% 56% / 0.1)',
+            borderBottom: '2px wavy hsl(43 96% 56%)',
+            borderRadius: '2px',
+            padding: '0 1px'
           },
           '.cm-error-highlight-structural': {
-            backgroundColor: 'rgba(239, 68, 68, 0.3)',
-            borderBottom: '2px solid rgb(239, 68, 68)',
-            fontWeight: 'bold'
+            backgroundColor: 'hsl(var(--destructive) / 0.15)',
+            borderBottom: '2px solid hsl(var(--destructive))',
+            fontWeight: '600',
+            borderRadius: '2px',
+            padding: '0 1px'
           },
           '.cm-info-highlight': {
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            borderBottom: '1px dotted rgb(59, 130, 246)'
+            backgroundColor: 'hsl(var(--primary) / 0.1)',
+            borderBottom: '1px dotted hsl(var(--primary))',
+            borderRadius: '2px',
+            padding: '0 1px'
           },
           '&.cm-editor.cm-focused .cm-selectionBackground, .cm-selectionBackground': {
             backgroundColor: 'hsl(var(--accent))'
@@ -183,8 +203,15 @@ export const YAMLEditor: React.FC<YAMLEditorProps> = ({
     })
 
     viewRef.current = view
+    logger.editorEvent('editor_initialized', {
+      theme,
+      readOnly,
+      hasPlaceholder: !!placeholder,
+      initialLength: value.length
+    })
 
     return () => {
+      logger.editorEvent('editor_destroyed')
       view.destroy()
       viewRef.current = null
     }
@@ -234,6 +261,12 @@ export const YAMLEditor: React.FC<YAMLEditorProps> = ({
     })
 
     const decorationSet = Decoration.set(decorations.sort((a, b) => a.from - b.from))
+    
+    logger.editorEvent('error_highlights_updated', {
+      errorCount: errors.length,
+      decorationCount: decorations.length,
+      severities: errors.map(e => e.severity)
+    })
     
     viewRef.current.dispatch({
       effects: addErrorDecorations.of(decorationSet)

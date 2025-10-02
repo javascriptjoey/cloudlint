@@ -13,17 +13,19 @@ function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <BrowserRouter>
-        <Navbar />
-        <main>
-          <Suspense fallback={<div className="container mx-auto px-4 py-8"><div className="animate-pulse h-32 bg-muted rounded"></div></div>}>
-            <Routes>
-              <Route path="/" element={<About />} />
-              <Route path="/playground" element={<Playground />} />
-              <Route path="/contact" element={<Contact />} />
-            </Routes>
-          </Suspense>
-        </main>
-        <Footer />
+        <div className="flex min-h-screen flex-col">
+          <Navbar />
+          <main className="flex-1">
+            <Suspense fallback={<div className="container mx-auto px-4 py-8"><div className="animate-pulse h-32 bg-muted rounded"></div></div>}>
+              <Routes>
+                <Route path="/" element={<About />} />
+                <Route path="/playground" element={<Playground />} />
+                <Route path="/contact" element={<Contact />} />
+              </Routes>
+            </Suspense>
+          </main>
+          <Footer />
+        </div>
       </BrowserRouter>
     </ThemeProvider>
   )

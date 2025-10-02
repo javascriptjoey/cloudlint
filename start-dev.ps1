@@ -1,5 +1,5 @@
 # Development startup script for CloudLint
-Write-Host "🚀 Starting CloudLint Development Environment" -ForegroundColor Green
+Write-Host "Starting CloudLint Development Environment" -ForegroundColor Green
 
 # Function to start process in new window
 function Start-Service {
@@ -44,22 +44,22 @@ Write-Host "Waiting for frontend to start..." -ForegroundColor Yellow
 Start-Sleep -Seconds 3
 
 Write-Host ""
-Write-Host "✅ Development environment is starting!" -ForegroundColor Green
-Write-Host "🌐 Frontend: http://localhost:5173" -ForegroundColor Blue
-Write-Host "🔧 Backend API: http://localhost:3001" -ForegroundColor Blue
+Write-Host "Development environment is starting!" -ForegroundColor Green
+Write-Host "Frontend: http://localhost:5173" -ForegroundColor Blue
+Write-Host "Backend API: http://localhost:3001" -ForegroundColor Blue
 Write-Host ""
-Write-Host "🧪 Test the validation fix with this YAML:" -ForegroundColor Magenta
+Write-Host "Test the validation fix with this YAML:" -ForegroundColor Magenta
 Write-Host "fruits:" -ForegroundColor White
 Write-Host "  - apple" -ForegroundColor White  
 Write-Host "   - banana  # <-- This should show an error!" -ForegroundColor Red
 Write-Host "  - orange" -ForegroundColor White
 Write-Host ""
-Write-Host "Expected result: ❌ Validation should FAIL with indentation error" -ForegroundColor Red
-Write-Host "Previous issue: ✅ Was incorrectly passing validation" -ForegroundColor Yellow
+Write-Host "Expected result: Validation should FAIL with indentation error" -ForegroundColor Red
+Write-Host "Previous issue: Was incorrectly passing validation" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Press any key to open browser..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 
 Start-Process "http://localhost:5173"
 
-Write-Host "🎯 Development environment ready!" -ForegroundColor Green
+Write-Host "Development environment ready!" -ForegroundColor Green

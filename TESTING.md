@@ -1,6 +1,10 @@
-# Testing Guide
+# CloudLint Testing Guide
 
-This project uses **Vitest** for unit testing, which is the perfect testing framework for Vite-based projects.
+This document describes the comprehensive testing approach for CloudLint, including unit tests, integration tests, and end-to-end tests for YAML validation functionality.
+
+## Overview
+
+The testing suite is designed to prevent regressions and ensure that YAML validation edge cases are properly handled. This was created in response to an issue where indentation errors in YAML were not being properly detected.
 
 ## 🧪 **Why Vitest?**
 

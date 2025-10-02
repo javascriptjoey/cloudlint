@@ -5,7 +5,7 @@ import { Menu, CloudCog } from 'lucide-react'
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90 relative z-30">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <CloudCog aria-hidden className="h-8 w-8 text-primary" />
