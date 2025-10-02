@@ -18,15 +18,27 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/validate': {
-          target: 'http://localhost:3000',
+          target: 'http://localhost:3001',
           changeOrigin: true
         },
         '/suggest': {
-          target: 'http://localhost:3000', 
+          target: 'http://localhost:3001', 
           changeOrigin: true
         },
         '/convert': {
-          target: 'http://localhost:3000',
+          target: 'http://localhost:3001',
+          changeOrigin: true
+        },
+        '/autofix': {
+          target: 'http://localhost:3001',
+          changeOrigin: true
+        },
+        '/diff-preview': {
+          target: 'http://localhost:3001',
+          changeOrigin: true
+        },
+        '/schema-validate': {
+          target: 'http://localhost:3001',
           changeOrigin: true
         }
       }
