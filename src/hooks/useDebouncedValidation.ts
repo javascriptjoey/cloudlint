@@ -35,6 +35,7 @@ export function useDebouncedValidation(
   } = options
 
   const timeoutRef = useRef<number | null>(null)
+  const mountedRef = useRef<boolean>(true)
   const [lastValidatedValue, setLastValidatedValue] = useState<string>('')
   const [hasValidated, setHasValidated] = useState<boolean>(false)
   const [isPending, setIsPending] = useState<boolean>(false)
@@ -52,18 +53,24 @@ export function useDebouncedValidation(
 
   // Clear any pending validation
   const clearPending = useCallback(() => {
-    if (timeoutRef.current) {
+    if (timeoutRef.current && typeof window !== 'undefined') {
       window.clearTimeout(timeoutRef.current)
       timeoutRef.current = null
     }
-    setIsPending(false)
+    // Only update state if component is still mounted
+    if (mountedRef.current) {
+      setIsPending(false)
+    }
   }, [])
 
   // Trigger validation manually (used by manual validate button)
   const validateNow = useCallback(async () => {
     clearPending()
-    setLastValidatedValue(value)
-    setHasValidated(true)
+    // Only update state if component is still mounted
+    if (mountedRef.current) {
+      setLastValidatedValue(value)
+      setHasValidated(true)
+    }
     await onValidate()
   }, [value, onValidate, clearPending])
 
@@ -92,12 +99,20 @@ export function useDebouncedValidation(
     // Set up debounced validation
     const delay = calculateDelay(value)
     
-    setIsPending(true)
-    timeoutRef.current = window.setTimeout(() => {
-      validateNow()
-      timeoutRef.current = null
-      setIsPending(false)
-    }, delay)
+    if (mountedRef.current) {
+      setIsPending(true)
+    }
+    
+    if (typeof window !== 'undefined') {
+      timeoutRef.current = window.setTimeout(() => {
+        validateNow()
+        timeoutRef.current = null
+        // Only update state if component is still mounted
+        if (mountedRef.current) {
+          setIsPending(false)
+        }
+      }, delay)
+    }
 
     // Cleanup function
     return clearPending
@@ -105,7 +120,11 @@ export function useDebouncedValidation(
 
   // Cleanup on unmount
   useEffect(() => {
-    return clearPending
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      clearPending()
+    }
   }, [clearPending])
 
   return {
