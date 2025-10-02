@@ -18,7 +18,7 @@ vi.mock('@/lib/apiClient', async () => {
 describe('Playground diff preview fallback', () => {
   it('falls back to fixed result when diff endpoint fails', async () => {
     render(<Playground />)
-    const box = screen.getByRole('textbox', { name: 'YAML input' })
+    const box = screen.getByRole('textbox', { name: /yaml input/i })
     await userEvent.clear(box)
     await userEvent.type(box, 'steps:\n  - scirpt: echo hi\n')
     const validate = screen.getByRole('button', { name: /validate/i })

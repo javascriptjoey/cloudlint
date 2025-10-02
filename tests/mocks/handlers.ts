@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 export const handlers = [
   http.post('/validate', async ({ request }) => {
     const { yaml } = await request.json() as { yaml: string }
-    const messages = !yaml || /error/i.test(yaml) ? [
+    const messages = !yaml || /err/i.test(yaml) ? [
       { message: 'Indentation issue on line 2', severity: 'error' },
       { message: 'Unknown key "scirpt"', severity: 'warning' },
     ] : []

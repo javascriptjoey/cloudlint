@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Seo } from '@/components/Seo'
-import { Textarea } from '@/components/ui/textarea'
+import { YAMLEditor } from '@/components/YAMLEditor'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,7 +14,7 @@ import { RealTimeValidationSettings } from '@/components/RealTimeValidationSetti
 const YAML_MAX_BYTES = Number(import.meta.env.VITE_YAML_MAX_BYTES ?? 200_000) // ~200 KB default
 
 export default function Playground() {
-  const [yaml, setYaml] = useState('steps:\n  - script: echo hello\n')
+  const [yaml, setYaml] = useState('')
   const [validating, setValidating] = useState(false)
   const [showBusyLabel, setShowBusyLabel] = useState(false)
   const [result, setResult] = useState<null | { ok: boolean; messages: { message: string; severity: 'error'|'warning'|'info' }[]; fixed?: string }>(null)
@@ -259,18 +259,19 @@ export default function Playground() {
             <CardDescription>Paste YAML or upload a file. Validate, convert, and preview fixes.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Textarea
+            <YAMLEditor
               value={yaml}
-              onChange={(e)=>setYaml(e.target.value)}
-              aria-label="YAML input"
+              onChange={setYaml}
+              validationMessages={result?.messages || []}
               placeholder="Paste YAML here or use Upload to select a .yaml/.yml file"
+              onValidate={debouncedValidation.validateNow}
               className="min-h-[360px] md:min-h-[520px]"
             />
             <Input ref={fileRef} className="sr-only" type="file" accept=".yaml,.yml" onChange={onUploadYaml} aria-label="Upload YAML file" />
             <Input ref={schemaRef} className="sr-only" type="file" accept="application/json,.json" onChange={onUploadSchema} aria-label="Upload JSON Schema" />
 
             <div className="flex flex-wrap items-center gap-3">
-<Button onClick={debouncedValidation.validateNow} disabled={!hasInput || validating} aria-busy={validating} aria-live="polite" className="min-w-[115px] flex items-center">
+            <Button onClick={debouncedValidation.validateNow} disabled={validating} aria-busy={validating} aria-live="polite" className="min-w-[115px] flex items-center">
                 <span>{realTimeValidationEnabled ? 'Validate Now' : 'Validate'}</span>
                 <span aria-hidden className={showBusyLabel ? 'ml-2 inline-block size-3 rounded-full border-2 border-current border-r-transparent animate-spin' : 'ml-2 inline-block size-3 opacity-0'} />
               </Button>

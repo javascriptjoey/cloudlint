@@ -6,11 +6,11 @@ import { http, HttpResponse } from 'msw'
 import Playground from '@/pages/Playground'
 
 async function typeInTextarea(value: string) {
-  const ta = screen.getByRole('textbox', { name: /yaml input/i }) as HTMLTextAreaElement
-  await userEvent.clear(ta)
+  const editor = screen.getByRole('textbox', { name: /yaml input/i })
+  await userEvent.clear(editor)
   if (value) {
     // Use paste for complex strings to avoid userEvent parsing issues
-    await userEvent.click(ta)
+    await userEvent.click(editor)
     await userEvent.paste(value)
   }
 }
@@ -281,37 +281,51 @@ describe('YAML Validation Logic', () => {
   })
 
   describe('Empty and edge cases', () => {
-    it('handles empty YAML input', async () => {
-      server.use(
-        http.post('/validate', () => {
-          return HttpResponse.json({ ok: true, messages: [] })
-        })
-      )
+  it('handles empty YAML input', async () => {
+    server.use(
+      http.post('/validate', () => {
+        return HttpResponse.json({ ok: true, messages: [] })
+      })
+    )
 
-      render(<Playground />)
-      
-      await typeInTextarea('')
-      
-      // Validate button should be disabled for empty input
-      const validateBtn = screen.getByRole('button', { name: /validate/i })
-      expect(validateBtn).toBeDisabled()
-    })
+    render(<Playground />)
+    
+    // Clear the initial content to simulate empty input scenario
+    await typeInTextarea('')
+    
+    // Click validate to test the validation behavior with empty input
+    await clickValidateButton()
+    
+    // Should show success message (empty YAML is typically valid)
+    await waitFor(() => {
+      const successAlert = screen.getByRole('status')
+      expect(successAlert).toBeInTheDocument()
+      expect(successAlert).toHaveTextContent(/no errors found/i)
+    }, { timeout: 3000 })
+  })
 
-    it('handles whitespace-only input', async () => {
-      server.use(
-        http.post('/validate', () => {
-          return HttpResponse.json({ ok: true, messages: [] })
-        })
-      )
+  it('handles whitespace-only input', async () => {
+    server.use(
+      http.post('/validate', () => {
+        return HttpResponse.json({ ok: true, messages: [] })
+      })
+    )
 
-      render(<Playground />)
-      
-      await typeInTextarea('   \n  \t  \n   ')
-      
-      // Validate button should be disabled for whitespace-only input
-      const validateBtn = screen.getByRole('button', { name: /validate/i })
-      expect(validateBtn).toBeDisabled()
-    })
+    render(<Playground />)
+    
+    // Replace content with whitespace-only input
+    await typeInTextarea('   \n  \t  \n   ')
+    
+    // Click validate to test the validation behavior with whitespace input
+    await clickValidateButton()
+    
+    // Should show success message (whitespace-only YAML is typically valid)
+    await waitFor(() => {
+      const successAlert = screen.getByRole('status')
+      expect(successAlert).toBeInTheDocument()
+      expect(successAlert).toHaveTextContent(/no errors found/i)
+    }, { timeout: 3000 })
+  })
 
     it('handles very long YAML input', async () => {
       server.use(

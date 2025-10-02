@@ -63,6 +63,39 @@ beforeEach(() => {
     
     // Reset matchMedia mock
     matchMediaMock.mockClear()
+    
+    // Mock CodeMirror DOM methods for testing
+    if (!Element.prototype.getClientRects) {
+      Element.prototype.getClientRects = vi.fn().mockReturnValue({
+        length: 1,
+        0: { top: 0, left: 0, bottom: 20, right: 100, width: 100, height: 20 },
+        item: vi.fn(),
+        [Symbol.iterator]: function* () { yield this[0] }
+      })
+    }
+    
+    if (!Element.prototype.getBoundingClientRect) {
+      Element.prototype.getBoundingClientRect = vi.fn().mockReturnValue({
+        top: 0, left: 0, bottom: 20, right: 100, width: 100, height: 20, x: 0, y: 0,
+        toJSON: vi.fn()
+      })
+    }
+    
+    if (!Range.prototype.getClientRects) {
+      Range.prototype.getClientRects = vi.fn().mockReturnValue({
+        length: 1,
+        0: { top: 0, left: 0, bottom: 20, right: 100, width: 100, height: 20 },
+        item: vi.fn(),
+        [Symbol.iterator]: function* () { yield this[0] }
+      })
+    }
+    
+    if (!Range.prototype.getBoundingClientRect) {
+      Range.prototype.getBoundingClientRect = vi.fn().mockReturnValue({
+        top: 0, left: 0, bottom: 20, right: 100, width: 100, height: 20, x: 0, y: 0,
+        toJSON: vi.fn()
+      })
+    }
   }
 })
 
