@@ -29,5 +29,51 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    
+    // Advanced testing projects
+    {
+      name: 'performance',
+      testDir: './tests/performance',
+      timeout: 60000, // 1 minute timeout for load tests
+      retries: 1,
+      use: {
+        ...devices['Desktop Chrome'],
+        // Disable animations for consistent performance measurements
+        reducedMotion: 'reduce',
+      },
+    },
+    
+    {
+      name: 'contract',
+      testDir: './tests/contract',
+      timeout: 30000,
+      retries: 2,
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+    
+    {
+      name: 'visual',
+      testDir: './tests/visual',
+      timeout: 30000,
+      retries: 1,
+      use: {
+        ...devices['Desktop Chrome'],
+        // Disable animations for consistent screenshots
+        reducedMotion: 'reduce',
+      },
+    },
+    
+    {
+      name: 'mobile',
+      testDir: './tests/mobile',
+      timeout: 45000,
+      retries: 1,
+      use: {
+        ...devices['iPhone 12'],
+        hasTouch: true,
+      },
+    },
   ],
 })
