@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { SvgAnimation } from '@/components/SvgAnimation'
 import { Coffee, UserCheck } from 'lucide-react'
 
 export default function Contact() {
@@ -55,13 +54,15 @@ export default function Contact() {
           </div>
           <div className="flex items-center justify-center">
             <div className="justify-self-center w-full max-w-[520px]">
-              <SvgAnimation
-                src="/animations/developer-support.svg"
-                alt="Friendly, developer-first support"
-                className="w-full"
-                fallbackIcon={UserCheck}
-                fallbackSize="120px"
-              />
+              <div className="flex h-[300px] w-full items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/50">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <UserCheck className="h-16 w-16 text-muted-foreground/60" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">Support Illustration</p>
+                    <p className="text-xs text-muted-foreground/70">Coming Soon</p>
+                  </div>
+                </div>
+              </div>
               <p className="mt-4 text-sm text-muted-foreground text-center">Friendly, developer‑first support</p>
             </div>
           </div>
