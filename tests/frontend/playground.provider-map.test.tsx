@@ -21,18 +21,21 @@ describe('Playground provider mapping', () => {
   it('maps diverse azure strings to Azure badge', async () => {
     render(<Playground />)
     const badge = await screen.findByText(/Provider:/)
-    // Trigger a validate so suggest gets called
-    const validate = screen.getByRole('button', { name: /validate/i })
+    // Trigger a validate so suggest gets called - button is "Validate Now" with real-time validation
+    const validate = screen.getByRole('button', { name: /validate now/i })
     await userEvent.click(validate)
     await screen.findByText(/Provider:\s*Azure/i)
     expect(badge.textContent).toMatch(/Azure/i)
   })
 
   it('defaults to Generic for unknown provider strings', async () => {
-;(api.suggest as unknown as MockedFunction<typeof api.suggest>).mockResolvedValueOnce({ provider: 'unknown-cloud', suggestions: [] })
+    // Reset the suggest mock to return unknown provider
+    ;(api.suggest as unknown as MockedFunction<typeof api.suggest>).mockResolvedValue({ provider: 'unknown-cloud', suggestions: [] })
     render(<Playground />)
-    const validate = screen.getByRole('button', { name: /validate/i })
+    // Button is "Validate Now" with real-time validation
+    const validate = screen.getByRole('button', { name: /validate now/i })
     await userEvent.click(validate)
+    // Wait for the provider detection to complete and update the badge
     await screen.findByText(/Provider:\s*Generic/i)
   })
 })
