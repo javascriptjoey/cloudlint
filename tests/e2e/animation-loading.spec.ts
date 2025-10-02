@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Lottie Animation Loading', () => {
+test.describe('SVG Animation Loading', () => {
   test.beforeEach(async ({ page }) => {
     // Ensure we start with default network conditions
     await page.goto('/')
@@ -13,9 +13,9 @@ test('About page animation loads successfully', async ({ page }) => {
     const animationRegion = page.getByRole('region', { name: /data security animation/i })
     await expect(animationRegion).toBeVisible()
     
-    // Check that the actual Lottie animation loads (not fallback)
-    const lottieAnimation = page.getByTestId('lottie-animation')
-    await expect(lottieAnimation).toBeVisible({ timeout: 15000 })
+    // Check that the SVG animation loads
+    const svgAnimation = page.getByTestId('svg-animation')
+    await expect(svgAnimation).toBeVisible({ timeout: 5000 })
     
     // Ensure loading state is gone
     const loadingState = page.getByTestId('animation-loading')
@@ -25,9 +25,9 @@ test('About page animation loads successfully', async ({ page }) => {
     const fallback = page.getByTestId('animation-fallback')
     await expect(fallback).not.toBeVisible()
     
-    // Verify accessibility attributes
-    await expect(lottieAnimation).toHaveAttribute('role', 'img')
-    await expect(lottieAnimation).toHaveAttribute('aria-label', 'Data security animation')
+    // Verify accessibility attributes  
+    const animationContainer = page.getByRole('img', { name: /data security animation/i })
+    await expect(animationContainer).toBeVisible()
   })
 
   test('Contact page animation loads successfully', async ({ page }) => {

@@ -1,0 +1,220 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" aria-labelledby="support-title" role="img">
+  <title id="support-title">Developer Support Animation</title>
+  
+  <defs>
+    <!-- Gradient definitions -->
+    <linearGradient id="laptopGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#374151;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1f2937;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="screenGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#111827;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1f2937;stop-opacity:1" />
+    </linearGradient>
+
+    <linearGradient id="codeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+
+    <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:0" />
+    </radialGradient>
+
+    <!-- Animation definitions -->
+    <style>
+      .laptop-glow {
+        animation: laptopGlow 3s ease-in-out infinite alternate;
+      }
+      
+      .code-typing {
+        animation: codeTyping 4s ease-in-out infinite;
+      }
+      
+      .support-float {
+        animation: supportFloat 5s ease-in-out infinite;
+        transform-origin: center;
+      }
+      
+      .cursor-blink {
+        animation: cursorBlink 1s step-end infinite;
+      }
+      
+      .chat-bubble {
+        animation: chatPop 2s ease-in-out infinite;
+        transform-origin: bottom left;
+      }
+      
+      .help-icon-bounce {
+        animation: helpBounce 3s ease-in-out infinite;
+      }
+
+      @keyframes laptopGlow {
+        0% { filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.2)); }
+        100% { filter: drop-shadow(0 0 25px rgba(16, 185, 129, 0.4)); }
+      }
+      
+      @keyframes codeTyping {
+        0%, 20% { width: 0%; opacity: 0; }
+        30% { opacity: 1; }
+        80% { width: 100%; opacity: 1; }
+        90%, 100% { width: 100%; opacity: 0.7; }
+      }
+      
+      @keyframes supportFloat {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        33% { transform: translateY(-5px) rotate(1deg); }
+        66% { transform: translateY(3px) rotate(-1deg); }
+      }
+      
+      @keyframes cursorBlink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+      }
+      
+      @keyframes chatPop {
+        0%, 70% { transform: scale(1); opacity: 0.8; }
+        80% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.8; }
+      }
+      
+      @keyframes helpBounce {
+        0%, 100% { transform: translateY(0px) scale(1); }
+        50% { transform: translateY(-8px) scale(1.1); }
+      }
+
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        .laptop-glow, .code-typing, .support-float, .cursor-blink, .chat-bubble, .help-icon-bounce {
+          animation: none;
+        }
+      }
+    </style>
+  </defs>
+
+  <!-- Background elements -->
+  <circle cx="200" cy="200" r="150" fill="url(#glowGradient)" opacity="0.3"/>
+
+  <!-- Main laptop -->
+  <g class="support-float laptop-glow">
+    <!-- Laptop base -->
+    <path d="M 100 280 L 300 280 Q 310 280 310 290 L 310 300 Q 310 310 300 310 L 100 310 Q 90 310 90 300 L 90 290 Q 90 280 100 280 Z" 
+          fill="url(#laptopGradient)" 
+          stroke="#4b5563" 
+          stroke-width="1"/>
+    
+    <!-- Laptop screen -->
+    <rect x="120" y="120" width="160" height="120" rx="8" ry="8" 
+          fill="url(#screenGradient)" 
+          stroke="#374151" 
+          stroke-width="2"/>
+    
+    <!-- Laptop screen bezel -->
+    <rect x="110" y="110" width="180" height="140" rx="12" ry="12" 
+          fill="url(#laptopGradient)" 
+          stroke="#4b5563" 
+          stroke-width="2"/>
+    
+    <!-- Screen glow -->
+    <rect x="120" y="120" width="160" height="120" rx="8" ry="8" 
+          fill="url(#screenGradient)" 
+          stroke="#10b981" 
+          stroke-width="1" 
+          opacity="0.8"/>
+  </g>
+
+  <!-- Code lines on screen -->
+  <g class="code-typing">
+    <!-- Code line 1 -->
+    <rect x="130" y="140" width="0" height="3" fill="#10b981" opacity="0.8">
+      <animate attributeName="width" values="0;120;120;120" dur="4s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Code line 2 -->
+    <rect x="135" y="155" width="0" height="3" fill="#3b82f6" opacity="0.8">
+      <animate attributeName="width" values="0;0;90;90" dur="4s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Code line 3 -->
+    <rect x="130" y="170" width="0" height="3" fill="#8b5cf6" opacity="0.8">
+      <animate attributeName="width" values="0;0;0;110" dur="4s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Code line 4 -->
+    <rect x="135" y="185" width="0" height="3" fill="#10b981" opacity="0.8">
+      <animate attributeName="width" values="0;0;0;80" dur="4s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Cursor -->
+    <rect x="250" y="185" width="2" height="8" fill="#fbbf24" class="cursor-blink"/>
+  </g>
+
+  <!-- Chat/Support elements -->
+  <g class="chat-bubble">
+    <!-- Chat bubble -->
+    <path d="M 320 100 
+             L 380 100 
+             Q 390 100 390 110
+             L 390 150
+             Q 390 160 380 160
+             L 330 160
+             L 320 170
+             Z" 
+          fill="#10b981" 
+          stroke="#059669" 
+          stroke-width="1" 
+          opacity="0.9"/>
+    
+    <!-- Chat text lines -->
+    <line x1="330" y1="115" x2="370" y2="115" stroke="white" stroke-width="2" opacity="0.9"/>
+    <line x1="330" y1="125" x2="365" y2="125" stroke="white" stroke-width="2" opacity="0.7"/>
+    <line x1="330" y1="135" x2="375" y2="135" stroke="white" stroke-width="2" opacity="0.9"/>
+    <line x1="330" y1="145" x2="355" y2="145" stroke="white" stroke-width="2" opacity="0.6"/>
+  </g>
+
+  <!-- Help/Support icons -->
+  <g class="help-icon-bounce" transform="translate(60, 180)">
+    <circle r="20" fill="#3b82f6" opacity="0.2"/>
+    <circle r="15" fill="#3b82f6" opacity="0.8"/>
+    <text x="0" y="6" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="bold" fill="white">?</text>
+  </g>
+
+  <g class="help-icon-bounce" transform="translate(340, 300)" style="animation-delay: -1s;">
+    <circle r="18" fill="#8b5cf6" opacity="0.2"/>
+    <circle r="13" fill="#8b5cf6" opacity="0.8"/>
+    <path d="M -6 -4 L 6 -4 L 6 -1 L 3 -1 L 3 2 L 6 2 L 6 8 L -6 8 Z" fill="white"/>
+    <rect x="-2" y="0" width="4" height="2" fill="#8b5cf6"/>
+  </g>
+
+  <!-- Floating code symbols -->
+  <g opacity="0.4">
+    <text x="80" y="80" font-family="Monaco, 'Courier New', monospace" font-size="14" fill="#10b981" class="support-float" style="animation-delay: -0.5s;">&lt;/&gt;</text>
+    <text x="320" y="60" font-family="Monaco, 'Courier New', monospace" font-size="12" fill="#3b82f6" class="support-float" style="animation-delay: -1.2s;">{ }</text>
+    <text x="50" y="300" font-family="Monaco, 'Courier New', monospace" font-size="16" fill="#8b5cf6" class="support-float" style="animation-delay: -2s;">API</text>
+    <text x="350" y="250" font-family="Monaco, 'Courier New', monospace" font-size="14" fill="#f59e0b" class="support-float" style="animation-delay: -0.8s;">npm</text>
+  </g>
+
+  <!-- Developer-friendly message -->
+  <text x="200" y="360" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="#64748b" opacity="0.8">
+    Developer-First Support
+  </text>
+  
+  <!-- Subtle keyboard -->
+  <g opacity="0.6">
+    <rect x="140" y="290" width="120" height="8" rx="2" ry="2" fill="#374151"/>
+    <g fill="#4b5563">
+      <rect x="145" y="292" width="8" height="4" rx="1"/>
+      <rect x="155" y="292" width="8" height="4" rx="1"/>
+      <rect x="165" y="292" width="8" height="4" rx="1"/>
+      <rect x="175" y="292" width="24" height="4" rx="1"/>
+      <rect x="201" y="292" width="8" height="4" rx="1"/>
+      <rect x="211" y="292" width="8" height="4" rx="1"/>
+      <rect x="221" y="292" width="8" height="4" rx="1"/>
+      <rect x="231" y="292" width="8" height="4" rx="1"/>
+      <rect x="241" y="292" width="14" height="4" rx="1"/>
+    </g>
+  </g>
+</svg>

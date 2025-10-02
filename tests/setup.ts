@@ -93,14 +93,6 @@ function isYamlTagWarning(w: unknown): boolean {
   return (originalEmitWarning as unknown as (...a: any[]) => void)(warning as any, ...(args as any[]))
 }) as unknown as typeof process.emitWarning
 
-// Mock dotlottie-react to avoid WASM/runtime in unit tests
-// Provide a simple div that preserves role/aria props for accessibility assertions
-import React from 'react'
-vi.mock('@lottiefiles/dotlottie-react', () => ({
-  DotLottieReact: (props: Record<string, unknown>) => {
-    return React.createElement('div', { 'data-testid': 'mock-lottie', ...props })
-  },
-}))
 
 // Start MSW only in jsdom (frontend tests). Backend tests run in Node and should not be intercepted.
 const isJsdom = typeof window !== 'undefined' && typeof document !== 'undefined'

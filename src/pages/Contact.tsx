@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { LottiePlayer } from '@/components/LottiePlayer'
+import { SvgAnimation } from '@/components/SvgAnimation'
 import { Coffee, UserCheck } from 'lucide-react'
 
 export default function Contact() {
@@ -55,11 +55,9 @@ export default function Contact() {
           </div>
           <div className="flex items-center justify-center">
             <div className="justify-self-center w-full max-w-[520px]">
-              <LottiePlayer
-                src="/animations/Developer_Yoga.lottie"
+              <SvgAnimation
+                src="/animations/developer-support.svg"
                 alt="Friendly, developer-first support"
-                loop
-                autoplay
                 className="w-full"
                 fallbackIcon={UserCheck}
                 fallbackSize="120px"

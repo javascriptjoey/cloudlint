@@ -2,7 +2,7 @@ import { Seo } from '@/components/Seo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { LottiePlayer } from '@/components/LottiePlayer'
+import { SvgAnimation } from '@/components/SvgAnimation'
 import { Cloud, Shield, GitCompare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -34,11 +34,9 @@ export default function About() {
           </div>
           <div className="flex items-center justify-center">
             <div className="justify-self-center w-full max-w-[520px]">
-              <LottiePlayer
-                src="/animations/data-security.lottie"
+              <SvgAnimation
+                src="/animations/data-security.svg"
                 alt="Data security animation"
-                loop
-                autoplay
                 className="w-full"
                 fallbackIcon={Shield}
                 fallbackSize="120px"
