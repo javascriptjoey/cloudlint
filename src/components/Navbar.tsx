@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Menu, CloudCog } from 'lucide-react'
 
 export function Navbar() {
@@ -22,6 +22,7 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="left" className="w-72">
               <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <SheetDescription className="sr-only">Navigate to different pages of the application</SheetDescription>
               <div className="mt-8 grid gap-4">
                 <SheetClose asChild>
                   <Link className="text-lg" to="/">Home</Link>

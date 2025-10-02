@@ -18,6 +18,18 @@ const SheetTitle = React.forwardRef<
 ))
 SheetTitle.displayName = DialogPrimitive.Title.displayName
 
+const SheetDescription = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn('text-sm text-muted-foreground', className)}
+    {...props}
+  />
+))
+SheetDescription.displayName = DialogPrimitive.Description.displayName
+
 function SheetContent({ side = 'left', className, ...props }: React.ComponentProps<typeof DialogPrimitive.Content> & { side?: 'left'|'right'|'top'|'bottom' }) {
   const sides: Record<string, string> = {
     left: 'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left',
@@ -43,4 +55,4 @@ function SheetContent({ side = 'left', className, ...props }: React.ComponentPro
   )
 }
 
-export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetTitle }
+export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetTitle, SheetDescription }

@@ -1,77 +1,86 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('SVG Animation Loading', () => {
+test.describe('Animation Placeholders', () => {
   test.beforeEach(async ({ page }) => {
-    // Ensure we start with default network conditions
+    // Ensure we start with clean state
     await page.goto('/')
   })
 
-test('About page animation loads successfully', async ({ page }) => {
+  test('About page shows security illustration placeholder', async ({ page }) => {
     await page.goto('/')
     
-    // Wait for animation container to be present
-    const animationRegion = page.getByRole('region', { name: /data security animation/i })
-    await expect(animationRegion).toBeVisible()
+    // Check that the placeholder card is visible
+    const placeholderText = page.getByText('Security Illustration')
+    await expect(placeholderText).toBeVisible()
     
-    // Check that the SVG animation loads
-    const svgAnimation = page.getByTestId('svg-animation')
-    await expect(svgAnimation).toBeVisible({ timeout: 5000 })
+    // Check for "Coming Soon" text
+    const comingSoonText = page.getByText('Coming Soon')
+    await expect(comingSoonText).toBeVisible()
     
-    // Ensure loading state is gone
-    const loadingState = page.getByTestId('animation-loading')
-    await expect(loadingState).not.toBeVisible()
+    // Check for the provider intelligence text
+    const providerText = page.getByText('Provider‑aware YAML Intelligence')
+    await expect(providerText).toBeVisible()
     
-    // Ensure no fallback is shown
-    const fallback = page.getByTestId('animation-fallback')
-    await expect(fallback).not.toBeVisible()
-    
-    // Verify accessibility attributes  
-    const animationContainer = page.getByRole('img', { name: /data security animation/i })
-    await expect(animationContainer).toBeVisible()
+    // Verify the Shield icon is present
+    const shieldIcon = page.locator('svg').first()
+    await expect(shieldIcon).toBeVisible()
   })
 
-  test('Contact page animation loads successfully', async ({ page }) => {
+  test('Contact page shows support illustration placeholder', async ({ page }) => {
     await page.goto('/contact')
     
-    // Wait for animation container to be present
-    const animationRegion = page.getByRole('region', { name: /friendly, developer-first support/i })
-    await expect(animationRegion).toBeVisible()
+    // Check that the placeholder card is visible
+    const placeholderText = page.getByText('Support Illustration')
+    await expect(placeholderText).toBeVisible()
     
-    // Check that the actual Lottie animation loads
-    const lottieAnimation = page.getByTestId('lottie-animation')
-    await expect(lottieAnimation).toBeVisible({ timeout: 15000 })
+    // Check for "Coming Soon" text
+    const comingSoonText = page.getByText('Coming Soon')
+    await expect(comingSoonText).toBeVisible()
     
-    // Ensure loading state is gone
-    const loadingState = page.getByTestId('animation-loading')
-    await expect(loadingState).not.toBeVisible()
+    // Check for the support text
+    const supportText = page.getByText('Friendly, developer‑first support')
+    await expect(supportText).toBeVisible()
     
-    // Verify accessibility
-    await expect(lottieAnimation).toHaveAttribute('role', 'img')
-    await expect(lottieAnimation).toHaveAttribute('aria-label', 'Friendly, developer-first support')
+    // Verify the UserCheck icon is present
+    const userIcon = page.locator('svg').first()
+    await expect(userIcon).toBeVisible()
   })
 
-  test('Animation shows loading state initially', async ({ page }) => {
-    // Slow down network to see loading state
-    await page.route('**/animations/*.lottie', async route => {
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      await route.continue()
-    })
-    
+  test('Page functionality works with placeholders', async ({ page }) => {
     await page.goto('/')
     
-    // Should show loading state first
-    const loadingState = page.getByTestId('animation-loading')
-    await expect(loadingState).toBeVisible()
-    await expect(loadingState).toContainText('Loading animation...')
+    // Page should load quickly with placeholders
+    const pageTitle = page.getByRole('heading', { name: /ship yaml with confidence/i })
+    await expect(pageTitle).toBeVisible()
     
-    // Eventually loads the actual animation
-    const lottieAnimation = page.getByTestId('lottie-animation')
-    await expect(lottieAnimation).toBeVisible({ timeout: 20000 })
+    // Navigation should work normally
+    await page.getByRole('link', { name: /contact/i }).first().click()
+    await expect(page).toHaveURL(/.*contact/)
     
-    // Loading state should disappear
-    await expect(loadingState).not.toBeVisible()
+    // Contact page placeholder should be visible
+    const contactPlaceholder = page.getByText('Support Illustration')
+    await expect(contactPlaceholder).toBeVisible()
   })
 
+  test('Placeholder design is consistent and accessible', async ({ page }) => {
+    await page.goto('/')
+    
+    // Check that placeholder has proper styling
+    const placeholder = page.locator('.border-dashed').first()
+    await expect(placeholder).toBeVisible()
+    
+    // Verify proper contrast and visibility
+    const placeholderText = page.getByText('Security Illustration')
+    await expect(placeholderText).toBeVisible()
+    
+    // Check that icons are properly displayed
+    const icon = placeholder.locator('svg')
+    await expect(icon).toBeVisible()
+    await expect(icon).toHaveAttribute('aria-hidden', 'true')
+  })
+})
+
+test.describe('Animation Loading and Fallback', () => {
   test('Shows fallback icon when animation fails to load (404)', async ({ page }) => {
     // Block the animation file to simulate 404
     await page.route('**/animations/data-security.lottie', route => route.abort())
