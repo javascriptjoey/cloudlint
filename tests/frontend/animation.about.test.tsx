@@ -3,13 +3,15 @@ import { MemoryRouter } from 'react-router-dom'
 import About from '@/pages/About'
 
 describe('About page animation', () => {
-  it('renders the data-security Lottie with accessible name', () => {
+  it('renders the security illustration placeholder with coming soon text', () => {
     render(
       <MemoryRouter>
         <About />
       </MemoryRouter>
     )
-    const animationRegion = screen.getByRole('region', { name: /data security animation/i })
-    expect(animationRegion).toBeInTheDocument()
+    // Check for the security illustration placeholder
+    expect(screen.getByText('Security Illustration')).toBeInTheDocument()
+    expect(screen.getByText('Coming Soon')).toBeInTheDocument()
+    expect(screen.getByText('Provider‑aware YAML Intelligence')).toBeInTheDocument()
   })
 })
