@@ -41,7 +41,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           export SERVE_STATIC=1
-          export PORT=8787
+          export PORT=3001
           export NODE_ENV=test
           nohup node node_modules/tsx/dist/cli.mjs src/server.ts > server.log 2>&1 &
 
@@ -50,12 +50,12 @@ jobs:
         shell: pwsh
         run: |
           $env:SERVE_STATIC='1'
-          $env:PORT='8787'
+          $env:PORT='3001'
           $env:NODE_ENV='test'
           Start-Process -FilePath node -ArgumentList "node_modules/tsx/dist/cli.mjs","src/server.ts" -NoNewWindow -RedirectStandardOutput "server.out.log" -RedirectStandardError "server.err.log"
 
       - name: Wait for server
-        run: npx wait-on -t 180000 http://localhost:8787/health
+        run: npx wait-on -t 180000 http://localhost:3001/health
 
       - name: Print server logs on failure
         if: failure()

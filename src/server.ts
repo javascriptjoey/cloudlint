@@ -223,7 +223,7 @@ export function createServer() {
 }
 
 if (import.meta.main) {
-  const port = Number(process.env.PORT || 8787)
+  const port = Number(process.env.PORT || 3001)
   const app = createServer()
   const __dirname_es = path.dirname(fileURLToPath(import.meta.url))
   const distDir = path.resolve(__dirname_es, '../dist')
