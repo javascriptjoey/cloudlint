@@ -1,18 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import Playground from '@/pages/Playground'
 import { server } from '../mocks/server'
-
-// Mock API responses
-const mockValidationResponse = {
-  ok: true,
-  messages: []
-}
-
-const mockSuggestionResponse = {
-  provider: 'generic',
-  suggestions: []
-}
 
 beforeEach(() => {
   server.resetHandlers()

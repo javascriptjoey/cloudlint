@@ -22,7 +22,6 @@ describe('Playground oversize check', () => {
     
     // Wait for initial real-time validation to complete and reset call count
     await screen.findByText('Provider: Generic')
-    const initialCalls = (api.validate as unknown as MockedFunction<typeof api.validate>).mock.calls.length
     
     // Clear the call history to start fresh
     ;(api.validate as unknown as MockedFunction<typeof api.validate>).mockClear()
