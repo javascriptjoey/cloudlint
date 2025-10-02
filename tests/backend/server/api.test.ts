@@ -1,6 +1,9 @@
+/**
+ * @vitest-environment node
+ */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import request from 'supertest'
-import { createServer } from '@/server'
+import { app } from '@/backend/server/app'
 
 let app: ReturnType<typeof createServer>
 

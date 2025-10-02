@@ -13,9 +13,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    environmentMatchGlobs: [
-      ['tests/backend/**', 'node'],
-    ],
     setupFiles: ['./tests/setup.ts'],
     css: true,
     // Run test files serially to avoid cross-file env interference (timeout tests)

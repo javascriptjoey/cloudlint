@@ -26,6 +26,8 @@ export default function Playground() {
   const fileRef = useRef<HTMLInputElement>(null)
   const schemaRef = useRef<HTMLInputElement>(null)
   const cancelDelayRef = useRef<number | null>(null)
+  const busyLabelDelayRef = useRef<number | null>(null)
+  const schemaBlurDelayRef = useRef<number | null>(null)
   const [showCancel, setShowCancel] = useState(false)
 
   const hasInput = yaml.trim().length > 0
@@ -56,7 +58,7 @@ export default function Playground() {
       setSchemaErrors(null)
       setSchemaText(text)
       if (schemaRef.current) schemaRef.current.value = ''
-      setTimeout(() => { schemaRef.current?.blur() }, 0)
+      schemaBlurDelayRef.current = window.setTimeout(() => { schemaRef.current?.blur() }, 0)
     } catch {
       setSchemaErrors(['Invalid JSON schema file'])
     }
@@ -75,9 +77,10 @@ export default function Playground() {
     setShowBusyLabel(false)
     // Only show Cancel if the request lasts over 250ms to avoid jarring flashes
     if (cancelDelayRef.current) window.clearTimeout(cancelDelayRef.current)
+    if (busyLabelDelayRef.current) window.clearTimeout(busyLabelDelayRef.current)
     cancelDelayRef.current = window.setTimeout(()=> setShowCancel(true), 250)
     // Only switch label after 150ms to avoid brief flicker on fast responses
-    window.setTimeout(()=> setShowBusyLabel(true), 150)
+    busyLabelDelayRef.current = window.setTimeout(()=> setShowBusyLabel(true), 150)
     setSchemaErrors(null)
     try {
       // abort any in-flight request
@@ -137,7 +140,14 @@ export default function Playground() {
       setResult({ ok: false, messages: [{ message: msg, severity: 'error' }] })
     } finally {
       setValidating(false)
-      if (cancelDelayRef.current) window.clearTimeout(cancelDelayRef.current)
+      if (cancelDelayRef.current) {
+        window.clearTimeout(cancelDelayRef.current)
+        cancelDelayRef.current = null
+      }
+      if (busyLabelDelayRef.current) {
+        window.clearTimeout(busyLabelDelayRef.current)
+        busyLabelDelayRef.current = null
+      }
       setShowCancel(false)
       setShowBusyLabel(false)
       controllerRef.current = null
@@ -186,6 +196,26 @@ export default function Playground() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [yaml])
+
+  // Cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      // Clean up any pending timeouts
+      if (cancelDelayRef.current) {
+        window.clearTimeout(cancelDelayRef.current)
+      }
+      if (busyLabelDelayRef.current) {
+        window.clearTimeout(busyLabelDelayRef.current)
+      }
+      if (schemaBlurDelayRef.current) {
+        window.clearTimeout(schemaBlurDelayRef.current)
+      }
+      // Abort any in-flight requests
+      if (controllerRef.current) {
+        controllerRef.current.abort()
+      }
+    }
+  }, [])
 
   return (
     <>
