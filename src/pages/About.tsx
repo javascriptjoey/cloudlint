@@ -2,7 +2,6 @@ import { Seo } from '@/components/Seo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { LottiePlayer } from '@/components/LottiePlayer'
 import { Cloud, Shield, GitCompare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -34,15 +33,15 @@ export default function About() {
           </div>
           <div className="flex items-center justify-center">
             <div className="justify-self-center w-full max-w-[520px]">
-              <LottiePlayer
-                src="/animations/data-security.lottie"
-                alt="Data security animation"
-                loop
-                autoplay
-                className="w-full"
-                fallbackIcon={Shield}
-                fallbackSize="120px"
-              />
+              <div className="flex h-[300px] w-full items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/50">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <Shield className="h-16 w-16 text-muted-foreground/60" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">Security Illustration</p>
+                    <p className="text-xs text-muted-foreground/70">Coming Soon</p>
+                  </div>
+                </div>
+              </div>
               <p className="mt-4 text-sm text-muted-foreground text-center">Provider‑aware YAML Intelligence</p>
             </div>
           </div>
