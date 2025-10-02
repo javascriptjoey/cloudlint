@@ -8,7 +8,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   workers: process.env.CI ? 1 : 2, // Reduce concurrency to avoid resource contention
   use: {
-    baseURL: 'http://127.0.0.1:8787',
+    baseURL: 'http://127.0.0.1:3001',
     headless: true,
     trace: 'on-first-retry',
     video: 'retain-on-failure',
@@ -16,12 +16,12 @@ export default defineConfig({
   },
   webServer: useWebServer ? {
     command: 'npm run start:server',
-    url: 'http://localhost:8787',
+    url: 'http://localhost:3001',
     reuseExistingServer: true,
     timeout: 180_000,
     env: {
       SERVE_STATIC: '1',
-      PORT: '8787',
+      PORT: '3001',
       NODE_ENV: 'test',
     },
   } : undefined,

@@ -50,7 +50,8 @@ const goToPlayground = async (page: Page) => {
 }
 
 const yamlBox = (page: Page) => page.getByRole('textbox', { name: 'YAML input' })
-const validateBtn = (page: Page) => page.getByRole('button', { name: 'Validate' })
+// The validate button has dynamic text: 'Validate' or 'Validate Now'
+const validateBtn = (page: Page) => page.getByRole('button', { name: /Validate/ })
 const themeToggle = (page: Page) => page.getByRole('button', { name: /toggle theme/i })
 
 test.describe('YAML Validation E2E Tests', () => {
@@ -93,18 +94,24 @@ test.describe('YAML Validation E2E Tests', () => {
   test('handles empty YAML input correctly', async ({ page }) => {
     await goToPlayground(page)
     
+    // Clear any initial content and ensure it's empty
+    await yamlBox(page).clear()
     await yamlBox(page).fill('')
     
-    // Validate button should be disabled
+    // Wait for React state to update and validate button should be disabled when empty
+    await page.waitForTimeout(100) // Allow React state to update
     await expect(validateBtn(page)).toBeDisabled()
   })
 
   test('handles whitespace-only input correctly', async ({ page }) => {
     await goToPlayground(page)
     
+    // Clear initial content and fill with whitespace only
+    await yamlBox(page).clear()
     await yamlBox(page).fill('   \n  \t  \n   ')
     
-    // Validate button should be disabled for whitespace-only
+    // Wait for React state to update and validate button should be disabled for whitespace-only input
+    await page.waitForTimeout(100) // Allow React state to update
     await expect(validateBtn(page)).toBeDisabled()
   })
 
@@ -176,7 +183,8 @@ test.describe('YAML Validation E2E Tests', () => {
     await acceptBtn.click()
     
     // Check that the YAML was updated
-    await expect(yamlBox(page)).toHaveValue(/script: echo hello/)
+    const editorContent = await yamlBox(page).inputValue()
+    expect(editorContent).toMatch(/script: echo hello/)
   })
 
   test('cancel button works during validation', async ({ page }) => {
