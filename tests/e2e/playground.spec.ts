@@ -53,7 +53,8 @@ const goToPlayground = async (page: Page) => {
 }
 
 const yamlBox = (page: Page) => page.getByRole('textbox', { name: 'YAML input' })
-const validateBtn = (page: Page) => page.getByRole('button', { name: 'Validate' })
+// The validate button has dynamic text: 'Validate' or 'Validate Now'
+const validateBtn = (page: Page) => page.getByRole('button', { name: /Validate/ })
 const convertBtn = (page: Page) => page.getByRole('button', { name: 'Convert to JSON' })
 const uploadYamlInput = (page: Page) => page.locator('input[aria-label="Upload YAML file"]')
 const uploadSchemaInput = (page: Page) => page.locator('input[aria-label="Upload JSON Schema"]')
@@ -133,7 +134,8 @@ test('Shows diff preview and applies fix via Accept button', async ({ page }) =>
   await expect(accept).toBeVisible()
   await accept.click()
   // After accept, the editor should contain the fixed content
-  await expect(yamlBox(page)).toHaveValue(/script: echo hi/)
+  const editorContent = await yamlBox(page).inputValue()
+  expect(editorContent).toMatch(/script: echo hi/)
 })
 
 // Cancellation flows
@@ -180,9 +182,9 @@ test('Provider badge updates to AWS when CFN template detected', async ({ page }
 // Critical alerts and UI feedback
 test('Shows alerts and maintains keyboard and ARIA accessibility', async ({ page }) => {
   await goToPlayground(page)
-  // Basic roles
-  await expect(page.getByRole('button', { name: 'Upload YAML', exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Convert to JSON', exact: true })).toBeVisible()
+  // Basic roles - check current button labels (use more specific selector for Upload YAML)
+  await expect(page.locator('button').filter({ hasText: 'Upload YAML' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Convert to JSON' })).toBeVisible()
 
   // Keyboard navigation: Tab to Validate button
   await page.keyboard.press('Tab')

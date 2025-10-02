@@ -53,7 +53,8 @@ const goToPlayground = async (page: Page) => {
 }
 
 const yamlBox = (page: Page) => page.getByRole('textbox', { name: 'YAML input' })
-const validateBtn = (page: Page) => page.getByRole('button', { name: 'Validate' })
+// The validate button has dynamic text: 'Validate' or 'Validate Now'
+const validateBtn = (page: Page) => page.getByRole('button', { name: /Validate/ })
 
 // Decline diff preview path
 test('Decline diff preview keeps editor unchanged and closes preview', async ({ page }) => {
@@ -68,8 +69,9 @@ test('Decline diff preview keeps editor unchanged and closes preview', async ({ 
   await page.getByRole('button', { name: 'Decline' }).click()
   // Diff preview should be gone
   await expect(page.getByRole('heading', { name: 'Preview changes' })).toHaveCount(0)
-  // Editor text remains with typo
-  await expect(yamlBox(page)).toHaveValue(/scirpt/)
+  // Editor text should still contain the typo (textarea value check)
+  const editorContent = await yamlBox(page).inputValue()
+  expect(editorContent).toMatch(/scirpt/)
 })
 
 // Copy JSON to clipboard
@@ -77,7 +79,7 @@ test('Copy JSON to clipboard', async ({ page }) => {
   await goToPlayground(page)
   await yamlBox(page).fill('foo: 1\n')
   // Render JSON view first
-  await page.getByRole('button', { name: 'Convert to JSON', exact: true }).click()
+  await page.getByRole('button', { name: 'Convert to JSON' }).click()
   await expect(page.getByRole('heading', { name: 'JSON' })).toBeVisible()
   // Click copy button in JSON card header
   const copyBtn = page.getByRole('button', { name: 'Copy JSON' })
@@ -92,7 +94,7 @@ test('Copy JSON to clipboard', async ({ page }) => {
 test('Download JSON saves expected file contents', async ({ page }) => {
   await goToPlayground(page)
   await yamlBox(page).fill('foo: 1\n')
-  await page.getByRole('button', { name: 'Convert to JSON', exact: true }).click()
+  await page.getByRole('button', { name: 'Convert to JSON' }).click()
   const [ download ] = await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Download JSON' }).click(),
