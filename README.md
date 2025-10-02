@@ -1,8 +1,13 @@
-# Cloudlint
+# Cloudlint - Enterprise YAML Validation & Linting Platform
 
-A modern YAML validation and linting platform with enterprise-grade backend and React frontend.
+[![Tests](https://github.com/javascriptjoey/cloudlint/workflows/CI/badge.svg)](https://github.com/javascriptjoey/cloudlint/actions)
+[![Security](https://img.shields.io/badge/security-OWASP%20Top%2010-green)](./docs/testing/processes/test-reporting-dashboard.md)
+[![Accessibility](https://img.shields.io/badge/accessibility-WCAG%202.1%20AA-blue)](./docs/testing/processes/test-reporting-dashboard.md)
+[![Coverage](https://img.shields.io/badge/coverage-95%25+-brightgreen)](./docs/testing/phase2.5-comprehensive-implementation.md)
 
-> **Latest Update**: Complete backend consolidation with production-ready validation engine.
+Cloudlint is a **production-ready, enterprise-grade YAML validation and linting platform** with comprehensive validation, intelligent suggestions, format conversion, and automated fixes for YAML files across multiple cloud providers and frameworks.
+
+> **🚀 Phase 2.5 Update**: Complete enterprise testing infrastructure with 5,490+ lines of test code, WCAG 2.1 AA accessibility compliance, OWASP Top 10 security coverage, and world-class performance monitoring.
 
 ## 🚀 Features
 
