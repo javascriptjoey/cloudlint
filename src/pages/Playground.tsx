@@ -271,7 +271,7 @@ export default function Playground() {
             <Input ref={schemaRef} className="sr-only" type="file" accept="application/json,.json" onChange={onUploadSchema} aria-label="Upload JSON Schema" />
 
             <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={debouncedValidation.validateNow} disabled={validating} aria-busy={validating} aria-live="polite" className="min-w-[115px] flex items-center">
+            <Button onClick={debouncedValidation.validateNow} disabled={validating} aria-busy={validating} aria-live="polite" className="min-w-[115px] flex items-center justify-center">
                 <span>{realTimeValidationEnabled ? 'Validate Now' : 'Validate'}</span>
                 <span aria-hidden className={showBusyLabel ? 'ml-2 inline-block size-3 rounded-full border-2 border-current border-r-transparent animate-spin' : 'ml-2 inline-block size-3 opacity-0'} />
               </Button>

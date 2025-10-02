@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useCallback } from 'react'
 import { EditorView, basicSetup } from 'codemirror'
 import { EditorState } from '@codemirror/state'
-import { keymap } from '@codemirror/view'
+import { keymap, placeholder as placeholderExtension } from '@codemirror/view'
 import { yaml } from '@codemirror/lang-yaml'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { searchKeymap } from '@codemirror/search'
@@ -171,19 +171,8 @@ export const YAMLEditor: React.FC<YAMLEditorProps> = ({
             fontStyle: 'italic'
           }
         }),
-        // Custom placeholder implementation will be handled by CodeMirror's placeholder extension
-        placeholder && value === '' ? EditorView.theme({
-          '.cm-line': {
-            position: 'relative'
-          },
-          '.cm-line:first-child::before': {
-            content: `"${placeholder}"`,
-            color: 'hsl(var(--muted-foreground))',
-            fontStyle: 'italic',
-            pointerEvents: 'none',
-            position: 'absolute'
-          }
-        }) : []
+        // Use proper CodeMirror placeholder extension
+        placeholder ? placeholderExtension(placeholder) : []
       ]
     })
 
@@ -199,7 +188,7 @@ export const YAMLEditor: React.FC<YAMLEditorProps> = ({
       view.destroy()
       viewRef.current = null
     }
-  }, [theme, readOnly, placeholder]) // Recreate editor when these change
+  }, [theme, readOnly, placeholder, onValidate]) // Recreate editor when these change
 
   // Update content when value prop changes externally
   useEffect(() => {

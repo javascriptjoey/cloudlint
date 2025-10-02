@@ -28,6 +28,20 @@ export function getCodeMirrorValue(): string {
 }
 
 /**
+ * Get the CodeMirror editor root element for DOM queries (e.g., error highlights)
+ */
+export async function getCodeMirrorEditor(): Promise<HTMLElement> {
+  const editor = screen.getByRole('textbox', { name: /yaml input/i })
+  // The role element is a wrapper; the actual editor has class .cm-editor somewhere up the tree
+  const cmRoot = editor.closest('.cm-editor') as HTMLElement | null
+  if (cmRoot) return cmRoot
+  // Fallback: query document if structure differs
+  const found = document.querySelector('.cm-editor') as HTMLElement | null
+  if (!found) throw new Error('CodeMirror editor root not found')
+  return found
+}
+
+/**
  * Type text into CodeMirror editor (replaces existing content)
  */
 export async function typeInCodeMirror(text: string) {

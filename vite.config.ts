@@ -15,6 +15,22 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
+    server: {
+      proxy: {
+        '/validate': {
+          target: 'http://localhost:3000',
+          changeOrigin: true
+        },
+        '/suggest': {
+          target: 'http://localhost:3000', 
+          changeOrigin: true
+        },
+        '/convert': {
+          target: 'http://localhost:3000',
+          changeOrigin: true
+        }
+      }
+    },
     base: isProduction && isGitHubPages ? '/cloudlint/' : '/',
     build: {
       outDir: 'dist',
