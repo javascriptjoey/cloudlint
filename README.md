@@ -126,31 +126,57 @@ npm run dev
 - `npm run schemas:fetch` - Fetch latest schema definitions
 
 ### Testing & Quality
+
+#### **Core Testing**
 - `npm run test` - Run unit tests in watch mode
 - `npm run test:run` - Run all tests once
-- `npm run e2e` - Run Playwright E2E tests
 - `npm run test:ui` - Run tests with UI
 - `npm run test:coverage` - Run tests with coverage
+- `npm run test:all` - Complete test suite (unit + E2E + advanced)
+
+#### **E2E Testing (Playwright)**
+- `npm run e2e` - Core E2E tests (Chromium)
+- `npm run e2e:all-browsers` - Cross-browser E2E testing
+- `npm run e2e:performance` - Performance & load testing  
+- `npm run e2e:contract` - API contract validation
+- `npm run e2e:visual` - Visual regression testing
+- `npm run e2e:mobile` - Mobile & responsive testing
+- `npm run e2e:accessibility` - WCAG 2.1 AA compliance
+- `npm run e2e:security` - Security & vulnerability testing
+- `npm run e2e:edge-cases` - Error handling & edge cases
+- `npm run e2e:advanced` - All advanced test categories
+
+#### **Code Quality**
 - `npm run lint` - Run ESLint
 - `npm run type-check` - TypeScript type checking
 - `npm run type-check:test` - TypeScript check for tests
 
 ## 🧪 Testing
 
-Comprehensive testing with **145+ tests** across multiple layers:
+Comprehensive testing with **217+ tests** across multiple layers and categories:
 
-### Unit Tests (Vitest + React Testing Library)
+### Unit Tests (Vitest + React Testing Library) - **145 tests**
 - **Frontend components** - All UI components and hooks
 - **Backend validation** - YAML processing, security, provider detection
 - **API integration** - Client-server communication
 - **Real-time validation** - Debounced validation logic
 - **Theme system** - Dark/light mode persistence
 
-### E2E Tests (Playwright)
+### E2E Tests (Playwright) - **217 total tests**
+
+#### **Core E2E Tests** (35 tests × 3 browsers = 105 tests)
 - **Cross-browser testing** - Chromium, Firefox, WebKit
 - **Playground functionality** - Complete user workflows
 - **Validation flows** - End-to-end YAML processing
-- **Accessibility** - Keyboard navigation, ARIA compliance
+
+#### **Advanced Test Categories** (112 tests)
+- **Performance Testing** (11 tests) - Load testing up to 10MB files, concurrency
+- **API Contract Testing** (15 tests) - OpenAPI validation, versioning
+- **Visual Regression** (18 tests) - Pixel-perfect UI consistency
+- **Mobile Testing** (15 tests) - Touch interactions, responsive design
+- **Accessibility** (16 tests) - WCAG 2.1 AA compliance, screen readers
+- **Security Testing** (15 tests) - OWASP Top 10, injection protection
+- **Edge Cases** (15 tests) - Error handling, network failures, race conditions
 
 ```bash
 # Unit tests
@@ -159,11 +185,15 @@ npm run test:run           # Single run
 npm run test:coverage      # With coverage
 
 # E2E tests
-npm run e2e                # Full Playwright suite
+npm run e2e                # Core E2E tests
+npm run e2e:advanced       # All advanced categories
+npm run test:all           # Everything (unit + E2E + advanced)
 
 # Backend validation
 npm run yaml:validate file.yaml  # CLI validation
 ```
+
+> 📖 **Detailed Testing Documentation**: See [`docs/testing/playwright-configuration.md`](./docs/testing/playwright-configuration.md) for complete Playwright setup, project structure, and usage guide.
 
 ## 🎨 UI Components
 
