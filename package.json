@@ -23,10 +23,12 @@
     "yaml:suggest": "tsx src/backend/yaml/cli.ts suggest",
     "schemas:fetch": "tsx src/backend/yaml/schemaFetch.ts fetch",
     "start:server": "node node_modules/tsx/dist/cli.mjs src/server.ts",
-    "build-and-serve": "cross-env SERVE_STATIC=1 PORT=8787 npm run build && npm run start:server",
+    "build-and-serve": "cross-env SERVE_STATIC=1 PORT=3001 npm run build && npm run start:server",
     "e2e": "playwright install && playwright test",
     "start:e2e": "npm run build && node node_modules/tsx/dist/cli.mjs src/server.ts",
-    "start:prod:pwsh": "npm run build && pwsh -NoLogo -NoProfile -Command \"$env:SERVE_STATIC='1'; $env:PORT='8787'; npm run start:server\""
+    "start:prod:pwsh": "npm run build && pwsh -NoLogo -NoProfile -Command \"$env:SERVE_STATIC='1'; $env:PORT='3001'; npm run start:server\"",
+    "start:prod:8787": "npm run build && cross-env SERVE_STATIC=1 PORT=8787 npm run start:server",
+    "dev:backend": "tsx src/server.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.3",
