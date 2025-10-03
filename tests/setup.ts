@@ -47,16 +47,14 @@ if (typeof window !== 'undefined') {
     Element: typeof Element
   }
   // Provide missing methods on Range prototype
-  if (w.Range && !(w.Range.prototype as unknown as { getClientRects?: () => any }).getClientRects) {
+if (w.Range && !(w.Range.prototype as unknown as { getClientRects?: () => unknown }).getClientRects) {
     ;(w.Range.prototype as unknown as { getClientRects: () => DOMRectList }).getClientRects = () => {
-      // Minimal DOMRectList-like object
-      const list: any[] & { length: number; item: (i: number) => any } = [] as any
-      list.length = 0
-      list.item = () => null
-      return list as unknown as DOMRectList
+      // Minimal DOMRectList-like object without using `any`
+      const list = { length: 0, item: () => null } as unknown as DOMRectList
+      return list
     }
   }
-  if (w.Range && !(w.Range.prototype as unknown as { getBoundingClientRect?: () => any }).getBoundingClientRect) {
+if (w.Range && !(w.Range.prototype as unknown as { getBoundingClientRect?: () => unknown }).getBoundingClientRect) {
     ;(w.Range.prototype as unknown as { getBoundingClientRect: () => DOMRect }).getBoundingClientRect = () => ({
       x: 0,
       y: 0,
@@ -83,10 +81,8 @@ if (typeof window !== 'undefined') {
   if (!w.Element.prototype.getClientRects) {
     // @ts-expect-error define polyfill
     w.Element.prototype.getClientRects = () => {
-      const list: any[] & { length: number; item: (i: number) => any } = [] as any
-      list.length = 0
-      list.item = () => null
-      return list as unknown as DOMRectList
+      const list = { length: 0, item: () => null } as unknown as DOMRectList
+      return list
     }
   }
   if (!w.HTMLElement.prototype.scrollTo) {
