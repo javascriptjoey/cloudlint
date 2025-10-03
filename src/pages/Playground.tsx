@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Seo } from '@/components/Seo'
-import { Textarea } from '@/components/ui/textarea'
+import { CodeMirrorYamlEditor } from '@/components/CodeMirrorYamlEditor'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,7 +14,7 @@ import { RealTimeValidationSettings } from '@/components/RealTimeValidationSetti
 const YAML_MAX_BYTES = Number(import.meta.env.VITE_YAML_MAX_BYTES ?? 200_000) // ~200 KB default
 
 export default function Playground() {
-  const [yaml, setYaml] = useState('steps:\n  - script: echo hello\n')
+  const [yaml, setYaml] = useState('')
   const [validating, setValidating] = useState(false)
   const [showBusyLabel, setShowBusyLabel] = useState(false)
   const [result, setResult] = useState<null | { ok: boolean; messages: { message: string; severity: 'error'|'warning'|'info' }[]; fixed?: string }>(null)
@@ -259,9 +259,9 @@ export default function Playground() {
             <CardDescription>Paste YAML or upload a file. Validate, convert, and preview fixes.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Textarea
+            <CodeMirrorYamlEditor
               value={yaml}
-              onChange={(e)=>setYaml(e.target.value)}
+              onChange={setYaml}
               aria-label="YAML input"
               placeholder="Paste YAML here or use Upload to select a .yaml/.yml file"
               className="min-h-[360px] md:min-h-[520px]"

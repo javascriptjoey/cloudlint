@@ -20,18 +20,28 @@ vi.mock('@/lib/apiClient', async () => {
 describe('Playground provider mapping', () => {
   it('maps diverse azure strings to Azure badge', async () => {
     render(<Playground />)
-    const badge = await screen.findByText(/Provider:/)
+
+    // Enter some YAML so the Validate button is enabled
+    const textarea = await screen.findByLabelText('YAML input')
+    await userEvent.type(textarea, 'name: test')
+
     // Trigger a validate so suggest gets called - button is "Validate Now" with real-time validation
     const validate = screen.getByRole('button', { name: /validate now/i })
     await userEvent.click(validate)
+
+    // Re-query the provider badge after the async update
     await screen.findByText(/Provider:\s*Azure/i)
-    expect(badge.textContent).toMatch(/Azure/i)
   })
 
   it('defaults to Generic for unknown provider strings', async () => {
     // Reset the suggest mock to return unknown provider
     ;(api.suggest as unknown as MockedFunction<typeof api.suggest>).mockResolvedValue({ provider: 'unknown-cloud', suggestions: [] })
     render(<Playground />)
+
+    // Enter some YAML so the Validate button is enabled
+    const textarea = await screen.findByLabelText('YAML input')
+    await userEvent.type(textarea, 'name: test')
+
     // Button is "Validate Now" with real-time validation
     const validate = screen.getByRole('button', { name: /validate now/i })
     await userEvent.click(validate)

@@ -25,7 +25,11 @@ describe('Playground validation display logic', () => {
       render(<Playground />)
     })
     
-    // With real-time validation enabled, the button text is "Validate Now"
+    // Enter some YAML so the Validate button is enabled, then click
+    const textarea = screen.getByLabelText('YAML input')
+    await act(async () => {
+      await userEvent.type(textarea, 'name: test')
+    })
     const btn = screen.getByRole('button', { name: 'Validate Now' })
     await act(async () => {
       await userEvent.click(btn)
@@ -47,8 +51,10 @@ describe('Playground validation display logic', () => {
       render(<Playground />)
     })
     
-    // With real-time validation enabled, the button text is "Validate Now"
+    // Enter some YAML so the Validate button is enabled, then click
+    const textarea = screen.getByLabelText('YAML input')
     await act(async () => {
+      await userEvent.type(textarea, 'name: test')
       await userEvent.click(screen.getByRole('button', { name: 'Validate Now' }))
     })
     
@@ -70,6 +76,12 @@ describe('Playground validation display logic', () => {
     
     const row = screen.getByRole('button', { name: 'Upload YAML' }).closest('div') as HTMLElement
     const beforeWidth = row.getBoundingClientRect().width
+
+    // Enter some YAML so the Validate button is enabled
+    const textarea = screen.getByLabelText('YAML input')
+    await act(async () => {
+      await userEvent.type(textarea, 'name: test')
+    })
     
     // With real-time validation enabled, the button text is "Validate Now"
     await act(async () => {

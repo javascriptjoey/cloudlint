@@ -37,6 +37,64 @@ if (typeof window !== 'undefined') {
   }
 }
 
+// Polyfills and globals required by CodeMirror in JSDOM
+// 1) Range.getClientRects / getBoundingClientRect used by CodeMirror for measurements
+if (typeof window !== 'undefined') {
+  const w = window as unknown as {
+    Range?: typeof Range
+    ResizeObserver?: typeof ResizeObserver
+    HTMLElement: typeof HTMLElement
+    Element: typeof Element
+  }
+  // Provide missing methods on Range prototype
+  if (w.Range && !(w.Range.prototype as unknown as { getClientRects?: () => any }).getClientRects) {
+    ;(w.Range.prototype as unknown as { getClientRects: () => DOMRectList }).getClientRects = () => {
+      // Minimal DOMRectList-like object
+      const list: any[] & { length: number; item: (i: number) => any } = [] as any
+      list.length = 0
+      list.item = () => null
+      return list as unknown as DOMRectList
+    }
+  }
+  if (w.Range && !(w.Range.prototype as unknown as { getBoundingClientRect?: () => any }).getBoundingClientRect) {
+    ;(w.Range.prototype as unknown as { getBoundingClientRect: () => DOMRect }).getBoundingClientRect = () => ({
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      toJSON: () => ({}),
+    })
+  }
+  // 2) ResizeObserver used by CodeMirror view to observe layout changes
+  if (!w.ResizeObserver) {
+    class MockResizeObserver {
+      observe() {/* no-op */}
+      unobserve() {/* no-op */}
+      disconnect() {/* no-op */}
+    }
+    // @ts-expect-error assign mock
+    w.ResizeObserver = MockResizeObserver
+  }
+  // 3) getClientRects on Element for some browsers/APIs that access it directly
+  if (!w.Element.prototype.getClientRects) {
+    // @ts-expect-error define polyfill
+    w.Element.prototype.getClientRects = () => {
+      const list: any[] & { length: number; item: (i: number) => any } = [] as any
+      list.length = 0
+      list.item = () => null
+      return list as unknown as DOMRectList
+    }
+  }
+  if (!w.HTMLElement.prototype.scrollTo) {
+    // @ts-expect-error define polyfill
+    w.HTMLElement.prototype.scrollTo = () => {}
+  }
+}
+
 // Setup global mocks
 beforeEach(() => {
   if (typeof window !== 'undefined') {
