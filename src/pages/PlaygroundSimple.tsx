@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Seo } from "@/components/Seo";
 import { CodeMirrorYamlEditor } from "@/components/CodeMirrorYamlEditor";
 import { Button } from "@/components/ui/button";
@@ -40,8 +40,9 @@ export default function PlaygroundSimple() {
   // Theme
   const { theme, setTheme } = useTheme();
 
-  // Sample YAML
-  const sampleYaml = `# Sample YAML
+  // Sample YAML - memoized to prevent recreation on every render
+  const sampleYaml = useMemo(
+    () => `# Sample YAML
 name: cloudlint-example
 version: 1.0.0
 description: A sample YAML file for testing
@@ -64,23 +65,25 @@ services:
       - db_data:/var/lib/postgresql/data
 
 volumes:
-  db_data:`;
+  db_data:`,
+    []
+  );
 
-  // Handlers
-  const handleValidate = () => {
+  // Handlers - memoized to prevent unnecessary re-renders
+  const handleValidate = useCallback(() => {
     if (!yaml.trim()) return;
     setIsValidating(true);
 
     // Simulate validation
     setTimeout(() => {
       setIsValidating(false);
-      alert(
+      toast.success(
         "Validation complete! (This is a mock - backend integration needed)"
       );
     }, 1000);
-  };
+  }, [yaml]);
 
-  const handleConvertToJson = () => {
+  const handleConvertToJson = useCallback(() => {
     if (!yaml.trim()) return;
 
     try {
@@ -94,19 +97,19 @@ volumes:
     } catch (error) {
       setJsonOutput(`Error: ${error}`);
     }
-  };
+  }, [yaml]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setYaml("");
     setJsonOutput(null);
-  };
+  }, []);
 
-  const handleLoadSample = () => {
+  const handleLoadSample = useCallback(() => {
     setYaml(sampleYaml);
     setJsonOutput(null);
-  };
+  }, [sampleYaml]);
 
-  const handleCopyYaml = async () => {
+  const handleCopyYaml = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(yaml);
       setCopyFeedback("yaml");
@@ -116,9 +119,9 @@ volumes:
       console.error("Failed to copy YAML:", error);
       toast.error("Failed to copy YAML");
     }
-  };
+  }, [yaml]);
 
-  const handleCopyJson = async () => {
+  const handleCopyJson = useCallback(async () => {
     if (jsonOutput) {
       try {
         await navigator.clipboard.writeText(jsonOutput);
@@ -130,11 +133,11 @@ volumes:
         toast.error("Failed to copy JSON");
       }
     }
-  };
+  }, [jsonOutput]);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme(theme === "light" ? "dark" : "light");
-  };
+  }, [theme, setTheme]);
 
   return (
     <>

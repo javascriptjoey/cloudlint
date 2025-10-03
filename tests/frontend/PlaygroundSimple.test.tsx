@@ -7,7 +7,7 @@ import PlaygroundSimple from "@/pages/PlaygroundSimple";
 
 // Mock the CodeMirror component
 vi.mock("@/components/CodeMirrorYamlEditor", () => ({
-  CodeMirrorYamlEditor: ({ value, onChange, placeholder }: any) => (
+  CodeMirrorYamlEditor: ({ value, onChange, placeholder }: unknown) => (
     <textarea
       data-testid="yaml-editor"
       value={value}
