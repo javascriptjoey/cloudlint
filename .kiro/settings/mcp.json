@@ -8,7 +8,9 @@
         "NODE_ENV": "development"
       },
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [],
+      "restart": true,
+      "timeout": 30000
     },
     "github": {
       "command": "npx",
@@ -18,7 +20,9 @@
         "NODE_ENV": "development"
       },
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [],
+      "restart": true,
+      "timeout": 30000
     },
     "context7": {
       "command": "npx",
@@ -27,7 +31,9 @@
         "NODE_ENV": "development"
       },
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [],
+      "restart": true,
+      "timeout": 30000
     },
     "spectral": {
       "command": "docker",
@@ -43,7 +49,9 @@
         "NODE_ENV": "development"
       },
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [],
+      "restart": true,
+      "timeout": 60000
     }
   }
 }
