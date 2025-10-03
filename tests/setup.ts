@@ -74,19 +74,16 @@ if (w.Range && !(w.Range.prototype as unknown as { getBoundingClientRect?: () =>
       unobserve() {/* no-op */}
       disconnect() {/* no-op */}
     }
-    // @ts-expect-error assign mock
     w.ResizeObserver = MockResizeObserver
   }
   // 3) getClientRects on Element for some browsers/APIs that access it directly
   if (!w.Element.prototype.getClientRects) {
-    // @ts-expect-error define polyfill
     w.Element.prototype.getClientRects = () => {
       const list = { length: 0, item: () => null } as unknown as DOMRectList
       return list
     }
   }
   if (!w.HTMLElement.prototype.scrollTo) {
-    // @ts-expect-error define polyfill
     w.HTMLElement.prototype.scrollTo = () => {}
   }
 }
