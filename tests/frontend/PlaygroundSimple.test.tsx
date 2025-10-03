@@ -7,7 +7,15 @@ import PlaygroundSimple from "@/pages/PlaygroundSimple";
 
 // Mock the CodeMirror component
 vi.mock("@/components/CodeMirrorYamlEditor", () => ({
-  CodeMirrorYamlEditor: ({ value, onChange, placeholder }: unknown) => (
+  CodeMirrorYamlEditor: ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+  }) => (
     <textarea
       data-testid="yaml-editor"
       value={value}
@@ -77,7 +85,7 @@ describe("PlaygroundSimple", () => {
     });
     await user.click(loadSampleButton);
 
-    const editor = screen.getByTestId("yaml-editor");
+    const editor = screen.getByTestId("yaml-editor") as HTMLTextAreaElement;
     expect(editor.value).toContain("cloudlint-example");
   });
 
@@ -168,6 +176,6 @@ describe("PlaygroundSimple", () => {
     const resetButton = screen.getByRole("button", { name: /reset/i });
     await user.click(resetButton);
 
-    expect(editor.value).toBe("");
+    expect((editor as HTMLTextAreaElement).value).toBe("");
   });
 });
