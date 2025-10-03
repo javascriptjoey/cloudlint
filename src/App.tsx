@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 // Lazy load route components for better code splitting
 const About = lazy(() => import("@/pages/About"));
 const Contact = lazy(() => import("@/pages/Contact"));
-const Playground = lazy(() => import("@/pages/PlaygroundNew"));
+const Playground = lazy(() => import("@/pages/PlaygroundSimple"));
 
 function App() {
   return (

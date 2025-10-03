@@ -288,7 +288,7 @@ Outputs:
                     onValueChange={(value: Provider) => setProvider(value)}
                   >
                     <SelectTrigger id="provider-select" className="w-32">
-                      <SelectValue />
+                      <SelectValue placeholder="Select provider" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Generic">Generic</SelectItem>
