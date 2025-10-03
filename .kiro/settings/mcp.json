@@ -1,0 +1,57 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "npx",
+      "args": ["shadcn@latest", "mcp"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "NODE_ENV": "development"
+      },
+      "disabled": false,
+      "autoApprove": [],
+      "restart": true,
+      "timeout": 30000
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@latest"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_PAT}",
+        "NODE_ENV": "development"
+      },
+      "disabled": false,
+      "autoApprove": [],
+      "restart": true,
+      "timeout": 30000
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "disabled": false,
+      "autoApprove": [],
+      "restart": true,
+      "timeout": 30000
+    },
+    "spectral": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-v",
+        "${workspaceFolder}:/workspace:ro",
+        "marksivill/mcp-spectral"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "disabled": false,
+      "autoApprove": [],
+      "restart": true,
+      "timeout": 60000
+    }
+  }
+}
