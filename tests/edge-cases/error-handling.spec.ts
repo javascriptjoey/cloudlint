@@ -562,7 +562,7 @@ test.describe('Malformed Input Edge Cases', () => {
       
       // Error should be descriptive and helpful
       expect(errorText).toBeTruthy()
-      expect(errorText.length).toBeGreaterThan(10)
+      expect(errorText?.length).toBeGreaterThan(10)
       
       // Should not expose internal parsing errors
       expect(errorText).not.toContain('SyntaxError')

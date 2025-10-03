@@ -164,7 +164,7 @@ test.describe('API Versioning & Backward Compatibility', () => {
       
       if (response.status() === 200) {
         const responseData = await response.json()
-        const versionSchema = API_SCHEMAS[version]?.validateEndpoint?.response?.success?.schema
+        const versionSchema = API_SCHEMAS[version as keyof typeof API_SCHEMAS]?.validateEndpoint?.response?.success?.schema
         
         if (versionSchema) {
           // Verify response contains at least the fields required by this version
@@ -211,7 +211,7 @@ test.describe('API Versioning & Backward Compatibility', () => {
         // Should include deprecation notice in warnings
         if (responseData.warnings && Array.isArray(responseData.warnings)) {
           const hasDeprecationWarning = responseData.warnings.some(
-            warning => warning.toLowerCase().includes('deprecat')
+            (warning: string) => warning.toLowerCase().includes('deprecat')
           )
           expect(hasDeprecationWarning).toBe(true)
         }
@@ -290,7 +290,7 @@ test.describe('API Schema Evolution & Migration', () => {
       } catch (error) {
         versionResults.push({
           version,
-          error: error.message,
+          error: (error as Error).message,
           success: false
         })
       }
@@ -397,7 +397,7 @@ test.describe('API Schema Evolution & Migration', () => {
           }
           
         } catch (error) {
-          console.log(`⚠️ Error testing ${contentType} with version ${version}: ${error.message}`)
+          console.log(`⚠️ Error testing ${contentType} with version ${version}: ${(error as Error).message}`)
         }
       }
     }
@@ -599,7 +599,7 @@ test.describe('API Documentation Version Compliance', () => {
           }
           
         } catch (error) {
-          console.log(`⚠️ Error testing ${endpoint} v${version}: ${error.message}`)
+          console.log(`⚠️ Error testing ${endpoint} v${version}: ${(error as Error).message}`)
         }
       }
     }

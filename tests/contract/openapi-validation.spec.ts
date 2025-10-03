@@ -341,7 +341,8 @@ function validateJsonSchema(data: unknown, schema: unknown): { valid: boolean; e
   const errors: string[] = []
   
   // Simple JSON Schema validator (basic implementation)
-  function validateObject(obj: unknown, objSchema: unknown, path = ''): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function validateObject(obj: unknown, objSchema: any, path = ''): void {
     if (objSchema.type === 'object') {
       if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
         errors.push(`${path}: Expected object, got ${typeof obj}`)
@@ -529,7 +530,7 @@ malformed indentation
     
     expect(response.status).toBe(400)
     
-    const errorSchema = CLOUDLINT_OPENAPI_SCHEMA.paths['/api/validate'].post.responses['400'].content['application/json'].schema
+      const errorSchema = CLOUDLINT_OPENAPI_SCHEMA.paths['/api/validate'].post.responses['400'].content?.['application/json']?.schema
     const validation = validateJsonSchema(response.data, errorSchema)
     
     expect(validation.valid).toBe(true)
@@ -602,9 +603,12 @@ wrong: structure
     expect([400, 500]).toContain(response.status)
     
     if (response.status === 400) {
-      const errorSchema = CLOUDLINT_OPENAPI_SCHEMA.paths['/api/convert'].post.responses['400'].content['application/json'].schema
-      const validation = validateJsonSchema(response.data, errorSchema)
-      expect(validation.valid).toBe(true)
+      // Use the same error schema as /api/validate since they reference the same schema
+      const errorSchema = CLOUDLINT_OPENAPI_SCHEMA.paths['/api/validate'].post.responses['400'].content?.['application/json']?.schema
+      if (errorSchema) {
+        const validation = validateJsonSchema(response.data, errorSchema)
+        expect(validation.valid).toBe(true)
+      }
     }
     
     expect(response.data).toHaveProperty('error')

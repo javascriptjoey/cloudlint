@@ -373,7 +373,9 @@ test.describe('Theme and Display Accessibility', () => {
     }
     
     // Run accessibility scan in dark mode
-    const results = await runAccessibilityScan(page, 'Dark mode playground')
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze()
     
     // Expect no accessibility violations in dark mode
     expect(results.violations).toEqual([])

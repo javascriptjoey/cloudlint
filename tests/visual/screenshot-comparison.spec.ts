@@ -128,7 +128,7 @@ test.describe('Visual Regression - Playground', () => {
         fullPage: true,
         threshold: VISUAL_CONFIG.threshold,
         animations: VISUAL_CONFIG.animations,
-        mask: page.locator('[data-testid="timestamp"]')
+        mask: [page.locator('[data-testid="timestamp"]')]
       })
     }
   })
