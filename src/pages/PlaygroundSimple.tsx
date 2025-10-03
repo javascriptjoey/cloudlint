@@ -10,11 +10,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
-  Upload,
   Copy,
-  Download,
   FileJson,
   AlertCircle,
   CheckCircle,
@@ -22,16 +22,20 @@ import {
   Sun,
   RefreshCw,
   FileText,
+  Check,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 export default function PlaygroundSimple() {
   // Basic state
   const [yaml, setYaml] = useState("");
-  const [provider, setProvider] = useState("Generic");
+  const [provider] = useState("Generic");
   const [securityChecks, setSecurityChecks] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [jsonOutput, setJsonOutput] = useState<string | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState<"yaml" | "json" | null>(
+    null
+  );
 
   // Theme
   const { theme, setTheme } = useTheme();
@@ -102,13 +106,29 @@ volumes:
     setJsonOutput(null);
   };
 
-  const handleCopyYaml = () => {
-    navigator.clipboard.writeText(yaml);
+  const handleCopyYaml = async () => {
+    try {
+      await navigator.clipboard.writeText(yaml);
+      setCopyFeedback("yaml");
+      toast.success("YAML copied to clipboard!");
+      setTimeout(() => setCopyFeedback(null), 2000);
+    } catch (error) {
+      console.error("Failed to copy YAML:", error);
+      toast.error("Failed to copy YAML");
+    }
   };
 
-  const handleCopyJson = () => {
+  const handleCopyJson = async () => {
     if (jsonOutput) {
-      navigator.clipboard.writeText(jsonOutput);
+      try {
+        await navigator.clipboard.writeText(jsonOutput);
+        setCopyFeedback("json");
+        toast.success("JSON copied to clipboard!");
+        setTimeout(() => setCopyFeedback(null), 2000);
+      } catch (error) {
+        console.error("Failed to copy JSON:", error);
+        toast.error("Failed to copy JSON");
+      }
     }
   };
 
@@ -154,14 +174,20 @@ volumes:
 
                 {/* Security Checks */}
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Security Checks:</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSecurityChecks(!securityChecks)}
+                  <label
+                    htmlFor="security-toggle"
+                    className="text-sm font-medium cursor-pointer"
                   >
+                    Security Checks:
+                  </label>
+                  <Switch
+                    id="security-toggle"
+                    checked={securityChecks}
+                    onCheckedChange={setSecurityChecks}
+                  />
+                  <span className="text-sm text-muted-foreground">
                     {securityChecks ? "On" : "Off"}
-                  </Button>
+                  </span>
                 </div>
               </div>
 
@@ -210,8 +236,17 @@ volumes:
                       size="sm"
                       onClick={handleCopyYaml}
                       disabled={!yaml.trim()}
+                      className={
+                        copyFeedback === "yaml"
+                          ? "bg-green-50 border-green-200 text-green-700 dark:bg-green-950 dark:border-green-800 dark:text-green-300"
+                          : ""
+                      }
                     >
-                      <Copy className="h-4 w-4" />
+                      {copyFeedback === "yaml" ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -266,8 +301,17 @@ volumes:
                             variant="outline"
                             size="sm"
                             onClick={handleCopyJson}
+                            className={
+                              copyFeedback === "json"
+                                ? "bg-green-50 border-green-200 text-green-700 dark:bg-green-950 dark:border-green-800 dark:text-green-300"
+                                : ""
+                            }
                           >
-                            <Copy className="h-4 w-4" />
+                            {copyFeedback === "json" ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                         <pre className="bg-muted p-4 rounded-md text-sm overflow-auto max-h-[300px]">

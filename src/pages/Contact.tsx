@@ -1,33 +1,47 @@
-import { useState } from 'react'
-import { Seo } from '@/components/Seo'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Coffee, UserCheck } from 'lucide-react'
+import { useState } from "react";
+import { Seo } from "@/components/Seo";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Coffee, UserCheck } from "lucide-react";
 
 export default function Contact() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [message, setMessage] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [status, setStatus] = useState<null | { ok: boolean; msg: string }>(null)
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState<null | { ok: boolean; msg: string }>(
+    null
+  );
 
-  const emailValid = /.+@.+\..+/.test(email)
-  const canSubmit = name.trim().length > 1 && emailValid && message.trim().length > 4
+  const emailValid = /.+@.+\..+/.test(email);
+  const canSubmit =
+    name.trim().length > 1 && emailValid && message.trim().length > 4;
 
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!canSubmit) return
-    setSubmitting(true)
-    setStatus(null)
-    await new Promise((r) => setTimeout(r, 500))
-    if (/error/i.test(message)) setStatus({ ok: false, msg: 'Something went wrong. Please try again.' })
-    else setStatus({ ok: true, msg: 'Thanks for your feedback! We appreciate it.' })
-    setSubmitting(false)
-  }
+    e.preventDefault();
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setStatus(null);
+    await new Promise((r) => setTimeout(r, 500));
+    if (/error/i.test(message))
+      setStatus({ ok: false, msg: "Something went wrong. Please try again." });
+    else
+      setStatus({
+        ok: true,
+        msg: "Thanks for your feedback! We appreciate it.",
+      });
+    setSubmitting(false);
+  };
 
   return (
     <div className="px-0">
@@ -42,11 +56,21 @@ export default function Contact() {
       <section className="border-b bg-gradient-to-b from-primary/5 via-transparent to-transparent">
         <div className="container mx-auto grid gap-8 px-4 py-12 md:grid-cols-2 md:items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">We’d love to hear from you</h1>
-            <p className="mt-3 max-w-prose text-muted-foreground">Suggest improvements, report bugs, or request features—your input helps Cloudlint get better for everyone.</p>
+            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+              We’d love to hear from you
+            </h1>
+            <p className="mt-3 max-w-prose text-muted-foreground">
+              Suggest improvements, report bugs, or request features—your input
+              helps Cloudlint get better for everyone.
+            </p>
             <div className="mt-6">
               <Button asChild variant="secondary">
-                <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2">
+                <a
+                  href="https://www.buymeacoffee.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2"
+                >
                   <Coffee className="h-5 w-5" aria-hidden /> Buy me a coffee
                 </a>
               </Button>
@@ -58,12 +82,18 @@ export default function Contact() {
                 <div className="flex flex-col items-center gap-3 text-center">
                   <UserCheck className="h-16 w-16 text-muted-foreground/60" />
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Support Illustration</p>
-                    <p className="text-xs text-muted-foreground/70">Coming Soon</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Support Illustration
+                    </p>
+                    <p className="text-xs text-muted-foreground/70">
+                      Coming Soon
+                    </p>
                   </div>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground text-center">Friendly, developer‑first support</p>
+              <p className="mt-4 text-sm text-muted-foreground text-center">
+                Friendly, developer‑first support
+              </p>
             </div>
           </div>
         </div>
@@ -77,34 +107,81 @@ export default function Contact() {
           </CardHeader>
           <CardContent>
             {status && (
-              <Alert className={status.ok ? 'border-emerald-600/30 bg-emerald-500/5' : 'border-destructive bg-destructive/5'} aria-live="polite">
-                <AlertTitle>{status.ok ? 'Thanks!' : 'Oops'}</AlertTitle>
+              <Alert
+                className={
+                  status.ok
+                    ? "border-emerald-600/30 bg-emerald-500/5"
+                    : "border-destructive bg-destructive/5"
+                }
+                aria-live="polite"
+              >
+                <AlertTitle>{status.ok ? "Thanks!" : "Oops"}</AlertTitle>
                 <AlertDescription>{status.msg}</AlertDescription>
               </Alert>
             )}
             <form className="mt-4 grid gap-4" onSubmit={onSubmit} noValidate>
               <div className="grid gap-2">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" name="name" value={name} onChange={(e)=>setName(e.target.value)} autoComplete="name" required aria-invalid={name.trim().length<=1} />
+                <Input
+                  id="name"
+                  name="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  required
+                  aria-invalid={name.trim().length <= 1}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} autoComplete="email" required aria-invalid={!emailValid} />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                  aria-invalid={!emailValid}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="message">Message</Label>
-                <Textarea id="message" name="message" value={message} onChange={(e)=>setMessage(e.target.value)} rows={6} required aria-invalid={message.trim().length<=4} />
+                <Textarea
+                  id="message"
+                  name="message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={6}
+                  required
+                  aria-invalid={message.trim().length <= 4}
+                />
               </div>
               <div className="flex items-center gap-3">
-                <Button type="submit" disabled={!canSubmit || submitting} aria-busy={submitting}>
-                  {submitting ? 'Sending…' : 'Send message'}
+                <Button
+                  type="submit"
+                  disabled={!canSubmit || submitting}
+                  aria-busy={submitting}
+                >
+                  {submitting ? "Sending…" : "Send message"}
                 </Button>
-                <Button variant="ghost" type="button" onClick={()=>{setName('');setEmail('');setMessage('');setStatus(null)}}>Reset</Button>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={() => {
+                    setName("");
+                    setEmail("");
+                    setMessage("");
+                    setStatus(null);
+                  }}
+                >
+                  Reset
+                </Button>
               </div>
             </form>
           </CardContent>
         </Card>
       </section>
     </div>
-  )
+  );
 }

@@ -3,9 +3,10 @@ import { Suspense, lazy } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 // Lazy load route components for better code splitting
-const About = lazy(() => import("@/pages/About"));
+const Home = lazy(() => import("@/pages/Home"));
 const Contact = lazy(() => import("@/pages/Contact"));
 const Playground = lazy(() => import("@/pages/PlaygroundSimple"));
 
@@ -23,13 +24,14 @@ function App() {
             }
           >
             <Routes>
-              <Route path="/" element={<About />} />
+              <Route path="/" element={<Home />} />
               <Route path="/playground" element={<Playground />} />
               <Route path="/contact" element={<Contact />} />
             </Routes>
           </Suspense>
         </main>
         <Footer />
+        <Toaster />
       </BrowserRouter>
     </ThemeProvider>
   );

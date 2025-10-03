@@ -104,10 +104,13 @@ describe("PlaygroundSimple", () => {
     const user = userEvent.setup();
     renderPlayground();
 
-    const securityButton = screen.getByRole("button", { name: /off/i });
-    await user.click(securityButton);
+    const securityToggle = screen.getByRole("switch", {
+      name: /security checks/i,
+    });
+    expect(screen.getByText("Off")).toBeInTheDocument();
 
-    expect(screen.getByRole("button", { name: /on/i })).toBeInTheDocument();
+    await user.click(securityToggle);
+    expect(screen.getByText("On")).toBeInTheDocument();
   });
 
   it("toggles theme", async () => {
@@ -150,7 +153,9 @@ describe("PlaygroundSimple", () => {
     const jsonTab = screen.getByRole("tab", { name: /json output/i });
     await user.click(jsonTab);
 
-    expect(screen.getByText(/json output/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /json output/i })
+    ).toBeInTheDocument();
   });
 
   it("resets content", async () => {

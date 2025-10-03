@@ -1,127 +1,212 @@
-import { useMemo, useRef, useState } from 'react'
-import { Seo } from '@/components/Seo'
-import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Upload } from 'lucide-react'
-
-function mockValidate(yaml: string): Promise<{ ok: boolean; messages: { message: string; severity: 'error'|'warning'|'info' }[]; fixed?: string }> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (/error/i.test(yaml) || yaml.trim() === '') {
-        resolve({ ok: false, messages: [
-          { message: 'Indentation issue on line 2', severity: 'error' },
-          { message: 'Unknown key "scirpt"', severity: 'warning' },
-        ] })
-      } else {
-        resolve({ ok: true, messages: [] })
-      }
-    }, 400)
-  })
-}
+import { Seo } from "@/components/Seo";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Cloud, Shield, GitCompare } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Home() {
-  const [yaml, setYaml] = useState('steps:\n  - script: echo hello\n')
-  const [validating, setValidating] = useState(false)
-  const [result, setResult] = useState<null | { ok: boolean; messages: { message: string; severity: 'error'|'warning'|'info' }[] }>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
-
-  const errorCount = useMemo(() => result?.messages.filter(m => m.severity === 'error').length ?? 0, [result])
-
-  const onUpload: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!/\.ya?ml$/i.test(file.name)) {
-      alert('Please select a .yaml or .yml file.')
-      return
-    }
-    const text = await file.text()
-    setYaml(text)
-  }
-
-  const validate = async () => {
-    setValidating(true)
-    const res = await mockValidate(yaml)
-    setResult(res)
-    setValidating(false)
-  }
-
-  const fixAll = async () => {
-    const fixed = yaml.replace(/\bscirpt\b/g, 'script').trimEnd() + '\n'
-    setYaml(fixed)
-    setResult({ ok: true, messages: [] })
-  }
-
   return (
-    <>
+    <div className="px-0">
       <Seo
-        title="Cloudlint • YAML Playground"
-        description="Validate, preview, and fix YAML quickly with Cloudlint UI."
+        title="Cloudlint • Provider‑aware YAML validation & automation"
+        description="Cloudlint delivers universal YAML validation, smart auto‑fixes, schema checks, diffs, and a security‑first design. Built for speed with CLI, SDK, and REST."
         canonical="https://cloudlint.local/"
-        ogTitle="Cloudlint Playground"
-        ogDescription="Try Cloudlint’s YAML validation and fixes in your browser."
+        ogTitle="Cloudlint - Ship YAML with confidence"
+        ogDescription="Validate YAML for AWS/Azure/generic, auto‑fix safely, preview diffs, and automate with CLI/SDK/REST."
       />
+
       {/* Hero */}
-      <section className="container mx-auto px-4 pt-6 md:pt-10">
-        <div className="grid items-center gap-6 md:grid-cols-2">
+      <section className="relative overflow-hidden border-b">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent"
+        />
+        <div className="container mx-auto grid gap-6 px-4 py-12 md:grid-cols-[1.1fr_.9fr] md:items-center">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Cloudlint YAML Playground</h1>
-            <p className="mt-2 text-muted-foreground">Validate and auto-fix YAML with provider-aware analyzers.</p>
+            <Badge className="mb-3">Security‑first • Developer‑friendly</Badge>
+            <h1 className="text-3xl font-bold tracking-tight md:text-5xl">
+              Ship YAML with confidence.
+            </h1>
+            <p className="mt-3 max-w-prose text-muted-foreground md:text-lg">
+              Cloudlint validates any YAML—style, structure, and provider
+              specifics—then suggests safe fixes you can preview.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild>
+                <Link to="/playground">Try the Playground</Link>
+              </Button>
+              <Button variant="secondary" asChild>
+                <Link to="/contact">Contact</Link>
+              </Button>
+            </div>
           </div>
-          {/* Removed temporary animation */}
+          <div className="flex items-center justify-center">
+            <div className="justify-self-center w-full max-w-[520px]">
+              <div className="flex h-[300px] w-full items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/50">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <Shield className="h-16 w-16 text-muted-foreground/60" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Security Illustration
+                    </p>
+                    <p className="text-xs text-muted-foreground/70">
+                      Coming Soon
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-4 text-sm text-muted-foreground text-center">
+                Provider‑aware YAML Intelligence
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="container mx-auto grid gap-6 px-4 py-6 md:grid-cols-[1fr_320px]">
-        <div>
+      {/* Features grid */}
+      <section className="container mx-auto px-4 py-12">
+        <div className="mb-8 max-w-2xl">
+          <h2 className="text-2xl font-semibold md:text-3xl">
+            Everything you need for YAML at scale
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            Fast, accurate, and designed for CI/CD and editor workflows.
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-3">
+              <Cloud aria-hidden className="h-6 w-6 text-primary" />
+              <div>
+                <CardTitle>Universal validation</CardTitle>
+                <CardDescription>
+                  AWS CFN, Azure Pipelines, and generic YAML
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              Syntax, style, and schema checks with provider detection and
+              flags.
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-3">
+              <GitCompare aria-hidden className="h-6 w-6 text-blue-600" />
+              <div>
+                <CardTitle>Smart auto‑fix + diffs</CardTitle>
+                <CardDescription>Preview before you accept</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              Correct typos, normalize formatting, and view unified diffs to
+              understand changes.
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-3">
+              <Shield aria-hidden className="h-6 w-6 text-emerald-600" />
+              <div>
+                <CardTitle>Security‑first</CardTitle>
+                <CardDescription>Privacy‑respecting by default</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              Anchors/aliases and dangerous tags blocked unless explicitly
+              allowed. Size/MIME guards, Docker‑isolated tooling.
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
-              <CardTitle>YAML Input</CardTitle>
-              <CardDescription>Paste YAML or upload a file</CardDescription>
+              <CardTitle>JSON Schema for any YAML</CardTitle>
+              <CardDescription>Flexible validation</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea value={yaml} onChange={(e)=>setYaml(e.target.value)} aria-label="YAML input" />
-              {/* Hidden native input to preserve keyboard/AT access; triggered by the button below */}
-              <Input ref={fileRef} className="sr-only" type="file" accept=".yaml,.yml" onChange={onUpload} aria-label="Upload YAML file" />
-              <div className="flex flex-wrap items-center gap-3">
-                <Button onClick={validate} disabled={validating}>{validating ? 'Validating…' : 'Validate'}</Button>
-                <Button variant="secondary" type="button" onClick={()=>fileRef.current?.click()} aria-describedby="upload-hint">
-                  <Upload className="mr-2 h-4 w-4" aria-hidden />
-                  Upload YAML
-                </Button>
-                <span id="upload-hint" className="sr-only">Choose a .yaml or .yml file to load into the editor</span>
-                {result?.ok && (
-                  <div className="animate-in fade-in-50 text-sm text-green-600">Success: No errors found.</div>
-                )}
-              </div>
-              {!result?.ok && result && (
-                <Alert className="border-destructive bg-destructive/5">
-                  <AlertTitle>Found {errorCount} error{errorCount!==1?'s':''}</AlertTitle>
-                  <AlertDescription>
-                    <ul className="list-disc pl-5">
-                      {result.messages.map((m,i)=> (
-                        <li key={i} className={m.severity==='error'?'text-red-600':m.severity==='warning'?'text-amber-600':'text-muted-foreground'}>{m.message}</li>
-                      ))}
-                    </ul>
-                    <div className="mt-3 flex gap-2">
-                      <Button variant="secondary" onClick={fixAll}>Fix All</Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
+            <CardContent className="text-sm text-muted-foreground">
+              Bring your own schema to validate proprietary formats—no provider
+              lock‑in required.
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>YAML ⇄ JSON conversion</CardTitle>
+              <CardDescription>Simple, lossless transforms</CardDescription>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              Switch representations effortlessly to fit your tooling and review
+              flows.
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Automate everything</CardTitle>
+              <CardDescription>CLI • SDK • REST</CardDescription>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              Integrate with CI/CD, IDEs, or custom services. Same engine across
+              interfaces for predictable results.
             </CardContent>
           </Card>
         </div>
-        <aside>
-          <div className="sticky top-20 rounded-lg border p-4 text-sm text-muted-foreground">
-            <div className="mb-2 font-medium text-foreground">Sponsored</div>
-            <div className="h-56 w-full rounded bg-muted" />
-            <p className="mt-3">Reserved ad space. Appears as sidebar on desktop and below content on mobile/tablet.</p>
+      </section>
+
+      {/* Developer experience */}
+      <section className="border-t bg-muted/30 py-12">
+        <div className="container mx-auto grid gap-8 px-4 md:grid-cols-2 md:items-center">
+          <div className="order-2 md:order-1">
+            <h3 className="text-xl font-semibold md:text-2xl">
+              Built for speed and clarity
+            </h3>
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              <li>• Instant feedback with clean, actionable messages</li>
+              <li>• Keyboard‑friendly UI and WCAG‑aligned semantics</li>
+              <li>• Mobile‑ready layout that shines on desktop</li>
+            </ul>
+            <div className="mt-6 flex gap-3">
+              <Button asChild>
+                <Link to="/playground">Open Playground</Link>
+              </Button>
+              <Button variant="secondary" asChild>
+                <Link to="/contact">Talk to us</Link>
+              </Button>
+            </div>
           </div>
-        </aside>
-      </div>
-    </>
-  )
+          <div className="order-1 md:order-2">
+            <div className="rounded-xl border p-6 shadow-sm">
+              <div className="grid grid-cols-3 gap-4 text-center text-xs text-muted-foreground">
+                <div>
+                  <div className="mb-1 text-2xl font-semibold text-foreground">
+                    YAML
+                  </div>
+                  <div>Validate</div>
+                </div>
+                <div>
+                  <div className="mb-1 text-2xl font-semibold text-foreground">
+                    Fix
+                  </div>
+                  <div>Preview diff</div>
+                </div>
+                <div>
+                  <div className="mb-1 text-2xl font-semibold text-foreground">
+                    Ship
+                  </div>
+                  <div>Automate</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }
