@@ -302,39 +302,301 @@ const handleKeyDown = (event: KeyboardEvent) => {
 </div>
 ```
 
-## API Integration
+## Backend Integration
 
-### API Client
+### Custom Hooks Architecture
+
+The frontend uses a comprehensive set of custom hooks for backend integration:
+
+#### 1. **useValidation** - Real-time YAML Validation
 
 ```typescript
-// Centralized API client
+// Real-time validation with caching and debouncing
+const validation = useValidation(yaml, {
+  provider: "aws",
+  securityChecks: true,
+  realTime: true,
+  debounceDelay: 1500, // 1.5s debounce
+});
+
+// Access validation state
+const {
+  isValidating,
+  results,
+  error,
+  hasErrors,
+  errorCount,
+  warningCount,
+  provider,
+  validate,
+  clearValidation,
+} = validation;
+```
+
+**Features:**
+
+- Real-time validation with intelligent debouncing (1.5s)
+- Client-side caching with TTL (5 minutes)
+- Request deduplication to prevent duplicate API calls
+- Automatic provider detection
+- Comprehensive error handling with retry logic
+
+#### 2. **useAutoFix** - Auto-fix with Diff Preview
+
+```typescript
+// Auto-fix with user confirmation workflow
+const autoFix = useAutoFix();
+
+// Generate fix with diff preview
+await autoFix.generateFix(yaml, {
+  spectralFix: true,
+  prettier: true,
+});
+
+// Access auto-fix state
+const {
+  isFixing,
+  fixedContent,
+  fixesApplied,
+  diff,
+  canApply,
+  hasChanges,
+  getFixedContent,
+  clearAutoFix,
+} = autoFix;
+```
+
+**Features:**
+
+- Multi-stage fixing pipeline (EOL → tabs → anchors → typos → prettier)
+- Unified diff preview before applying
+- User confirmation workflow
+- 7+ fix types supported
+- Safe, non-destructive transformations
+
+#### 3. **useProviderDetection** - Intelligent Provider Detection
+
+```typescript
+// Automatic provider detection with confidence scoring
+const { provider, confidence, reasons } = useProviderDetection(yaml);
+
+// Provider types: 'aws' | 'azure' | 'generic'
+// Confidence: 0-1 (0.9 = 90% confidence)
+```
+
+**Features:**
+
+- AWS CloudFormation detection (90%+ confidence)
+- Azure Pipelines detection (80%+ confidence)
+- Generic YAML fallback
+- Confidence scoring based on heuristics
+- Client-side detection for instant feedback
+
+#### 4. **useSuggestions** - Provider-Aware Suggestions
+
+```typescript
+// Provider-aware suggestions with confidence scoring
+const suggestions = useSuggestions(yaml, "aws");
+
+await suggestions.loadSuggestions();
+
+// Access suggestions
+const {
+  suggestions: suggestionList,
+  provider,
+  isLoading,
+  applySuggestions,
+  getCategorizedSuggestions,
+  getSuggestionStats,
+} = suggestions;
+```
+
+**Features:**
+
+- AWS CloudFormation suggestions (resource types, properties)
+- Azure Pipelines suggestions (tasks, configuration)
+- Confidence scoring (0-1)
+- Batch application of multiple suggestions
+- Categorized by type (add, rename, type)
+
+#### 5. **useValidationCache** - Performance Optimization
+
+```typescript
+// LRU cache with TTL for validation results
+const { getCached, setCached, clearAllCache, getCacheStats } =
+  useValidationCache();
+
+// Cache statistics
+const stats = getCacheStats();
+// { entryCount, totalSize, totalHits, averageAge, hitRate }
+```
+
+**Features:**
+
+- LRU (Least Recently Used) eviction
+- TTL (Time To Live) expiration (5 minutes)
+- Memory-aware caching based on content size
+- Hit count tracking for analytics
+- Maximum 100 cache entries
+
+### Enhanced API Client
+
+```typescript
+// Enterprise-grade API client with retry logic
 class ApiClient {
   private baseURL: string;
+  private timeout: number = 30000;
+  private retries: number = 3;
+  private retryDelay: number = 1000;
+  private activeRequests = new Map<string, Promise<unknown>>();
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
+  // Request with retry logic and error handling
+  private async request<T>(path: string, options: RequestInit): Promise<T> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(`${this.baseURL}${path}`, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          ...options.headers,
+        },
+      });
+
+      if (!response.ok) {
+        throw new ApiError(response.status, await response.text());
+      }
+
+      return response.json();
+    } catch (error) {
+      // Retry logic with exponential backoff
+      if (error.retryable && retryCount < this.retries) {
+        await this.delay(this.retryDelay * Math.pow(2, retryCount));
+        return this.request(path, { ...options, retryCount: retryCount + 1 });
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
-  async validateYaml(yaml: string, options?: ValidationOptions) {
-    const response = await fetch(`${this.baseURL}/api/yaml/validate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ yaml, ...options }),
-    });
-
-    if (!response.ok) {
-      throw new ApiError(response.status, await response.text());
+  // Request deduplication
+  private async deduplicatedRequest<T>(
+    key: string,
+    requestFn: () => Promise<T>
+  ): Promise<T> {
+    if (this.activeRequests.has(key)) {
+      return this.activeRequests.get(key) as Promise<T>;
     }
 
-    return response.json();
+    const promise = requestFn().finally(() => {
+      this.activeRequests.delete(key);
+    });
+
+    this.activeRequests.set(key, promise);
+    return promise;
+  }
+
+  // Validate YAML with caching
+  async validate(yaml: string, options?: ValidationOptions) {
+    const cacheKey = `validate-${this.hashContent(yaml)}-${JSON.stringify(options)}`;
+    return this.deduplicatedRequest(cacheKey, () =>
+      this.request("/validate", {
+        method: "POST",
+        body: JSON.stringify({ yaml, options }),
+      })
+    );
   }
 }
 ```
 
-### Error Handling
+**Features:**
+
+- Retry logic with exponential backoff (3 retries)
+- Request deduplication to prevent duplicate calls
+- Timeout handling (30s default)
+- Error classification (retryable vs non-retryable)
+- Input sanitization for security
+- Comprehensive error messages
+
+### Real-time Validation Flow
 
 ```typescript
-// Component error handling
+// Complete real-time validation implementation
+export default function PlaygroundSimple() {
+  const [yaml, setYaml] = useState("");
+  const [realTimeValidation, setRealTimeValidation] = useState(false);
+
+  // Real-time validation with backend integration
+  const validation = useValidation(yaml, {
+    provider: 'aws',
+    securityChecks: true,
+    realTime: realTimeValidation,
+    debounceDelay: 1500
+  });
+
+  // Manual validation handler
+  const handleValidate = useCallback(async () => {
+    if (!yaml.trim()) {
+      toast.error("Please enter some YAML content to validate");
+      return;
+    }
+
+    try {
+      const result = await validation.validate();
+
+      if (result.ok) {
+        toast.success("✅ Validation successful!");
+      } else {
+        const errorCount = result.messages.filter(m => m.severity === 'error').length;
+        toast.error(`❌ Validation failed: ${errorCount} errors`);
+      }
+
+      // Auto-scroll to results
+      setTimeout(() => scrollToResults(), 300);
+    } catch (error) {
+      toast.error(`Validation error: ${error.message}`);
+    }
+  }, [yaml, validation]);
+
+  return (
+    <div>
+      {/* Real-time toggle */}
+      <Switch
+        checked={realTimeValidation}
+        onCheckedChange={setRealTimeValidation}
+      />
+
+      {/* YAML Editor */}
+      <CodeMirrorYamlEditor
+        value={yaml}
+        onChange={setYaml}
+      />
+
+      {/* Validate button (disabled when real-time is active) */}
+      <Button
+        onClick={handleValidate}
+        disabled={!yaml.trim() || validation.isValidating || realTimeValidation}
+      >
+        {realTimeValidation ? "Real-time Active" : "Validate"}
+      </Button>
+
+      {/* Validation results */}
+      {validation.results && (
+        <ValidationResults results={validation.results} />
+      )}
+    </div>
+  );
+}
+```
+
+### Error Handling Strategy
+
+```typescript
+// Comprehensive error handling
 const [error, setError] = useState<string | null>(null);
 
 const handleValidate = async () => {
@@ -342,14 +604,196 @@ const handleValidate = async () => {
     setError(null);
     setIsValidating(true);
 
-    const result = await apiClient.validateYaml(yaml);
-    // handle success
+    const result = await api.validate(yaml, options);
+
+    // Handle success
+    setResults(result);
   } catch (err) {
-    setError(err instanceof Error ? err.message : "Validation failed");
+    // Classify error type
+    if (err instanceof ApiError) {
+      if (err.status === 413) {
+        setError("File too large. Maximum size is 2MB");
+      } else if (err.status === 429) {
+        setError("Too many requests. Please wait a moment.");
+      } else if (err.status >= 500) {
+        setError("Server error. Please try again later.");
+      } else {
+        setError(err.message);
+      }
+    } else if (err.name === "AbortError") {
+      setError("Request timeout. Please try again.");
+    } else {
+      setError("An unexpected error occurred");
+    }
+
+    // Show user-friendly toast
+    toast.error(error);
   } finally {
     setIsValidating(false);
   }
 };
+```
+
+### Performance Optimizations
+
+#### 1. **Request Deduplication**
+
+```typescript
+// Prevent duplicate API calls for the same content
+const activeRequests = new Map<string, Promise<unknown>>();
+
+async function deduplicatedValidate(yaml: string) {
+  const key = `validate-${hashContent(yaml)}`;
+
+  if (activeRequests.has(key)) {
+    return activeRequests.get(key);
+  }
+
+  const promise = api.validate(yaml);
+  activeRequests.set(key, promise);
+
+  promise.finally(() => activeRequests.delete(key));
+
+  return promise;
+}
+```
+
+#### 2. **Intelligent Caching**
+
+```typescript
+// Cache validation results with TTL
+const cache = new Map<string, CacheEntry>();
+
+function getCached(key: string): ValidateResponse | null {
+  const entry = cache.get(key);
+
+  if (!entry) return null;
+
+  // Check if expired (5 minutes TTL)
+  if (Date.now() - entry.timestamp > 5 * 60 * 1000) {
+    cache.delete(key);
+    return null;
+  }
+
+  entry.hits++; // Track cache hits
+  return entry.data;
+}
+```
+
+#### 3. **Debounced Real-time Validation**
+
+```typescript
+// Debounce real-time validation to reduce API calls
+const debouncedValidate = useMemo(() => {
+  let timeoutId: NodeJS.Timeout;
+
+  return (content: string) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      validate(content);
+    }, 1500); // 1.5s debounce
+  };
+}, [validate]);
+
+// Cleanup on unmount
+useEffect(() => {
+  return () => debouncedValidate.cancel();
+}, [debouncedValidate]);
+```
+
+### UX Enhancements
+
+#### 1. **Sticky Action Buttons**
+
+```typescript
+// Always-visible action buttons at bottom
+<section className="sticky bottom-0 z-10 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90 shadow-lg">
+  <div className="container mx-auto px-4 py-6">
+    <div className="flex flex-wrap items-center justify-center gap-4">
+      <Button onClick={handleValidate}>Validate</Button>
+      <Button onClick={handleAutoFix}>Auto-fix</Button>
+      <Button onClick={handleConvert}>Convert to JSON</Button>
+    </div>
+  </div>
+</section>
+```
+
+#### 2. **Auto-scroll to Results**
+
+```typescript
+// Smooth scroll to results after validation
+const scrollToResults = useCallback(() => {
+  if (resultsRef.current) {
+    resultsRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+}, []);
+
+// Trigger after validation
+await validation.validate();
+setTimeout(() => scrollToResults(), 300);
+```
+
+#### 3. **Provider Detection UI**
+
+```typescript
+// Visual provider badge with confidence indicator
+<Badge
+  variant={confidence > 0.8 ? 'default' : 'outline'}
+  style={
+    provider === 'aws' && confidence > 0.5
+      ? { backgroundColor: 'rgb(255, 153, 0)', color: 'rgb(35, 47, 62)' }
+      : provider === 'azure' && confidence > 0.5
+      ? { backgroundColor: 'rgb(0, 120, 212)', color: 'white' }
+      : undefined
+  }
+>
+  {provider}
+  {confidence > 0 && (
+    <span className="ml-1 text-xs opacity-75">
+      ({Math.round(confidence * 100)}%)
+    </span>
+  )}
+</Badge>
+```
+
+### Testing Backend Integration
+
+```typescript
+// Test real backend integration
+import { renderHook, waitFor } from "@testing-library/react";
+import { useValidation } from "@/hooks/useValidation";
+
+test("useValidation calls real backend API", async () => {
+  const { result } = renderHook(() => useValidation("name: test"));
+
+  await act(async () => {
+    await result.current.validate();
+  });
+
+  await waitFor(() => {
+    expect(result.current.isValidating).toBe(false);
+    expect(result.current.results).toBeDefined();
+  });
+});
+
+// Test caching behavior
+test("useValidation caches results", async () => {
+  const { result } = renderHook(() => useValidation("name: test"));
+
+  // First validation
+  await result.current.validate();
+  const firstCallTime = Date.now();
+
+  // Second validation (should be cached)
+  await result.current.validate();
+  const secondCallTime = Date.now();
+
+  // Second call should be instant (< 100ms)
+  expect(secondCallTime - firstCallTime).toBeLessThan(100);
+});
 ```
 
 ## Testing Approach
