@@ -4,7 +4,7 @@ Write-Host "KIRO TERMINAL BACKGROUND SETUP" -ForegroundColor Cyan
 Write-Host ""
 
 $wtSettingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-$backgroundImagePath = "$HOME\.kiro\terminal-background\kiro-ghost.png"
+$backgroundImagePath = "$HOME\.kiro\terminal-background\ghost_image.png"
 $backgroundDir = "$HOME\.kiro\terminal-background"
 
 # Check Windows Terminal
