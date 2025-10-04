@@ -7,6 +7,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { autocompletion } from "@codemirror/autocomplete";
 import { searchKeymap } from "@codemirror/search";
 import { keymap } from "@codemirror/view";
+import { indentWithTab } from "@codemirror/commands";
 import { cn } from "@/lib/utils";
 
 interface CodeMirrorYamlEditorProps {
@@ -43,6 +44,12 @@ const CodeMirrorYamlEditor = forwardRef<
     const editorRef = useRef<HTMLDivElement>(null);
     const viewRef = useRef<EditorView | null>(null);
     const isInternalChange = useRef(false);
+    const onChangeRef = useRef(onChange);
+
+    // Keep onChange ref up to date
+    useEffect(() => {
+      onChangeRef.current = onChange;
+    }, [onChange]);
 
     useImperativeHandle(ref, () => ({
       focus: () => viewRef.current?.focus(),
@@ -70,11 +77,14 @@ const CodeMirrorYamlEditor = forwardRef<
         basicSetup,
         yaml(),
         autocompletion(),
-        keymap.of(searchKeymap),
+        keymap.of([indentWithTab, ...searchKeymap]),
         EditorView.updateListener.of((update) => {
-          if (update.docChanged && !isInternalChange.current && onChange) {
+          if (update.docChanged && !isInternalChange.current) {
             const newValue = update.state.doc.toString();
-            onChange(newValue);
+            // Use the ref to avoid recreating the editor on onChange changes
+            if (onChangeRef.current) {
+              onChangeRef.current(newValue);
+            }
           }
         }),
         EditorView.theme({
@@ -149,7 +159,8 @@ const CodeMirrorYamlEditor = forwardRef<
         view.destroy();
         viewRef.current = null;
       };
-    }, [disabled, placeholder, ariaLabel, onChange, value]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [disabled, placeholder, ariaLabel]);
 
     // Update editor content when value prop changes externally
     useEffect(() => {
@@ -167,7 +178,7 @@ const CodeMirrorYamlEditor = forwardRef<
           isInternalChange.current = false;
         }
       }
-    }, [value, onChange]);
+    }, [value]);
 
     return (
       <div
@@ -184,7 +195,7 @@ const CodeMirrorYamlEditor = forwardRef<
           aria-label={ariaLabel}
           className="sr-only"
           value={value}
-          onChange={(e) => onChange?.(e.target.value)}
+          onChange={(e) => onChangeRef.current?.(e.target.value)}
           // keep it focusable for a11y, but visually hidden
         />
         <div ref={editorRef} />

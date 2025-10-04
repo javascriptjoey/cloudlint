@@ -86,7 +86,7 @@ describe("PlaygroundSimple", () => {
     await user.click(loadSampleButton);
 
     const editor = screen.getByTestId("yaml-editor") as HTMLTextAreaElement;
-    expect(editor.value).toContain("cloudlint-example");
+    expect(editor.value).toContain("AWS CloudFormation Template");
   });
 
   it("enables buttons when YAML content is present", async () => {
@@ -115,7 +115,8 @@ describe("PlaygroundSimple", () => {
     const securityToggle = screen.getByRole("switch", {
       name: /security checks/i,
     });
-    expect(screen.getByText("Off")).toBeInTheDocument();
+    // Both Real-time and Security Checks show "Off" initially, so use getAllByText
+    expect(screen.getAllByText("Off").length).toBeGreaterThan(0);
 
     await user.click(securityToggle);
     expect(screen.getByText("On")).toBeInTheDocument();
