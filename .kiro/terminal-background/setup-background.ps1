@@ -36,11 +36,11 @@ $psProfile = $settings.profiles.list | Where-Object { $_.name -eq "Windows Power
 if ($psProfile) {
     $psProfile | Add-Member -NotePropertyName "backgroundImage" -NotePropertyValue $backgroundImagePath -Force
     $psProfile | Add-Member -NotePropertyName "backgroundImageOpacity" -NotePropertyValue 0.08 -Force
-    $psProfile | Add-Member -NotePropertyName "backgroundImageStretchMode" -NotePropertyValue "uniformToFill" -Force
+    $psProfile | Add-Member -NotePropertyName "backgroundImageStretchMode" -NotePropertyValue "uniform" -Force
     $psProfile | Add-Member -NotePropertyName "backgroundImageAlignment" -NotePropertyValue "center" -Force
     $psProfile | Add-Member -NotePropertyName "useAcrylic" -NotePropertyValue $true -Force
     $psProfile | Add-Member -NotePropertyName "acrylicOpacity" -NotePropertyValue 0.85 -Force
-    Write-Host "[OK] Background configured" -ForegroundColor Green
+    Write-Host "[OK] Background configured (image scaled proportionally)" -ForegroundColor Green
 }
 
 # Save
@@ -72,4 +72,5 @@ Write-Host "Settings configured:" -ForegroundColor Yellow
 Write-Host "   - Background opacity: 8% (very subtle)" -ForegroundColor Gray
 Write-Host "   - Acrylic effect: 85%" -ForegroundColor Gray
 Write-Host "   - Image alignment: Center" -ForegroundColor Gray
+Write-Host "   - Image size: Scaled proportionally (uniform)" -ForegroundColor Gray
 Write-Host ""
