@@ -213,7 +213,7 @@ class ApiClient {
     requestFn: () => Promise<T>
   ): Promise<T> {
     if (this.activeRequests.has(key)) {
-      return this.activeRequests.get(key)!;
+      return this.activeRequests.get(key) as Promise<T>;
     }
 
     const promise = requestFn().finally(() => {
