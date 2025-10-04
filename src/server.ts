@@ -304,7 +304,6 @@ export function createServer() {
 if (import.meta.main) {
   const port = Number(process.env.PORT || 3001);
   const app = createServer();
-  const __dirname_es = path.dirname(fileURLToPath(import.meta.url));
   console.log("[server] starting...");
   console.log("[server] env:", {
     SERVE_STATIC: process.env.SERVE_STATIC,
