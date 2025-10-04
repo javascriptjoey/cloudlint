@@ -47,6 +47,27 @@ export function useValidationCache() {
   );
 
   /**
+   * Evict least recently used entries
+   */
+  const evictLeastRecentlyUsed = useCallback(() => {
+    const entries = Array.from(cacheRef.current.entries());
+
+    // Sort by hits (ascending) then by timestamp (ascending)
+    entries.sort(([, a], [, b]) => {
+      if (a.hits !== b.hits) {
+        return a.hits - b.hits;
+      }
+      return a.timestamp - b.timestamp;
+    });
+
+    // Remove the least used entry
+    if (entries.length > 0) {
+      const [keyToRemove] = entries[0];
+      cacheRef.current.delete(keyToRemove);
+    }
+  }, []);
+
+  /**
    * Set cached validation result with LRU eviction
    */
   const setCached = useCallback(
@@ -102,27 +123,6 @@ export function useValidationCache() {
       averageAge,
       hitRate: totalHits / Math.max(entries.length, 1),
     };
-  }, []);
-
-  /**
-   * Evict least recently used entries
-   */
-  const evictLeastRecentlyUsed = useCallback(() => {
-    const entries = Array.from(cacheRef.current.entries());
-
-    // Sort by hits (ascending) then by timestamp (ascending)
-    entries.sort(([, a], [, b]) => {
-      if (a.hits !== b.hits) {
-        return a.hits - b.hits;
-      }
-      return a.timestamp - b.timestamp;
-    });
-
-    // Remove the least used entry
-    if (entries.length > 0) {
-      const [keyToRemove] = entries[0];
-      cacheRef.current.delete(keyToRemove);
-    }
   }, []);
 
   /**

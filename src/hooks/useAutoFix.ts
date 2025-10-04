@@ -70,13 +70,23 @@ export function useAutoFix() {
       }));
 
       try {
+        console.log(
+          "🔍 Making API call to autofix:",
+          yaml.substring(0, 50) + "..."
+        );
+
         // Get auto-fix result
         const fixResult = await api.autofix(yaml, options);
+        console.log("✅ Autofix response received:", fixResult);
 
         // Generate diff preview if content changed
         let diffResult: DiffPreviewResponse | null = null;
         if (fixResult.content !== yaml) {
+          console.log("🔄 Generating diff preview...");
           diffResult = await api.diffPreview(yaml, fixResult.content);
+          console.log("📊 Diff result:", diffResult);
+        } else {
+          console.log("⚠️ No content changes detected");
         }
 
         setState((prev) => ({
@@ -87,6 +97,12 @@ export function useAutoFix() {
           diff: diffResult?.diff || null,
           error: null,
         }));
+
+        console.log("🎯 Auto-fix state updated:", {
+          hasChanges: fixResult.content !== yaml,
+          fixesApplied: fixResult.fixesApplied,
+          diff: diffResult?.diff ? "present" : "null",
+        });
 
         return {
           content: fixResult.content,

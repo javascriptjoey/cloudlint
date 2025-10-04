@@ -20,7 +20,7 @@ export const API_CONFIG = {
 
 export const VALIDATION_CONFIG = {
   // Real-time Validation
-  debounceDelay: 1500, // 1.5 seconds
+  debounceDelay: 500, // 500ms for responsive real-time validation
   realTimeEnabled: false, // Default off for performance
 
   // File Limits (matching backend)

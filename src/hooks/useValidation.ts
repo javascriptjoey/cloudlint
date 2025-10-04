@@ -67,21 +67,17 @@ export function useValidation(
   const { getCached, setCached } = useValidationCache();
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastValidationRef = useRef<string>("");
+  const optionsRef = useRef(options);
 
-  // Debounced validation function
-  const debouncedValidate = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
+  // Update options ref when options change
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
-    const debouncedFn = (content: string) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        validate(content);
-      }, options.debounceDelay ?? VALIDATION_CONFIG.debounceDelay);
-    };
-
-    debouncedFn.cancel = () => clearTimeout(timeoutId);
-    return debouncedFn;
-  }, [options.debounceDelay, validate]);
+  // Use ref to store validate function to avoid circular dependency
+  const validateRef = useRef<
+    ((content?: string) => Promise<ValidateResponse | null>) | null
+  >(null);
 
   /**
    * Validate YAML content
@@ -99,7 +95,8 @@ export function useValidation(
       }
 
       // Check cache first
-      const cacheKey = `${content}-${JSON.stringify(options)}`;
+      const currentOptions = optionsRef.current;
+      const cacheKey = `${content}-${JSON.stringify(currentOptions)}`;
       const cached = getCached(cacheKey);
       if (cached && lastValidationRef.current !== content) {
         setState((prev) => ({
@@ -124,10 +121,10 @@ export function useValidation(
 
       try {
         const results = await api.validate(content, {
-          provider: options.provider,
-          securityChecks: options.securityChecks,
-          filename: options.filename,
-          spectralRulesetPath: options.spectralRulesetPath,
+          provider: currentOptions.provider,
+          securityChecks: currentOptions.securityChecks,
+          filename: currentOptions.filename,
+          spectralRulesetPath: currentOptions.spectralRulesetPath,
         });
 
         setState((prev) => ({
@@ -158,8 +155,26 @@ export function useValidation(
         throw error;
       }
     },
-    [yaml, options, getCached, setCached]
+    [yaml, getCached, setCached]
   );
+
+  // Store validate function in ref for debounced validation
+  validateRef.current = validate;
+
+  // Debounced validation function using ref to avoid circular dependency
+  const debouncedValidate = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const debouncedFn = (content: string) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        validateRef.current?.(content);
+      }, options.debounceDelay ?? VALIDATION_CONFIG.debounceDelay);
+    };
+
+    debouncedFn.cancel = () => clearTimeout(timeoutId);
+    return debouncedFn;
+  }, [options.debounceDelay]);
 
   /**
    * Clear validation results and error state
@@ -213,21 +228,30 @@ export function useValidation(
     };
   }, [debouncedValidate]);
 
+  // Reactive computed properties - recalculate on every render
+  const hasResults = !!state.results;
+  const hasErrors = !!state.results && !state.results.ok;
+  const errors =
+    state.results?.messages.filter((m) => m.severity === "error") ?? [];
+  const errorCount = errors.length;
+  const warningCount =
+    state.results?.messages.filter((m) => m.severity === "warning").length ?? 0;
+  const infoCount =
+    state.results?.messages.filter((m) => m.severity === "info").length ?? 0;
+  const provider = state.results?.providerSummary?.provider ?? "generic";
+
   return {
     ...state,
     validate,
     clearValidation,
     forceValidate,
-    // Computed properties
-    hasResults: !!state.results,
-    hasErrors: !!state.results && !state.results.ok,
-    errorCount:
-      state.results?.messages.filter((m) => m.severity === "error").length ?? 0,
-    warningCount:
-      state.results?.messages.filter((m) => m.severity === "warning").length ??
-      0,
-    infoCount:
-      state.results?.messages.filter((m) => m.severity === "info").length ?? 0,
-    provider: state.results?.providerSummary?.provider ?? "generic",
+    // Computed properties (now reactive)
+    hasResults,
+    hasErrors,
+    errors,
+    errorCount,
+    warningCount,
+    infoCount,
+    provider,
   };
 }
