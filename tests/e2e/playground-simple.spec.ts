@@ -51,10 +51,10 @@ test.describe("Playground Simple E2E Tests", () => {
     // Click load sample
     await loadSampleBtn(page).click();
 
-    // Should now have sample content
+    // Should now have sample content (CloudFormation template)
     const content = await yamlBox(page).inputValue();
-    expect(content).toContain("name: cloudlint-example");
-    expect(content).toContain("services:");
+    expect(content).toContain("AWSTemplateFormatVersion");
+    expect(content).toContain("Resources:");
   });
 
   test("validate button works with YAML content", async ({ page }) => {
