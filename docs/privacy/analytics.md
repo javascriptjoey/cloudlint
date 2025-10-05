@@ -257,7 +257,90 @@ loadPlausibleScript(
 - [Privacy Policy Template](https://plausible.io/privacy)
 - [Cookie-less Tracking Explained](https://plausible.io/blog/google-analytics-cookies)
 
+## Consent Banner
+
+### Overview
+
+The consent banner is a WCAG 2.1 AA compliant modal dialog that appears on first visit to request analytics consent.
+
+### Features
+
+**User Experience:**
+
+- Appears after 1-second delay (non-intrusive)
+- Clear privacy information
+- Expandable details section
+- Three action options: Accept, Decline, Close
+- Backdrop overlay for focus
+- Smooth animations (respects reduced motion)
+
+**Accessibility:**
+
+- Full keyboard navigation
+- Screen reader compatible
+- Focus management and trapping
+- High contrast mode support
+- Visible focus indicators
+- ARIA labels and live regions
+
+### Keyboard Navigation
+
+| Key         | Action                              |
+| ----------- | ----------------------------------- |
+| Tab         | Move focus forward through buttons  |
+| Shift+Tab   | Move focus backward through buttons |
+| Enter/Space | Activate focused button             |
+| Escape      | Close banner and decline analytics  |
+
+### Implementation
+
+```typescript
+import { ConsentBanner } from "@/components/ConsentBanner";
+
+// In your App component
+<ConsentBanner
+  domain="yourdomain.com"
+  onAccept={() => {
+    // Track initial pageview
+    trackPageview();
+  }}
+  onDecline={() => {
+    // Optional: Log decline
+  }}
+/>
+```
+
+### Consent Storage
+
+Consent is stored in localStorage:
+
+```typescript
+{
+  "analytics": boolean,
+  "timestamp": number
+}
+```
+
+**Key:** `analytics_consent`
+
+### Testing
+
+**Unit Tests:** 19 tests covering all functionality
+**E2E Tests:** Complete user workflow testing
+**Accessibility Tests:** WCAG 2.1 AA compliance verified
+
+See `tests/unit/ConsentBanner.test.tsx` and `tests/e2e/consent-banner.spec.ts`
+
 ## Changelog
+
+### 2025-01-04 - Phase 2 Complete
+
+- ✅ Implemented WCAG 2.1 AA compliant consent banner
+- ✅ Added 19 unit tests (all passing)
+- ✅ Created comprehensive E2E test suite
+- ✅ Integrated into main application
+- ✅ Documented accessibility features
+- ✅ Verified keyboard navigation and screen reader support
 
 ### 2025-10-04 - Phase 1 Complete
 
@@ -269,6 +352,6 @@ loadPlausibleScript(
 
 ---
 
-**Last Updated:** 2025-10-04  
-**Status:** Phase 1 Complete - Basic Implementation ✅  
-**Next:** Phase 2 - Consent Banner UI
+**Last Updated:** 2025-01-04  
+**Status:** Phase 2 Complete - Consent Banner UI ✅  
+**Next:** Phase 3 - GDPR/CCPA Compliance Features

@@ -129,12 +129,12 @@ export function trackEvent(
 export function initializeAnalytics(): void {
   // Define plausible function if not already defined
   if (typeof window.plausible === "undefined") {
-    window.plausible = function (...args: unknown[]) {
-      const plausibleWithQueue = window.plausible as typeof window.plausible & {
-        q?: unknown[][];
-      };
-      plausibleWithQueue.q = plausibleWithQueue.q || [];
-      plausibleWithQueue.q.push(args);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    window.plausible = function (...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window.plausible as any).q = (window.plausible as any).q || [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window.plausible as any).q.push(args);
     };
   }
 }
