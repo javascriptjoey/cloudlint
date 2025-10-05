@@ -3,8 +3,8 @@
 [![Tests](https://github.com/javascriptjoey/cloudlint/workflows/CI/badge.svg)](https://github.com/javascriptjoey/cloudlint/actions)
 [![Security](https://img.shields.io/badge/security-OWASP%20Top%2010-green)](./docs/testing/processes/test-reporting-dashboard.md)
 [![Accessibility](https://img.shields.io/badge/accessibility-WCAG%202.1%20AA-blue)](./docs/testing/processes/test-reporting-dashboard.md)
-[![Coverage](https://img.shields.io/badge/coverage-95%25+-brightgreen)](./docs/testing/phase2.5-comprehensive-implementation.md)
-[![Performance](https://img.shields.io/badge/performance-76x%20faster-brightgreen)](./PHASE_5_COMPLETION_SUMMARY.md)
+[![Coverage](https://img.shields.io/badge/coverage-95%25+-brightgreen)](./docs/testing/TEST_SUMMARY_REPORT.md)
+[![Performance](https://img.shields.io/badge/performance-76x%20faster-brightgreen)](./docs/cold-storage/PHASE_5_COMPLETION_SUMMARY.md)
 
 Cloudlint is a **production-ready, enterprise-grade YAML validation and linting platform** with comprehensive validation, intelligent suggestions, format conversion, and automated fixes for YAML files across multiple cloud providers and frameworks.
 
