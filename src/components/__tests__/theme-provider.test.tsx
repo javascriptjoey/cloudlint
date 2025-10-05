@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
-import { localStorageMock, matchMediaMock } from "../../../tests/setup";
+import { matchMediaMock } from "../../../tests/setup";
 
 // Test component that uses the theme
 const TestComponent = () => {
@@ -20,27 +20,27 @@ const TestComponent = () => {
 
 describe("ThemeProvider", () => {
   // Each test gets its own container for better isolation
-  let container: HTMLDivElement
-  
+  let container: HTMLDivElement;
+
   beforeEach(() => {
     // Create a fresh container for each test
-    container = document.createElement('div')
-    document.body.appendChild(container)
-  })
-  
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
   afterEach(() => {
     // Clean up the container
     if (container && container.parentNode) {
-      container.parentNode.removeChild(container)
+      container.parentNode.removeChild(container);
     }
-  })
+  });
 
   it("provides default theme", () => {
     render(
       <ThemeProvider defaultTheme="light">
         <TestComponent />
       </ThemeProvider>,
-      { container }
+      { container },
     );
 
     expect(screen.getByTestId("current-theme")).toHaveTextContent("light");
@@ -53,7 +53,7 @@ describe("ThemeProvider", () => {
       <ThemeProvider defaultTheme="light">
         <TestComponent />
       </ThemeProvider>,
-      { container }
+      { container },
     );
 
     await user.click(getByText("Set Dark"));
@@ -67,7 +67,7 @@ describe("ThemeProvider", () => {
       <ThemeProvider defaultTheme="light">
         <TestComponent />
       </ThemeProvider>,
-      { container }
+      { container },
     );
 
     await user.click(getByText("Set Dark"));
@@ -85,31 +85,32 @@ describe("ThemeProvider", () => {
       <ThemeProvider storageKey="test-theme">
         <TestComponent />
       </ThemeProvider>,
-      { container }
+      { container },
     );
 
     await user.click(getByText("Set Dark"));
-    expect(localStorageMock.setItem).toHaveBeenCalledWith("test-theme", "dark");
+    // Check that the value was actually stored
+    expect(localStorage.getItem("test-theme")).toBe("dark");
   });
 
   it("loads theme from localStorage", () => {
-    // Mock localStorage to return a saved theme
-    localStorageMock.getItem.mockReturnValue("dark");
+    // Set a saved theme in localStorage
+    localStorage.setItem("test-theme", "dark");
 
     const { getByTestId } = render(
       <ThemeProvider storageKey="test-theme">
         <TestComponent />
       </ThemeProvider>,
-      { container }
+      { container },
     );
 
-    expect(localStorageMock.getItem).toHaveBeenCalledWith("test-theme");
+    // Verify the theme was loaded from localStorage
     expect(getByTestId("current-theme")).toHaveTextContent("dark");
   });
 
   it("handles system theme detection", async () => {
     const user = userEvent.setup();
-    
+
     // Mock system preference for dark mode
     matchMediaMock.mockImplementation((query: string) => ({
       matches: query === "(prefers-color-scheme: dark)",
@@ -126,7 +127,7 @@ describe("ThemeProvider", () => {
       <ThemeProvider defaultTheme="system">
         <TestComponent />
       </ThemeProvider>,
-      { container }
+      { container },
     );
 
     await user.click(getByText("Set System"));

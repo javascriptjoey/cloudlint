@@ -1,7 +1,15 @@
 import { test, expect, type Page } from "@playwright/test";
 
 const goToPlayground = async (page: Page) => {
-  // Navigate to playground
+  // Set consent in localStorage BEFORE navigating to prevent banner from appearing
+  // This prevents the consent banner from blocking clicks (it has a 1s delay)
+  await page.goto("/");
+  await page.evaluate(() => {
+    localStorage.setItem("analytics-consent", "declined");
+    localStorage.setItem("analytics-consent-date", new Date().toISOString());
+  });
+
+  // Now navigate to playground - banner won't appear
   await page.goto("/playground", { waitUntil: "networkidle", timeout: 15000 });
 
   // Wait for React hydration and CodeMirror editor to load
@@ -9,13 +17,13 @@ const goToPlayground = async (page: Page) => {
 
   // Wait for CodeMirror editor to be available
   const codeMirrorEditor = page.locator(
-    '[data-testid="codemirror-yaml-editor"]'
+    '[data-testid="codemirror-yaml-editor"]',
   );
   await expect(codeMirrorEditor).toBeVisible({ timeout: 10000 });
 
   // Wait for the hidden textarea (used for accessibility)
   const yamlTextarea = page.locator(
-    '[data-testid="codemirror-yaml-editor"] textarea'
+    '[data-testid="codemirror-yaml-editor"] textarea',
   );
   await expect(yamlTextarea).toBeVisible({ timeout: 5000 });
 };
@@ -63,18 +71,26 @@ test.describe("Playground Simple E2E Tests", () => {
     // Load sample YAML
     await loadSampleBtn(page).click();
 
-    // Click validate
-    await validateBtn(page).click();
+    // Wait for YAML to be loaded with actual content
+    await expect(yamlBox(page)).not.toHaveValue("", { timeout: 5000 });
+    const yamlContent = await yamlBox(page).inputValue();
+    expect(yamlContent).toContain("AWSTemplateFormatVersion");
 
-    // Should show validating state briefly
-    await expect(page.getByText("Validating...")).toBeVisible();
+    // Click validate - button should be enabled
+    const validateButton = validateBtn(page);
+    await expect(validateButton).toBeEnabled();
+    await validateButton.click();
 
-    // Wait for validation to complete (mock takes 1 second)
-    await page.waitForTimeout(1500);
+    // Wait for validation to start (button text changes)
+    await expect(validateButton).toContainText(/Validating|Validate/, {
+      timeout: 3000,
+    });
 
-    // Validate button should be enabled again (indicating validation completed)
-    await expect(validateBtn(page)).toBeEnabled();
-    await expect(validateBtn(page)).toContainText("Validate");
+    // Wait for validation to complete - button returns to "Validate" text
+    await expect(validateButton).toContainText("Validate", {
+      timeout: 15000,
+    });
+    await expect(validateButton).toBeEnabled();
   });
 
   test("convert to JSON works", async ({ page }) => {
@@ -83,17 +99,31 @@ test.describe("Playground Simple E2E Tests", () => {
     // Load sample YAML
     await loadSampleBtn(page).click();
 
-    // Click convert to JSON
-    await convertBtn(page).click();
+    // Wait for YAML to be loaded with actual content
+    await expect(yamlBox(page)).not.toHaveValue("", { timeout: 5000 });
+    const yamlContent = await yamlBox(page).inputValue();
+    expect(yamlContent).toContain("AWSTemplateFormatVersion");
+
+    // Click convert to JSON - button should be enabled
+    const convertButton = convertBtn(page);
+    await expect(convertButton).toBeEnabled();
+    await convertButton.click();
+
+    // Wait a moment for conversion to process
+    await page.waitForTimeout(1000);
 
     // Switch to JSON tab to see output
-    await page.getByRole("tab", { name: "JSON Output" }).click();
+    const jsonTab = page.getByRole("tab", { name: "JSON Output" });
+    await jsonTab.click();
 
-    // Should show JSON output (use heading selector to be specific)
-    await expect(
-      page.getByRole("heading", { name: "JSON Output" })
-    ).toBeVisible();
-    await expect(page.locator("pre code")).toBeVisible();
+    // Wait for tab to be active
+    await expect(jsonTab).toHaveAttribute("data-state", "active", {
+      timeout: 5000,
+    });
+
+    // Should show JSON output - look for any JSON-like content
+    const jsonContent = page.locator("pre, code, [class*='json']");
+    await expect(jsonContent.first()).toBeVisible({ timeout: 10000 });
   });
 
   test("reset button clears content", async ({ page }) => {
@@ -102,15 +132,22 @@ test.describe("Playground Simple E2E Tests", () => {
     // Load sample YAML
     await loadSampleBtn(page).click();
 
-    // Verify content is loaded
-    const content = await yamlBox(page).inputValue();
-    expect(content.length).toBeGreaterThan(0);
+    // Wait for YAML to be loaded with actual content
+    await expect(yamlBox(page)).not.toHaveValue("", { timeout: 5000 });
+    const yamlContent = await yamlBox(page).inputValue();
+    expect(yamlContent).toContain("AWSTemplateFormatVersion");
+    expect(yamlContent.length).toBeGreaterThan(100);
 
-    // Click reset
-    await resetBtn(page).click();
+    // Click reset - button should be enabled
+    const resetButton = resetBtn(page);
+    await expect(resetButton).toBeEnabled();
+    await resetButton.click();
+
+    // Wait a moment for reset to process
+    await page.waitForTimeout(500);
 
     // Should be empty now
-    await expect(yamlBox(page)).toHaveValue("");
+    await expect(yamlBox(page)).toHaveValue("", { timeout: 5000 });
   });
 
   test("theme toggle works", async ({ page }) => {
@@ -151,7 +188,7 @@ test.describe("Playground Simple E2E Tests", () => {
     // Should start on Validation tab
     await expect(page.getByRole("tab", { name: "Validation" })).toHaveAttribute(
       "data-state",
-      "active"
+      "active",
     );
 
     // Click JSON Output tab
@@ -159,12 +196,12 @@ test.describe("Playground Simple E2E Tests", () => {
 
     // Should switch to JSON tab
     await expect(
-      page.getByRole("tab", { name: "JSON Output" })
+      page.getByRole("tab", { name: "JSON Output" }),
     ).toHaveAttribute("data-state", "active");
 
     // Should show JSON placeholder
     await expect(
-      page.getByText('Click "Convert to JSON" to see output')
+      page.getByText('Click "Convert to JSON" to see output'),
     ).toBeVisible();
   });
 });

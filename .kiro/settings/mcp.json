@@ -29,7 +29,8 @@
       "args": ["-y", "@upstash/context7-mcp"],
       "env": {
         "NODE_ENV": "development",
-        "FASTMCP_LOG_LEVEL": "INFO"
+        "FASTMCP_LOG_LEVEL": "INFO",
+        "RECONNECT_TRIGGER": "2025-10-05"
       },
       "disabled": false,
       "autoApprove": [
