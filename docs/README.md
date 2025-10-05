@@ -1,163 +1,159 @@
-# Cloudlint Documentation
+# CloudLint Documentation
 
-Welcome to Cloudlint - a modern YAML validation and linting tool optimized for cloud configurations.
+Welcome to the CloudLint documentation! This directory contains comprehensive documentation for the CloudLint enterprise YAML validation platform.
 
-## Overview
+## 📚 Documentation Structure
 
-Cloudlint is a web-based YAML validator that provides real-time validation, syntax checking, and cloud-specific optimizations for AWS, Azure, and other cloud platforms. Built with React, TypeScript, and CodeMirror, it offers a clean, accessible interface for YAML editing and validation.
+### 🏗️ [Architecture](./architecture/)
 
-## Features
+System architecture, backend/frontend integration, and design decisions.
 
-- **Real-time YAML Validation**: Instant feedback on YAML syntax and structure
-- **CodeMirror Editor**: Professional code editor with syntax highlighting
-- **Cloud Provider Support**: Optimized for AWS CloudFormation, Azure Resource Manager, and generic YAML
-- **JSON Conversion**: Convert YAML to JSON format
-- **Theme Support**: Light and dark mode themes
-- **Accessibility**: WCAG 2.1 AA compliant interface
-- **Mobile Responsive**: Works on desktop, tablet, and mobile devices
-- **Performance Optimized**: Handles large YAML files efficiently
+- [Architecture Overview](./architecture/architecture.md)
+- [Backend Integration](./architecture/backend-integration.md)
+- [Frontend Architecture](./architecture/frontend.md)
+- [Backend Consolidation Report](./architecture/BACKEND_CONSOLIDATION_REPORT.md)
+- [Backend-Frontend Integration Audit](./architecture/BACKEND_FRONTEND_INTEGRATION_AUDIT.md)
+- [Backend Integration Plan](./architecture/BACKEND_INTEGRATION_PLAN.md)
 
-## Quick Start
+### 🧪 [Testing](./testing/)
 
-1. Navigate to the [Playground](/playground)
-2. Paste your YAML content or click "Load Sample" to try it out
-3. Click "Validate" to check your YAML
-4. Use "Convert to JSON" to see the JSON equivalent
-5. Toggle security checks and themes as needed
+Comprehensive testing documentation including unit, E2E, accessibility, and performance testing.
 
-## Documentation Index
+- [Testing Overview](./testing/overview.md)
+- [E2E Testing Guide](./testing/E2E_TESTING_GUIDE.md)
+- [Test Summary Report](./testing/TEST_SUMMARY_REPORT.md)
+- [Comprehensive Testing Checklist](./testing/COMPREHENSIVE_TESTING_CHECKLIST.md)
+- [Testing Guide](./testing/TESTING_GUIDE.md)
+- [Quick Test Reference](./testing/QUICK_TEST_REFERENCE.md)
+- [Start Here - Testing](./testing/START_HERE_TESTING.md)
+- [Testing Fixes](./testing/TESTING_FIXES.md)
+- [Accessibility Testing](./testing/accessibility-testing.md)
+- [Advanced Testing Strategy](./testing/advanced-testing-strategy.md)
+- [E2E Testing Details](./testing/e2e-testing.md)
+- [Playwright Configuration](./testing/playwright-configuration.md)
+- [Test Reporting Dashboard](./testing/processes/test-reporting-dashboard.md)
+- [Visual Regression Review](./testing/processes/visual-regression-review.md)
 
-### Core Features
+### 📡 [API](./api/)
 
-- [API Reference](./API.md) - Backend API endpoints and usage
-- [YAML Tooling](./yaml-tooling.md) - YAML processing capabilities
-- [Security Features](./secure-yaml.md) - Security validation and best practices
+API reference documentation and endpoints.
 
-### Development
+- [API Documentation](./api/API.md)
 
-- [Architecture](./architecture.md) - Application architecture and design decisions
-- [Frontend Guide](./frontend.md) - Frontend development guide
-- [Testing Strategy](./testing.md) - Comprehensive testing approach
-- [Performance](./performance.md) - Performance optimization guide
+### ⚡ [Performance](./performance/)
 
-### Testing
+Performance optimization, benchmarks, and monitoring.
 
-- [Testing Overview](./testing/README.md) - Complete testing documentation
-- [E2E Testing](./testing/e2e-testing.md) - End-to-end testing with Playwright
-- [Accessibility Testing](./testing/accessibility-testing.md) - WCAG compliance testing
+- [Performance Guide](./performance/performance.md)
 
-## Technology Stack
+### 🔌 [Integrations](./integrations/)
 
-### Frontend
+Third-party integrations, CI/CD, and development tools.
 
-- **React 19** - UI framework
-- **TypeScript** - Type safety and developer experience
-- **CodeMirror 6** - Professional code editor
-- **Tailwind CSS** - Utility-first CSS framework
-- **Radix UI** - Accessible component primitives
-- **React Router** - Client-side routing
-- **Sonner** - Toast notifications
+- [CI/CD Pipeline](./integrations/CI-CD.md)
+- [Gitflow Workflow](./integrations/GITFLOW.md)
+- [Terminal Setup](./integrations/terminal-setup.md)
 
-### Backend
+### 🔧 [Troubleshooting](./troubleshooting/)
 
-- **Node.js** - Runtime environment
-- **Express** - Web framework
-- **YAML** - YAML parsing and processing
-- **AJV** - JSON schema validation
+Common issues, fixes, and debugging guides.
 
-### Testing
+- [Troubleshooting Guide](./troubleshooting/troubleshooting.md)
+- [Fix: Double Page Load](./troubleshooting/FIX_DOUBLE_PAGE_LOAD.md)
+- [Fix Instructions](./troubleshooting/FIX_INSTRUCTIONS.md)
+- [Validation Toast Fix](./troubleshooting/VALIDATION_TOAST_FIX.md)
 
-- **Vitest** - Unit testing framework
-- **Playwright** - End-to-end testing
-- **Testing Library** - Component testing utilities
-- **Axe** - Accessibility testing
+### 🔒 Security
 
-### Development Tools
+Security-related documentation.
 
-- **Vite** - Build tool and dev server
-- **ESLint** - Code linting
-- **Prettier** - Code formatting
-- **TypeScript** - Static type checking
+- [Secure YAML Handling](./secure-yaml.md)
 
-## Project Structure
+### 🛠️ Tools
 
-```
-cloudlint/
-├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── ui/             # Base UI components (buttons, cards, etc.)
-│   │   ├── CodeMirrorYamlEditor.tsx
-│   │   ├── Footer.tsx
-│   │   ├── Navbar.tsx
-│   │   ├── Seo.tsx
-│   │   └── theme-provider.tsx
-│   ├── pages/              # Page components
-│   │   ├── Home.tsx
-│   │   ├── Contact.tsx
-│   │   └── PlaygroundSimple.tsx
-│   ├── lib/                # Utility libraries
-│   │   ├── apiClient.ts
-│   │   └── utils.ts
-│   ├── backend/            # Backend logic
-│   │   ├── yaml/           # YAML processing
-│   │   └── server.ts
-│   └── types/              # TypeScript type definitions
-├── tests/                  # Test files
-│   ├── e2e/               # End-to-end tests
-│   ├── frontend/          # Frontend unit tests
-│   ├── backend/           # Backend tests
-│   ├── accessibility/     # Accessibility tests
-│   ├── mobile/           # Mobile-specific tests
-│   ├── performance/      # Performance tests
-│   └── unit/             # Unit tests
-├── docs/                  # Documentation
-└── public/               # Static assets
-```
+YAML tooling and utilities.
 
-## Getting Started
+- [YAML Tooling Guide](./yaml-tooling.md)
 
-### Prerequisites
+### 🗄️ [Cold Storage](./cold-storage/)
 
-- Node.js 20+
-- npm 10+
+Archived and historical documentation (kept for reference, may be outdated).
 
-### Installation
+- Historical implementation summaries
+- Completed phase documentation
+- Resolved issues
+- Legacy planning documents
 
-```bash
-git clone <repository-url>
-cd cloudlint
-npm install
-```
+---
 
-### Development
+## 🚀 Quick Start
 
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run test         # Run unit tests
-npm run test:ui      # Run tests with UI
-npm run e2e          # Run e2e tests
-```
+New to CloudLint? Start here:
 
-### Testing
+1. **Project Overview**: Read the main [README.md](../README.md) in the root directory
+2. **Architecture**: Understand the [system architecture](./architecture/architecture.md)
+3. **Testing**: Learn about our [testing strategy](./testing/overview.md)
+4. **Development**: Check the [WARP.md](../WARP.md) for common commands
 
-```bash
-npm run test:run     # Run all unit tests
-npm run test:coverage # Run tests with coverage
-npm run e2e          # Run e2e tests
-npm run e2e:accessibility # Run accessibility tests
-```
+---
 
-## Contributing
+## 📖 Documentation Standards
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+### File Organization
 
-## License
+- **Keep it organized**: Place files in the appropriate category folder
+- **Use descriptive names**: File names should clearly indicate content
+- **Update links**: When moving files, update all cross-references
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Writing Style
+
+- **Be concise**: Get to the point quickly
+- **Use examples**: Code examples help understanding
+- **Keep it current**: Update docs when code changes
+- **Add context**: Explain why, not just what
+
+### Archiving
+
+- **Don't delete**: Move outdated docs to `cold-storage/`
+- **Add archive notes**: Explain why archived and link to current docs
+- **Preserve history**: Historical context is valuable
+
+---
+
+## 🔄 Recent Changes
+
+See [DOCUMENTATION_AUDIT_REPORT.md](../DOCUMENTATION_AUDIT_REPORT.md) for the complete audit and reorganization details.
+
+**Latest Update**: January 4, 2025
+
+- Reorganized all documentation into logical categories
+- Moved 35 files to appropriate folders
+- Archived 17 historical documents to cold-storage
+- Updated cross-references and links
+
+---
+
+## 📝 Contributing to Documentation
+
+When adding or updating documentation:
+
+1. **Choose the right location**: Use the folder structure above
+2. **Follow the style**: Match existing documentation patterns
+3. **Update this README**: Add links to new documentation
+4. **Test links**: Ensure all cross-references work
+5. **Get review**: Documentation changes should be reviewed like code
+
+---
+
+## 🆘 Need Help?
+
+- **Issues**: Check [troubleshooting](./troubleshooting/)
+- **Testing**: See [testing documentation](./testing/)
+- **Architecture**: Review [architecture docs](./architecture/)
+- **Questions**: Open an issue on GitHub
+
+---
+
+**Documentation Version**: 2.0  
+**Last Updated**: January 4, 2025  
+**Maintained by**: CloudLint Team
