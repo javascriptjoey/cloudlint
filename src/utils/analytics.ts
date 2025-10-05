@@ -53,17 +53,29 @@ declare global {
  */
 export function isAnalyticsEnabled(): boolean {
   try {
-    const consent = localStorage.getItem("analytics_consent");
+    const consent = localStorage.getItem("analytics-consent");
     if (!consent) {
-      // Default to enabled since Plausible is privacy-friendly
-      return true;
+      // Default to disabled - require explicit consent (GDPR compliant)
+      return false;
     }
 
-    const consentData: AnalyticsConsent = JSON.parse(consent);
-    return consentData.analytics;
+    // Handle simple string format from ConsentBanner
+    if (consent === "granted") {
+      return true;
+    } else if (consent === "denied") {
+      return false;
+    }
+
+    // Handle old JSON format for backwards compatibility
+    try {
+      const consentData: AnalyticsConsent = JSON.parse(consent);
+      return consentData.analytics === true;
+    } catch {
+      return false;
+    }
   } catch (error) {
     console.error("Error reading analytics consent:", error);
-    return true; // Default to enabled on error
+    return false; // Default to disabled on error (privacy-first)
   }
 }
 
@@ -72,11 +84,10 @@ export function isAnalyticsEnabled(): boolean {
  */
 export function setAnalyticsConsent(enabled: boolean): void {
   try {
-    const consentData: AnalyticsConsent = {
-      analytics: enabled,
-      timestamp: Date.now(),
-    };
-    localStorage.setItem("analytics_consent", JSON.stringify(consentData));
+    // Store as simple string for consistency with ConsentBanner
+    localStorage.setItem("analytics-consent", enabled ? "granted" : "denied");
+    localStorage.setItem("analytics-consent-date", new Date().toISOString());
+    localStorage.setItem("analytics-consent-updated", new Date().toISOString());
   } catch (error) {
     console.error("Error saving analytics consent:", error);
   }

@@ -46,6 +46,8 @@ export interface ConsentBannerProps {
   onDecline?: () => void;
   /** Callback when banner is dismissed */
   onDismiss?: () => void;
+  /** Callback when privacy link is clicked */
+  onPrivacyClick?: () => void;
   /** Custom className for styling */
   className?: string;
 }
@@ -56,6 +58,7 @@ export function ConsentBanner({
   onAccept,
   onDecline,
   onDismiss,
+  onPrivacyClick,
   className,
 }: ConsentBannerProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -66,7 +69,7 @@ export function ConsentBanner({
 
   // Check if user has already made a choice
   useEffect(() => {
-    const hasConsent = localStorage.getItem("analytics_consent");
+    const hasConsent = localStorage.getItem("analytics-consent");
     if (!hasConsent) {
       // Show banner after a brief delay for better UX
       const timer = setTimeout(() => {
@@ -298,17 +301,32 @@ export function ConsentBanner({
             >
               Decline
             </Button>
-            <Button
-              variant="ghost"
-              onClick={toggleDetails}
-              className="w-full sm:w-auto order-3 sm:order-3 sm:ml-auto"
-              aria-label={
-                showDetails ? "Hide privacy details" : "Show privacy details"
-              }
-              aria-expanded={showDetails}
-            >
-              {showDetails ? "Hide Details" : "Learn More"}
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto order-3 sm:order-3 sm:ml-auto">
+              <Button
+                variant="ghost"
+                onClick={toggleDetails}
+                className="flex-1 sm:flex-initial"
+                aria-label={
+                  showDetails ? "Hide privacy details" : "Show privacy details"
+                }
+                aria-expanded={showDetails}
+              >
+                {showDetails ? "Hide Details" : "Learn More"}
+              </Button>
+              {onPrivacyClick && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    onPrivacyClick();
+                    handleDecline(); // Close banner when opening privacy center
+                  }}
+                  className="flex-1 sm:flex-initial"
+                  aria-label="Open Privacy Center to manage your data"
+                >
+                  Privacy Center
+                </Button>
+              )}
+            </div>
           </CardFooter>
         </Card>
       </div>

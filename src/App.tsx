@@ -1,10 +1,11 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ConsentBanner } from "@/components/ConsentBanner";
+import { PrivacyCenter } from "@/components/PrivacyCenter";
 import { initializeAnalytics, trackPageview } from "@/utils/analytics";
 
 // Lazy load all pages for consistent loading experience
@@ -13,6 +14,8 @@ const Contact = lazy(() => import("@/pages/Contact"));
 const Playground = lazy(() => import("@/pages/PlaygroundSimple"));
 
 function App() {
+  const [isPrivacyCenterOpen, setIsPrivacyCenterOpen] = useState(false);
+
   // Initialize analytics on app start
   useEffect(() => {
     initializeAnalytics();
@@ -45,6 +48,11 @@ function App() {
             // Track initial pageview when analytics is accepted
             trackPageview();
           }}
+          onPrivacyClick={() => setIsPrivacyCenterOpen(true)}
+        />
+        <PrivacyCenter
+          isOpen={isPrivacyCenterOpen}
+          onClose={() => setIsPrivacyCenterOpen(false)}
         />
       </BrowserRouter>
     </ThemeProvider>
