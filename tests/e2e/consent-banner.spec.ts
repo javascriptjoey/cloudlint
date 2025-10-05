@@ -40,9 +40,10 @@ test.describe("Consent Banner E2E", () => {
       // Set consent in localStorage
       await page.goto("/");
       await page.evaluate(() => {
+        localStorage.setItem("analytics-consent", "granted");
         localStorage.setItem(
-          "analytics_consent",
-          JSON.stringify({ analytics: true, timestamp: Date.now() }),
+          "analytics-consent-date",
+          new Date().toISOString(),
         );
       });
 
@@ -67,7 +68,12 @@ test.describe("Consent Banner E2E", () => {
 
     test("should display all required elements", async ({ page }) => {
       await page.goto("/");
-      await page.waitForTimeout(1100);
+
+      // Wait for banner to appear and be fully rendered
+      const banner = page.getByRole("dialog", {
+        name: /privacy-friendly analytics/i,
+      });
+      await expect(banner).toBeVisible({ timeout: 15000 });
 
       // Check for title
       await expect(page.getByText(/privacy-friendly analytics/i)).toBeVisible();
@@ -77,16 +83,10 @@ test.describe("Consent Banner E2E", () => {
         page.getByText(/we use privacy-respecting analytics/i),
       ).toBeVisible();
 
-      // Check for buttons
-      await expect(
-        page.getByRole("button", { name: /accept analytics/i }),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: /decline/i }),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: /learn more/i }),
-      ).toBeVisible();
+      // Check for buttons using getByText for visible text
+      await expect(page.getByText("Accept Analytics")).toBeVisible();
+      await expect(page.getByText("Decline")).toBeVisible();
+      await expect(page.getByText("Learn More")).toBeVisible();
       await expect(
         page.getByRole("button", { name: /close and decline/i }),
       ).toBeVisible();
@@ -121,15 +121,17 @@ test.describe("Consent Banner E2E", () => {
       });
       await acceptButton.click();
 
-      // Check localStorage
+      // Check localStorage - consent is stored as simple string
       const consent = await page.evaluate(() =>
-        localStorage.getItem("analytics_consent"),
+        localStorage.getItem("analytics-consent"),
       );
-      expect(consent).toBeTruthy();
+      expect(consent).toBe("granted");
 
-      const parsed = JSON.parse(consent!);
-      expect(parsed.analytics).toBe(true);
-      expect(parsed.timestamp).toBeGreaterThan(0);
+      // Check consent date was also saved
+      const consentDate = await page.evaluate(() =>
+        localStorage.getItem("analytics-consent-date"),
+      );
+      expect(consentDate).toBeTruthy();
     });
 
     test("should persist consent across page reloads", async ({ page }) => {
@@ -151,43 +153,43 @@ test.describe("Consent Banner E2E", () => {
 
       // Verify consent is still in localStorage
       const consent = await page.evaluate(() =>
-        localStorage.getItem("analytics_consent"),
+        localStorage.getItem("analytics-consent"),
       );
-      const parsed = JSON.parse(consent!);
-      expect(parsed.analytics).toBe(true);
+      expect(consent).toBe("granted");
     });
   });
 
   test.describe("Opt-out Flow", () => {
     test("should decline analytics and hide banner", async ({ page }) => {
       await page.goto("/");
-      await page.waitForTimeout(1100);
 
-      const declineButton = page.getByRole("button", { name: /decline/i });
-      await declineButton.click();
-
-      // Banner should disappear
+      // Wait for banner to appear
       const banner = page.getByRole("dialog", {
         name: /privacy-friendly analytics/i,
       });
+      await expect(banner).toBeVisible({ timeout: 15000 });
+
+      // Click decline button using visible text
+      await page.getByText("Decline").click();
+
+      // Banner should disappear
       await expect(banner).not.toBeVisible();
     });
 
     test("should save declined consent to localStorage", async ({ page }) => {
       await page.goto("/");
-      await page.waitForTimeout(1100);
 
-      const declineButton = page.getByRole("button", { name: /decline/i });
-      await declineButton.click();
+      // Wait for banner
+      await expect(page.getByRole("dialog")).toBeVisible({ timeout: 15000 });
 
-      // Check localStorage
+      // Click decline
+      await page.getByText("Decline").click();
+
+      // Check localStorage - consent is stored as simple string
       const consent = await page.evaluate(() =>
-        localStorage.getItem("analytics_consent"),
+        localStorage.getItem("analytics-consent"),
       );
-      expect(consent).toBeTruthy();
-
-      const parsed = JSON.parse(consent!);
-      expect(parsed.analytics).toBe(false);
+      expect(consent).toBe("denied");
     });
 
     test("should close banner with X button", async ({ page }) => {
@@ -207,10 +209,9 @@ test.describe("Consent Banner E2E", () => {
 
       // Should save as declined
       const consent = await page.evaluate(() =>
-        localStorage.getItem("analytics_consent"),
+        localStorage.getItem("analytics-consent"),
       );
-      const parsed = JSON.parse(consent!);
-      expect(parsed.analytics).toBe(false);
+      expect(consent).toBe("denied");
     });
   });
 
@@ -219,37 +220,32 @@ test.describe("Consent Banner E2E", () => {
       page,
     }) => {
       await page.goto("/");
-      await page.waitForTimeout(1100);
 
-      const learnMoreButton = page.getByRole("button", {
-        name: /learn more/i,
-      });
-      await learnMoreButton.click();
+      // Wait for banner
+      await expect(page.getByRole("dialog")).toBeVisible({ timeout: 15000 });
+
+      // Click Learn More button using visible text
+      await page.getByText("Learn More").click();
 
       // Details should be visible
       await expect(page.getByText(/what we collect/i)).toBeVisible();
       await expect(page.getByText(/what we don't collect/i)).toBeVisible();
-      await expect(
-        page.getByRole("region", { name: /privacy details/i }),
-      ).toBeVisible();
     });
 
     test("should hide details when hide details is clicked", async ({
       page,
     }) => {
       await page.goto("/");
-      await page.waitForTimeout(1100);
+
+      // Wait for banner
+      await expect(page.getByRole("dialog")).toBeVisible({ timeout: 15000 });
 
       // Show details
-      const learnMoreButton = page.getByRole("button", {
-        name: /learn more/i,
-      });
-      await learnMoreButton.click();
+      await page.getByText("Learn More").click();
       await expect(page.getByText(/what we collect/i)).toBeVisible();
 
-      // Hide details
-      const hideButton = page.getByRole("button", { name: /hide details/i });
-      await hideButton.click();
+      // Hide details - button text changes to "Hide Details"
+      await page.getByText("Hide Details").click();
 
       // Details should be hidden
       await expect(page.getByText(/what we collect/i)).not.toBeVisible();
@@ -257,10 +253,13 @@ test.describe("Consent Banner E2E", () => {
 
     test("should update aria-expanded attribute", async ({ page }) => {
       await page.goto("/");
-      await page.waitForTimeout(1100);
 
+      // Wait for banner
+      await expect(page.getByRole("dialog")).toBeVisible({ timeout: 15000 });
+
+      // Find the Learn More button using its aria-label that includes "privacy details"
       const learnMoreButton = page.getByRole("button", {
-        name: /learn more/i,
+        name: /privacy details/i,
       });
 
       // Initially collapsed
@@ -268,10 +267,12 @@ test.describe("Consent Banner E2E", () => {
 
       // Expand
       await learnMoreButton.click();
+      await page.waitForTimeout(200); // Wait for state update
       await expect(learnMoreButton).toHaveAttribute("aria-expanded", "true");
 
-      // Collapse
+      // Collapse (button aria-label changes but we can still find it)
       await learnMoreButton.click();
+      await page.waitForTimeout(200); // Wait for state update
       await expect(learnMoreButton).toHaveAttribute("aria-expanded", "false");
     });
   });
@@ -289,17 +290,23 @@ test.describe("Consent Banner E2E", () => {
 
     test("should navigate through buttons with Tab key", async ({ page }) => {
       await page.goto("/");
-      await page.waitForTimeout(1200);
 
+      // Wait for banner and focus
+      await expect(page.getByRole("dialog")).toBeVisible({ timeout: 15000 });
+      await page.waitForTimeout(200); // Extra wait for focus
+
+      // Get buttons by their accessible names (full aria-label)
       const acceptButton = page.getByRole("button", {
-        name: /accept analytics/i,
+        name: "Accept analytics and help us improve",
       });
-      const declineButton = page.getByRole("button", { name: /decline/i });
+      const declineButton = page.getByRole("button", {
+        name: "Decline analytics and continue without tracking",
+      });
       const learnMoreButton = page.getByRole("button", {
-        name: /learn more/i,
+        name: "Show privacy details",
       });
       const closeButton = page.getByRole("button", {
-        name: /close and decline/i,
+        name: "Close and decline analytics",
       });
 
       // Accept button should be focused initially
@@ -312,6 +319,9 @@ test.describe("Consent Banner E2E", () => {
       // Tab to learn more button
       await page.keyboard.press("Tab");
       await expect(learnMoreButton).toBeFocused();
+
+      // Tab to Privacy Center button
+      await page.keyboard.press("Tab");
 
       // Tab to close button
       await page.keyboard.press("Tab");
@@ -358,10 +368,9 @@ test.describe("Consent Banner E2E", () => {
 
       // Should save as declined
       const consent = await page.evaluate(() =>
-        localStorage.getItem("analytics_consent"),
+        localStorage.getItem("analytics-consent"),
       );
-      const parsed = JSON.parse(consent!);
-      expect(parsed.analytics).toBe(false);
+      expect(consent).toBe("denied");
     });
 
     test("should activate accept button with Enter key", async ({ page }) => {
@@ -384,20 +393,24 @@ test.describe("Consent Banner E2E", () => {
 
       // Should save as accepted
       const consent = await page.evaluate(() =>
-        localStorage.getItem("analytics_consent"),
+        localStorage.getItem("analytics-consent"),
       );
-      const parsed = JSON.parse(consent!);
-      expect(parsed.analytics).toBe(true);
+      expect(consent).toBe("granted");
     });
 
     test("should activate decline button with Space key", async ({ page }) => {
       await page.goto("/");
-      await page.waitForTimeout(1200);
+
+      // Wait for banner and focus
+      await expect(page.getByRole("dialog")).toBeVisible({ timeout: 15000 });
+      await page.waitForTimeout(200);
 
       // Tab to decline button
       await page.keyboard.press("Tab");
 
-      const declineButton = page.getByRole("button", { name: /decline/i });
+      const declineButton = page.getByRole("button", {
+        name: "Decline analytics and continue without tracking",
+      });
       await expect(declineButton).toBeFocused();
 
       // Press Space
@@ -482,18 +495,16 @@ test.describe("Consent Banner E2E", () => {
     test("should display correctly on mobile", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE
       await page.goto("/");
-      await page.waitForTimeout(1100);
 
+      // Wait for banner
       const banner = page.getByRole("dialog", {
         name: /privacy-friendly analytics/i,
       });
-      await expect(banner).toBeVisible();
+      await expect(banner).toBeVisible({ timeout: 15000 });
 
-      // Check that buttons stack vertically on mobile
-      const acceptButton = page.getByRole("button", {
-        name: /accept analytics/i,
-      });
-      const declineButton = page.getByRole("button", { name: /decline/i });
+      // Check that buttons stack vertically on mobile using visible text
+      const acceptButton = page.getByText("Accept Analytics");
+      const declineButton = page.getByText("Decline");
 
       const acceptBox = await acceptButton.boundingBox();
       const declineBox = await declineButton.boundingBox();

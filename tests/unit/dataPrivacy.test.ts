@@ -58,6 +58,9 @@ describe("Data Privacy Utilities", () => {
       localStorage.setItem("analytics-consent", "granted");
       localStorage.setItem("analytics-consent-date", "2025-01-01");
 
+      // Verify it was set
+      expect(localStorage.getItem("analytics-consent")).toBe("granted");
+
       const data = exportUserData();
 
       expect(data.analytics.consent).toBe(true);
@@ -69,6 +72,9 @@ describe("Data Privacy Utilities", () => {
       localStorage.setItem("realTimeValidation", "true");
       localStorage.setItem("securityChecks", "false");
 
+      // Verify they were set
+      expect(localStorage.getItem("theme")).toBe("dark");
+
       const data = exportUserData();
 
       expect(data.preferences.theme).toBe("dark");
@@ -79,6 +85,9 @@ describe("Data Privacy Utilities", () => {
     it("should export usage history", () => {
       localStorage.setItem("validation-count", "100");
       localStorage.setItem("last-validation-date", "2025-01-04");
+
+      // Verify they were set
+      expect(localStorage.getItem("validation-count")).toBe("100");
 
       const data = exportUserData();
 
@@ -106,6 +115,16 @@ describe("Data Privacy Utilities", () => {
 
   describe("downloadUserData", () => {
     it("should create and trigger download", () => {
+      // Mock URL.createObjectURL and revokeObjectURL first
+      const originalCreateObjectURL = URL.createObjectURL;
+      const originalRevokeObjectURL = URL.revokeObjectURL;
+
+      const createObjectURLMock = vi.fn(() => "blob:mock-url");
+      const revokeObjectURLMock = vi.fn();
+
+      URL.createObjectURL = createObjectURLMock;
+      URL.revokeObjectURL = revokeObjectURLMock;
+
       // Mock DOM methods
       const createElementSpy = vi.spyOn(document, "createElement");
       const appendChildSpy = vi
@@ -123,29 +142,21 @@ describe("Data Privacy Utilities", () => {
 
       createElementSpy.mockReturnValue(mockLink as unknown as HTMLElement);
 
-      // Mock URL methods
-      const createObjectURLSpy = vi
-        .spyOn(URL, "createObjectURL")
-        .mockReturnValue("blob:mock-url");
-      const revokeObjectURLSpy = vi
-        .spyOn(URL, "revokeObjectURL")
-        .mockImplementation(() => {});
-
       downloadUserData();
 
       expect(createElementSpy).toHaveBeenCalledWith("a");
       expect(mockLink.click).toHaveBeenCalled();
       expect(mockLink.download).toContain("cloudlint-user-data");
       expect(mockLink.download).toContain(".json");
-      expect(createObjectURLSpy).toHaveBeenCalled();
-      expect(revokeObjectURLSpy).toHaveBeenCalled();
+      expect(createObjectURLMock).toHaveBeenCalled();
+      expect(revokeObjectURLMock).toHaveBeenCalled();
 
       // Cleanup
       createElementSpy.mockRestore();
       appendChildSpy.mockRestore();
       removeChildSpy.mockRestore();
-      createObjectURLSpy.mockRestore();
-      revokeObjectURLSpy.mockRestore();
+      URL.createObjectURL = originalCreateObjectURL;
+      URL.revokeObjectURL = originalRevokeObjectURL;
     });
   });
 
@@ -179,10 +190,14 @@ describe("Data Privacy Utilities", () => {
     });
 
     it("should handle deletion errors gracefully", () => {
+      // Set up some test data first
+      localStorage.setItem("analytics-consent", "granted");
+      localStorage.setItem("theme", "dark");
+
       // Mock localStorage.removeItem to throw error
-      const originalRemoveItem = Storage.prototype.removeItem;
-      Storage.prototype.removeItem = vi.fn(() => {
-        throw new Error("Mock deletion error");
+      const originalRemoveItem = localStorage.removeItem;
+      localStorage.removeItem = vi.fn((key: string) => {
+        throw new Error(`Mock deletion error for ${key}`);
       });
 
       const result = deleteAllUserData();
@@ -191,7 +206,7 @@ describe("Data Privacy Utilities", () => {
       expect(result.errors.length).toBeGreaterThan(0);
 
       // Restore original method
-      Storage.prototype.removeItem = originalRemoveItem;
+      localStorage.removeItem = originalRemoveItem;
     });
 
     it("should return list of deleted items", () => {

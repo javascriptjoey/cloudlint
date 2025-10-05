@@ -1,17 +1,39 @@
-import '@testing-library/jest-dom'
-import { cleanup } from '@testing-library/react'
-import { vi } from 'vitest'
-import { server } from './mocks/server'
+import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
+import { vi } from "vitest";
+import { server } from "./mocks/server";
 
-// Mock localStorage globally for all tests
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-  length: 0,
-  key: vi.fn(),
+// Create a real localStorage implementation for tests
+class LocalStorageMock {
+  private store: Record<string, string> = {};
+
+  getItem(key: string): string | null {
+    return this.store[key] || null;
+  }
+
+  setItem(key: string, value: string): void {
+    this.store[key] = String(value);
+  }
+
+  removeItem(key: string): void {
+    delete this.store[key];
+  }
+
+  clear(): void {
+    this.store = {};
+  }
+
+  get length(): number {
+    return Object.keys(this.store).length;
+  }
+
+  key(index: number): string | null {
+    const keys = Object.keys(this.store);
+    return keys[index] || null;
+  }
 }
+
+const localStorageMock = new LocalStorageMock();
 
 // Mock matchMedia for theme system detection
 const matchMediaMock = vi.fn().mockImplementation((query: string) => ({
@@ -23,15 +45,22 @@ const matchMediaMock = vi.fn().mockImplementation((query: string) => ({
   addEventListener: vi.fn(),
   removeEventListener: vi.fn(),
   dispatchEvent: vi.fn(),
-}))
+}));
 
 // Harmonize AbortController between window and global to avoid cross-realm issues in jsdom.
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   try {
-    const w = window as unknown as { AbortController?: typeof AbortController; AbortSignal?: typeof AbortSignal }
-    const g = globalThis as unknown as { AbortController?: typeof AbortController; AbortSignal?: typeof AbortSignal }
-    if (!w.AbortController && g.AbortController) w.AbortController = g.AbortController
-    if (!w.AbortSignal && g.AbortSignal) w.AbortSignal = g.AbortSignal
+    const w = window as unknown as {
+      AbortController?: typeof AbortController;
+      AbortSignal?: typeof AbortSignal;
+    };
+    const g = globalThis as unknown as {
+      AbortController?: typeof AbortController;
+      AbortSignal?: typeof AbortSignal;
+    };
+    if (!w.AbortController && g.AbortController)
+      w.AbortController = g.AbortController;
+    if (!w.AbortSignal && g.AbortSignal) w.AbortSignal = g.AbortSignal;
   } catch {
     // ignore if cannot assign
   }
@@ -39,23 +68,35 @@ if (typeof window !== 'undefined') {
 
 // Polyfills and globals required by CodeMirror in JSDOM
 // 1) Range.getClientRects / getBoundingClientRect used by CodeMirror for measurements
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   const w = window as unknown as {
-    Range?: typeof Range
-    ResizeObserver?: typeof ResizeObserver
-    HTMLElement: typeof HTMLElement
-    Element: typeof Element
-  }
+    Range?: typeof Range;
+    ResizeObserver?: typeof ResizeObserver;
+    HTMLElement: typeof HTMLElement;
+    Element: typeof Element;
+  };
   // Provide missing methods on Range prototype
-if (w.Range && !(w.Range.prototype as unknown as { getClientRects?: () => unknown }).getClientRects) {
-    ;(w.Range.prototype as unknown as { getClientRects: () => DOMRectList }).getClientRects = () => {
+  if (
+    w.Range &&
+    !(w.Range.prototype as unknown as { getClientRects?: () => unknown })
+      .getClientRects
+  ) {
+    (
+      w.Range.prototype as unknown as { getClientRects: () => DOMRectList }
+    ).getClientRects = () => {
       // Minimal DOMRectList-like object without using `any`
-      const list = { length: 0, item: () => null } as unknown as DOMRectList
-      return list
-    }
+      const list = { length: 0, item: () => null } as unknown as DOMRectList;
+      return list;
+    };
   }
-if (w.Range && !(w.Range.prototype as unknown as { getBoundingClientRect?: () => unknown }).getBoundingClientRect) {
-    ;(w.Range.prototype as unknown as { getBoundingClientRect: () => DOMRect }).getBoundingClientRect = () => ({
+  if (
+    w.Range &&
+    !(w.Range.prototype as unknown as { getBoundingClientRect?: () => unknown })
+      .getBoundingClientRect
+  ) {
+    (
+      w.Range.prototype as unknown as { getBoundingClientRect: () => DOMRect }
+    ).getBoundingClientRect = () => ({
       x: 0,
       y: 0,
       width: 0,
@@ -65,92 +106,100 @@ if (w.Range && !(w.Range.prototype as unknown as { getBoundingClientRect?: () =>
       right: 0,
       bottom: 0,
       toJSON: () => ({}),
-    })
+    });
   }
   // 2) ResizeObserver used by CodeMirror view to observe layout changes
   if (!w.ResizeObserver) {
     class MockResizeObserver {
-      observe() {/* no-op */}
-      unobserve() {/* no-op */}
-      disconnect() {/* no-op */}
+      observe() {
+        /* no-op */
+      }
+      unobserve() {
+        /* no-op */
+      }
+      disconnect() {
+        /* no-op */
+      }
     }
-    w.ResizeObserver = MockResizeObserver
+    w.ResizeObserver = MockResizeObserver;
   }
   // 3) getClientRects on Element for some browsers/APIs that access it directly
   if (!w.Element.prototype.getClientRects) {
     w.Element.prototype.getClientRects = () => {
-      const list = { length: 0, item: () => null } as unknown as DOMRectList
-      return list
-    }
+      const list = { length: 0, item: () => null } as unknown as DOMRectList;
+      return list;
+    };
   }
   if (!w.HTMLElement.prototype.scrollTo) {
-    w.HTMLElement.prototype.scrollTo = () => {}
+    w.HTMLElement.prototype.scrollTo = () => {};
   }
 }
 
 // Setup global mocks
 beforeEach(() => {
-  if (typeof window !== 'undefined') {
-    // Reset localStorage mock
-    localStorageMock.getItem.mockClear()
-    localStorageMock.setItem.mockClear()
-    localStorageMock.removeItem.mockClear()
-    localStorageMock.clear.mockClear()
-    
+  if (typeof window !== "undefined") {
+    // Clear localStorage data
+    localStorageMock.clear();
+
     // Apply localStorage mock
-    Object.defineProperty(window, 'localStorage', {
+    Object.defineProperty(window, "localStorage", {
       value: localStorageMock,
       writable: true,
-    })
-    
+      configurable: true,
+    });
+
     // Apply matchMedia mock
-    Object.defineProperty(window, 'matchMedia', {
+    Object.defineProperty(window, "matchMedia", {
       value: matchMediaMock,
       writable: true,
-    })
-    
+    });
+
     // Clean up document classes
-    document.documentElement.className = ''
-    
+    document.documentElement.className = "";
+
     // Reset matchMedia mock
-    matchMediaMock.mockClear()
+    matchMediaMock.mockClear();
   }
-})
+});
 
 afterEach(() => {
   // Clean up React components
-  if (typeof window !== 'undefined') {
-    cleanup()
-    
+  if (typeof window !== "undefined") {
+    cleanup();
+
     // Clean up DOM after each test
-    document.body.innerHTML = ''
-    document.documentElement.className = ''
+    document.body.innerHTML = "";
+    document.documentElement.className = "";
   }
-})
+});
 
 // Suppress noisy YAML unresolved tag warnings (e.g., !Ref) during tests only.
 // This does not change runtime behavior; it only filters specific YAML warnings.
-const originalEmitWarning = process.emitWarning.bind(process)
+const originalEmitWarning = process.emitWarning.bind(process);
 function isYamlTagWarning(w: unknown): boolean {
-  if (typeof w === 'string') return w.includes('YAMLWarning') || w.includes('TAG_RESOLVE_FAILED')
-  const name = (w as { name?: string })?.name
-  const code = (w as { code?: string })?.code
-  return name === 'YAMLWarning' || code === 'TAG_RESOLVE_FAILED'
+  if (typeof w === "string")
+    return w.includes("YAMLWarning") || w.includes("TAG_RESOLVE_FAILED");
+  const name = (w as { name?: string })?.name;
+  const code = (w as { code?: string })?.code;
+  return name === "YAMLWarning" || code === "TAG_RESOLVE_FAILED";
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-;(process as any).emitWarning = ((warning: unknown, ...args: unknown[]) => {
-  if (isYamlTagWarning(warning)) return
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (originalEmitWarning as unknown as (...a: any[]) => void)(warning as any, ...(args as any[]))
-}) as unknown as typeof process.emitWarning
+(process as any).emitWarning = ((warning: unknown, ...args: unknown[]) => {
+  if (isYamlTagWarning(warning)) return;
 
+  return (originalEmitWarning as unknown as (...a: unknown[]) => void)(
+    warning,
+    ...args,
+  );
+}) as unknown as typeof process.emitWarning;
 
 // Start MSW only in jsdom (frontend tests). Backend tests run in Node and should not be intercepted.
-const isJsdom = typeof window !== 'undefined' && typeof document !== 'undefined'
+const isJsdom =
+  typeof window !== "undefined" && typeof document !== "undefined";
 if (isJsdom) {
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-  afterEach(() => server.resetHandlers())
-  afterAll(() => server.close())
+  beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
 }
 
 // Remove previous manual fetch mock (replaced by MSW)
@@ -194,4 +243,4 @@ beforeEach(() => {
 */
 
 // Export mocks for individual test use
-export { localStorageMock, matchMediaMock }
+export { localStorageMock, matchMediaMock };
