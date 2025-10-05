@@ -70,8 +70,8 @@ describe("Analytics Utility", () => {
   });
 
   describe("isAnalyticsEnabled", () => {
-    it("should return true by default when no consent is stored", () => {
-      expect(isAnalyticsEnabled()).toBe(true);
+    it("should return false by default when no consent is stored (GDPR compliant)", () => {
+      expect(isAnalyticsEnabled()).toBe(false);
     });
 
     it("should return true when analytics is enabled", () => {
@@ -84,20 +84,20 @@ describe("Analytics Utility", () => {
       expect(isAnalyticsEnabled()).toBe(false);
     });
 
-    it("should return true on localStorage error", () => {
+    it("should return false on localStorage error (privacy-first)", () => {
       const spy = vi
         .spyOn(Storage.prototype, "getItem")
         .mockImplementation(() => {
           throw new Error("Storage error");
         });
 
-      expect(isAnalyticsEnabled()).toBe(true);
+      expect(isAnalyticsEnabled()).toBe(false);
       spy.mockRestore();
     });
 
-    it("should return true on invalid JSON in localStorage", () => {
-      localStorage.setItem("analytics_consent", "invalid json");
-      expect(isAnalyticsEnabled()).toBe(true);
+    it("should return false on invalid JSON in localStorage", () => {
+      localStorage.setItem("analytics-consent", "invalid json");
+      expect(isAnalyticsEnabled()).toBe(false);
     });
   });
 
@@ -105,22 +105,21 @@ describe("Analytics Utility", () => {
     it("should store analytics consent as enabled", () => {
       setAnalyticsConsent(true);
 
-      const stored = localStorage.getItem("analytics_consent");
-      expect(stored).toBeTruthy();
+      const stored = localStorage.getItem("analytics-consent");
+      expect(stored).toBe("granted");
 
-      const parsed = JSON.parse(stored!);
-      expect(parsed.analytics).toBe(true);
-      expect(parsed.timestamp).toBeTypeOf("number");
+      const date = localStorage.getItem("analytics-consent-date");
+      expect(date).toBeTruthy();
     });
 
     it("should store analytics consent as disabled", () => {
       setAnalyticsConsent(false);
 
-      const stored = localStorage.getItem("analytics_consent");
-      expect(stored).toBeTruthy();
+      const stored = localStorage.getItem("analytics-consent");
+      expect(stored).toBe("denied");
 
-      const parsed = JSON.parse(stored!);
-      expect(parsed.analytics).toBe(false);
+      const date = localStorage.getItem("analytics-consent-date");
+      expect(date).toBeTruthy();
     });
 
     it("should handle localStorage errors gracefully", () => {
@@ -138,15 +137,17 @@ describe("Analytics Utility", () => {
 
     it("should update timestamp on each call", async () => {
       setAnalyticsConsent(true);
-      const first = JSON.parse(localStorage.getItem("analytics_consent")!);
+      const first = localStorage.getItem("analytics-consent-date")!;
 
       // Wait a bit
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       setAnalyticsConsent(true);
-      const second = JSON.parse(localStorage.getItem("analytics_consent")!);
+      const second = localStorage.getItem("analytics-consent-date")!;
 
-      expect(second.timestamp).toBeGreaterThan(first.timestamp);
+      expect(new Date(second).getTime()).toBeGreaterThan(
+        new Date(first).getTime(),
+      );
     });
   });
 
@@ -289,6 +290,9 @@ describe("Analytics Utility", () => {
 
   describe("loadPlausibleScript", () => {
     it("should create and append script element", () => {
+      // Enable analytics first
+      setAnalyticsConsent(true);
+
       loadPlausibleScript("example.com");
 
       const script = document.querySelector(
@@ -302,6 +306,9 @@ describe("Analytics Utility", () => {
     });
 
     it("should use custom script source when provided", () => {
+      // Enable analytics first
+      setAnalyticsConsent(true);
+
       loadPlausibleScript("example.com", "https://custom.com/script.js");
 
       const script = document.querySelector(
@@ -311,6 +318,9 @@ describe("Analytics Utility", () => {
     });
 
     it("should not load script twice for same domain", () => {
+      // Enable analytics first
+      setAnalyticsConsent(true);
+
       loadPlausibleScript("example.com");
       loadPlausibleScript("example.com");
 
@@ -331,6 +341,9 @@ describe("Analytics Utility", () => {
     });
 
     it("should handle script load errors", () => {
+      // Enable analytics first
+      setAnalyticsConsent(true);
+
       const consoleErrorSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});

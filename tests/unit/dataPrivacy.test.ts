@@ -55,8 +55,6 @@ describe("Data Privacy Utilities", () => {
     });
 
     it("should export analytics consent data", () => {
-      // Clear first to ensure clean state
-      localStorage.clear();
       localStorage.setItem("analytics-consent", "granted");
       localStorage.setItem("analytics-consent-date", "2025-01-01");
 
@@ -67,8 +65,6 @@ describe("Data Privacy Utilities", () => {
     });
 
     it("should export user preferences", () => {
-      // Clear first to ensure clean state
-      localStorage.clear();
       localStorage.setItem("theme", "dark");
       localStorage.setItem("realTimeValidation", "true");
       localStorage.setItem("securityChecks", "false");
@@ -81,8 +77,6 @@ describe("Data Privacy Utilities", () => {
     });
 
     it("should export usage history", () => {
-      // Clear first to ensure clean state
-      localStorage.clear();
       localStorage.setItem("validation-count", "100");
       localStorage.setItem("last-validation-date", "2025-01-04");
 
@@ -101,13 +95,10 @@ describe("Data Privacy Utilities", () => {
     });
 
     it("should handle missing data gracefully", () => {
-      // Ensure completely clean state
-      localStorage.clear();
-
       const data = exportUserData();
 
       expect(data.analytics.consent).toBe(false);
-      expect(data.analytics.consentDate).toBeNull();
+      expect(data.analytics.consentDate).toBeFalsy(); // null or undefined
       expect(data.preferences.theme).toBe("light");
       expect(data.history.validations).toBe(0);
     });

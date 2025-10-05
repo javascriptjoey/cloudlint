@@ -148,12 +148,12 @@ describe("ConsentBanner", () => {
       });
       fireEvent.click(acceptButton);
 
-      const stored = localStorage.getItem("analytics_consent");
-      expect(stored).toBeTruthy();
+      // Check new format
+      const stored = localStorage.getItem("analytics-consent");
+      expect(stored).toBe("granted");
 
-      const parsed = JSON.parse(stored!);
-      expect(parsed.analytics).toBe(true);
-      expect(parsed.timestamp).toBeTypeOf("number");
+      const date = localStorage.getItem("analytics-consent-date");
+      expect(date).toBeTruthy();
     });
 
     it("should save consent as disabled when declining", async () => {
@@ -171,11 +171,12 @@ describe("ConsentBanner", () => {
       });
       fireEvent.click(declineButton);
 
-      const stored = localStorage.getItem("analytics_consent");
-      expect(stored).toBeTruthy();
+      // Check new format
+      const stored = localStorage.getItem("analytics-consent");
+      expect(stored).toBe("denied");
 
-      const parsed = JSON.parse(stored!);
-      expect(parsed.analytics).toBe(false);
+      const date = localStorage.getItem("analytics-consent-date");
+      expect(date).toBeTruthy();
     });
 
     it("should call onAccept callback when accepting", async () => {
@@ -434,8 +435,8 @@ describe("ConsentBanner", () => {
       });
       fireEvent.click(acceptButton);
 
-      // Verify domain is used (would need to mock loadPlausibleScript to verify)
-      expect(localStorage.getItem("analytics_consent")).toBeTruthy();
+      // Verify consent is saved (new format)
+      expect(localStorage.getItem("analytics-consent")).toBe("granted");
     });
 
     it("should apply custom className", async () => {
