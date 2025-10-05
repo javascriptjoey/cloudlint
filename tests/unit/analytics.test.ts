@@ -57,7 +57,7 @@ describe("Analytics Utility", () => {
     });
 
     // Clear any existing plausible function
-    delete (window as Record<string, unknown>).plausible;
+    delete (window as unknown as Record<string, unknown>).plausible;
 
     // Clear any existing Plausible scripts
     document.querySelectorAll("script[data-domain]").forEach((script) => {
@@ -159,7 +159,7 @@ describe("Analytics Utility", () => {
 
     it("should not override existing plausible function", () => {
       const mockPlausible = vi.fn();
-      (window as Record<string, unknown>).plausible = mockPlausible;
+      (window as unknown as Record<string, unknown>).plausible = mockPlausible;
 
       initializeAnalytics();
 

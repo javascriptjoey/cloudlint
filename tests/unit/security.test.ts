@@ -333,7 +333,14 @@ data:
         directives: {
           defaultSrc: ["'self'", "https://example.com"],
           scriptSrc: ["'self'"],
-          upgradeInsecureRequests: true, // Still included by default
+          styleSrc: ["'self'"],
+          imgSrc: ["'self'"],
+          fontSrc: ["'self'"],
+          connectSrc: ["'self'"],
+          frameAncestors: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          upgradeInsecureRequests: true,
         },
         reportOnly: false,
       };
