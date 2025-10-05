@@ -38,7 +38,8 @@
     "start:e2e": "npm run build && node node_modules/tsx/dist/cli.mjs src/server.ts",
     "start:prod:pwsh": "npm run build && pwsh -NoLogo -NoProfile -Command \"$env:SERVE_STATIC='1'; $env:PORT='3001'; npm run start:server\"",
     "start:prod:8787": "npm run build && cross-env SERVE_STATIC=1 PORT=8787 npm run start:server",
-    "dev:backend": "tsx src/server.ts"
+    "dev:backend": "tsx src/server.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.19.0",
@@ -101,7 +102,9 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.4.0",
     "happy-dom": "^18.0.1",
+    "husky": "^9.1.7",
     "jsdom": "^27.0.0",
+    "lint-staged": "^16.2.3",
     "msw": "^2.11.3",
     "prettier": "^3.3.3",
     "shadcn": "^3.3.1",
